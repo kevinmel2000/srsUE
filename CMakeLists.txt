@@ -50,6 +50,7 @@ endif()
 # Find boost
 ########################################################################
 SET(BOOST_REQUIRED_COMPONENTS
+    program_options
     system
     date_time
     thread
@@ -89,8 +90,8 @@ include_directories(
 
 link_directories(
     ${Boost_LIBRARY_DIRS}
-    ${POLARSSL_LIBRARIES}
-    ${SRSLTE_LIBRARIES}
+    ${POLARSSL_LIBRARY_DIRS}
+    ${SRSLTE_LIBRARY_DIRS}
 )
 
 ########################################################################
@@ -108,19 +109,19 @@ add_custom_target(uninstall
 ########################################################################
 # Add headers to cmake project (useful for IDEs)
 ########################################################################
-SET(HEADERS_ALL "")
-FILE(GLOB headers *)
-FOREACH (_header ${headers})
-    IF(IS_DIRECTORY ${_header})
-        FILE(GLOB_RECURSE tmp "${_header}/*.h")
-        LIST(APPEND HEADERS_ALL ${tmp})
-    ENDIF(IS_DIRECTORY ${_header})
-ENDFOREACH()
-ADD_CUSTOM_TARGET (add_srsUE_headers SOURCES ${HEADERS_ALL})
+set(HEADERS_ALL "")
+file(GLOB headers *)
+foreach(_header ${headers})
+    if(IS_DIRECTORY ${_header})
+        file(GLOB_RECURSE tmp "${_header}/*.h")
+        list(APPEND HEADERS_ALL ${tmp})
+    endif(IS_DIRECTORY ${_header})
+endforeach()
+add_custom_target(add_srsUE_headers SOURCES ${HEADERS_ALL})
 
 ########################################################################
 # Add subdirectories
 ########################################################################
 add_subdirectory(liblte)
-#add_subdirectory(ue)
+add_subdirectory(ue)
 
