@@ -19,8 +19,10 @@
 
 include_directories(hdr)
 add_library(ue_lib
-    src/log_filter.cc
-    src/logger.cc
+            src/log_filter.cc
+            src/ue_logger.cc
+            src/rlc.cc
+            src/rlc_layer.cc
 )
 add_executable(ue src/main.cc)
 target_link_libraries(ue ue_lib ${Boost_LIBRARIES})

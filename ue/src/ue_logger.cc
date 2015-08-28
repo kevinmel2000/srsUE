@@ -27,13 +27,13 @@
 
 #define LOG_BUFFER_SIZE 1024*32
 
-#include "logger.h"
+#include "ue_logger.h"
 
 using namespace std;
 
 namespace srsue{
 
-logger::logger(std::string file)
+ue_logger::ue_logger(std::string file)
   :buffer(LOG_BUFFER_SIZE)
   ,filename(file)
   ,not_done(true)
@@ -45,7 +45,7 @@ logger::logger(std::string file)
   pthread_create(&thread, NULL, &start, this);
 }
 
-logger::~logger() {
+ue_logger::~ue_logger() {
   not_done = false;
   log("Closing log");
   pthread_join(thread, NULL);
@@ -53,12 +53,12 @@ logger::~logger() {
   fclose(logfile);
 }
 
-void logger::log(const char *msg) {
-  string tmp(msg);
-  log(tmp);
+void ue_logger::log(const char *msg) {
+  str_ptr s_ptr(new std::string(msg));
+  log(s_ptr);
 }
 
-void logger::log(std::string &msg) {
+void ue_logger::log(str_ptr msg) {
     boost::mutex::scoped_lock lock(mutex);
     if(buffer.full()) {
       buffer.set_capacity(buffer.capacity()*2);
@@ -70,29 +70,30 @@ void logger::log(std::string &msg) {
     not_empty.notify_one();
 }
 
-void* logger::start(void *input) {
-  logger *l = (logger*)input;
+void* ue_logger::start(void *input) {
+  ue_logger *l = (ue_logger*)input;
   l->reader_loop();
 }
 
-void logger::reader_loop() {
+void ue_logger::reader_loop() {
   while(not_done) {
     boost::mutex::scoped_lock lock(mutex);
     while(buffer.empty()) not_empty.wait(lock);
-    if(logfile)
-      fprintf(logfile, "%s\n", buffer.front().c_str());
+    str_ptr s = buffer.front();
     buffer.pop_front();
     lock.unlock();
     not_full.notify_one();
+    if(logfile)
+      fprintf(logfile, "%s\n", s.get()->c_str());
   }
 }
 
-void logger::flush() {
-  boost::circular_buffer<string>::iterator it;
+void ue_logger::flush() {
+  boost::circular_buffer<str_ptr>::iterator it;
   for(it=buffer.begin();it!=buffer.end();it++)
   {
     if(logfile)
-      fprintf(logfile, "%s\n", it->c_str());
+      fprintf(logfile, "%s\n", it->get()->c_str());
   }
 }
 

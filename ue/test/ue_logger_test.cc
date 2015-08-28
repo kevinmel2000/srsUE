@@ -2,12 +2,12 @@
 #define NMSGS    100
 
 #include <stdio.h>
-#include "logger.h"
+#include "ue_logger.h"
 
 using namespace srsue;
 
 typedef struct {
-  logger *l;
+  ue_logger *l;
   int thread_id;
 }args_t;
 
@@ -22,7 +22,7 @@ void* thread_loop(void *a) {
 }
 
 void write(std::string filename) {
-  logger l(filename);
+  ue_logger l(filename);
   pthread_t threads[NTHREADS];
   args_t    args[NTHREADS];
   for(int i=0;i<NTHREADS;i++) {

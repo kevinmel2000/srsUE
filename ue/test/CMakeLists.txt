@@ -22,7 +22,10 @@
 ########################################################################
 include_directories(${PROJECT_SOURCE_DIR}/ue/hdr)
 
-add_executable(logger_test logger_test.cc)
-target_link_libraries(logger_test ue_lib ${Boost_LIBRARIES})
+add_executable(ue_logger_test ue_logger_test.cc)
+target_link_libraries(ue_logger_test ue_lib ${Boost_LIBRARIES})
 
-add_test(logger_test logger_test)
+add_executable(log_filter_test log_filter_test.cc)
+target_link_libraries(log_filter_test ue_lib ${Boost_LIBRARIES})
+
+add_test(ue_logger_test ue_logger_test)
