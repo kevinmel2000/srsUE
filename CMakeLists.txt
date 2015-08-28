@@ -42,10 +42,13 @@ include_directories(${CMAKE_SOURCE_DIR})
 ########################################################################
 # Compiler specific setup
 ########################################################################
-if(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
-    #http://gcc.gnu.org/wiki/Visibility
-    add_definitions(-fvisibility=hidden)
-endif()
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    #Any additional flags for CXX
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+IF( ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-write-strings -Wno-format-extra-args -Winline -Wno-unused-result -Wno-format -std=c99 -D_GNU_SOURCE -g")
+ENDIF( ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") )
 
 ########################################################################
 # Find boost

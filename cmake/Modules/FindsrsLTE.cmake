@@ -40,62 +40,6 @@ FIND_LIBRARY(
 )
 
 FIND_LIBRARY(
-    SRSLTE_LIBRARY_MAC
-    NAMES   srsapps_ue_mac 
-    HINTS   $ENV{SRSLTE_DIR}/lib
-            ${SRSLTE_BUILDDIR}/srsapps/ue/mac
-            ${PC_SRSLTE_LIBDIR}
-            ${CMAKE_INSTALL_PREFIX}/lib
-            ${CMAKE_INSTALL_PREFIX}/lib64
-    PATHS   /usr/local/lib
-            /usr/local/lib64
-            /usr/lib
-            /usr/lib64
-)
-
-FIND_LIBRARY(
-    SRSLTE_LIBRARY_PHY
-    NAMES   srsapps_ue_phy 
-    HINTS   $ENV{SRSLTE_DIR}/lib
-            ${SRSLTE_BUILDDIR}/srsapps/ue/phy
-            ${PC_SRSLTE_LIBDIR}
-            ${CMAKE_INSTALL_PREFIX}/lib
-            ${CMAKE_INSTALL_PREFIX}/lib64
-    PATHS   /usr/local/lib
-            /usr/local/lib64
-            /usr/lib
-            /usr/lib64
-)
-
-FIND_LIBRARY(
-    SRSLTE_LIBRARY_COMMON
-    NAMES   srsapps_common 
-    HINTS   $ENV{SRSLTE_DIR}/lib
-            ${SRSLTE_BUILDDIR}/srsapps/common
-            ${PC_SRSLTE_LIBDIR}
-            ${CMAKE_INSTALL_PREFIX}/lib
-            ${CMAKE_INSTALL_PREFIX}/lib64
-    PATHS   /usr/local/lib
-            /usr/local/lib64
-            /usr/lib
-            /usr/lib64
-)
-
-FIND_LIBRARY(
-    SRSLTE_LIBRARY_RADIO
-    NAMES   srsapps_radio 
-    HINTS   $ENV{SRSLTE_DIR}/lib
-            ${SRSLTE_BUILDDIR}/srsapps/radio
-            ${PC_SRSLTE_LIBDIR}
-            ${CMAKE_INSTALL_PREFIX}/lib
-            ${CMAKE_INSTALL_PREFIX}/lib64
-    PATHS   /usr/local/lib
-            /usr/local/lib64
-            /usr/lib
-            /usr/lib64
-)
-
-FIND_LIBRARY(
     SRSLTE_LIBRARY_CUHD
     NAMES   srslte_uhd 
     HINTS   $ENV{SRSLTE_DIR}/lib
@@ -111,19 +55,11 @@ FIND_LIBRARY(
 
 IF(DEFINED SRSLTE_SRCDIR) 
     set(SRSLTE_INCLUDE_DIRS ${SRSLTE_SRCDIR}/srslte/include 
-                            ${SRSLTE_SRCDIR}/srsapps/ue/phy/include
-                            ${SRSLTE_SRCDIR}/srsapps/ue/mac/include 
-                            ${SRSLTE_SRCDIR}/srsapps/radio/include 
-                            ${SRSLTE_SRCDIR}/srsapps/common/include 
                             ${SRSLTE_SRCDIR}/cuhd/include 
                             ${SRSLTE_SRCDIR}/common/include)
 ENDIF(DEFINED SRSLTE_SRCDIR)
 
-SET(SRSLTE_LIBRARIES    ${SRSLTE_LIBRARY_PHY}
-                        ${SRSLTE_LIBRARY_MAC}
-                        ${SRSLTE_LIBRARY_COMMON}
-                        ${SRSLTE_LIBRARY_RADIO}
-                        ${SRSLTE_LIBRARY_CUHD}
+SET(SRSLTE_LIBRARIES    ${SRSLTE_LIBRARY_CUHD}
                         ${SRSLTE_LIBRARY})
 
 message(STATUS "SRSLTE LIBRARIES: " ${SRSLTE_LIBRARIES})

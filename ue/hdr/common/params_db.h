@@ -24,3 +24,48 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+#include <stdlib.h>
+
+
+
+#ifndef PARAMS_H
+#define PARAMS_H
+
+namespace srslte {
+namespace ue {
+  class params_db
+  {
+  public: 
+    params_db(uint32_t nof_params_) {
+      nof_params = nof_params_; 
+      db = (int64_t*) calloc(sizeof(int64_t), nof_params);       
+      for (int i=0;i<nof_params;i++) {
+        db[i] = 0; 
+      }
+    }
+   ~params_db() {
+      free(db);
+    }
+    void    set_param(uint32_t param_idx, int64_t value) {
+      if (param_idx < nof_params) {
+        db[param_idx] = value;       
+      }
+    }
+    int64_t get_param(uint32_t param_idx) {
+      if (param_idx < nof_params) {        
+        return db[param_idx]; 
+      } else {
+        return -1; 
+      }
+    }
+    
+  private:
+    uint32_t nof_params; 
+    int64_t *db;
+  };
+}
+}
+
+#endif

@@ -1,3 +1,4 @@
+include_directories(hdr)
 add_library(lte SHARED
   src/liblte_common.cc
   src/liblte_interface.cc
@@ -7,4 +8,4 @@ add_library(lte SHARED
   src/liblte_mme.cc
   src/liblte_security.cc
 )
-include_directories(hdr)
+target_link_libraries(lte ${POLARSSL_LIBRARIES})

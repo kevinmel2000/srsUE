@@ -17,19 +17,9 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-########################################################################
-# LOGGER TEST
-########################################################################
-#include_directories(${PROJECT_SOURCE_DIR}/ue/hdr)
+find_package(UHD)
 
-#add_executable(ue_logger_test ue_logger_test.cc)
-#target_link_libraries(ue_logger_test ue_lib ${Boost_LIBRARIES})
-
-#add_executable(log_filter_test log_filter_test.cc)
-#target_link_libraries(log_filter_test ue_lib ${Boost_LIBRARIES})
-
-#add_test(ue_logger_test ue_logger_test)
-
-# Integrate srslte/srsapps
-add_subdirectory(phy)
-add_subdirectory(mac)
+if(UHD_FOUND)  
+  add_executable(mac_test mac_test.cc)
+  target_link_libraries(mac_test srsue_common srsue_mac srsue_phy srsue_radio lte srslte srslte_uhd)
+endif(UHD_FOUND)

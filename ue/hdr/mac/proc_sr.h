@@ -24,3 +24,45 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+
+#include <stdint.h>
+
+#include "mac/proc.h"
+#include "phy/phy.h"
+#include "mac/mac_params.h"
+
+#ifndef PROCSR_H
+#define PROCSR_H
+
+/* Scheduling Request procedure as defined in 5.4.4 of 36.321 */
+
+namespace srslte {
+namespace ue {
+
+class sr_proc : public proc
+{
+public:
+  sr_proc();
+  void init(phy_interface *phy_h, log *log_h, mac_params *params_db);
+  void step(uint32_t tti);  
+  void reset();
+  void start();
+  bool need_random_access(); 
+  
+private:
+  uint32_t      sr_counter;
+  uint32_t      dsr_transmax; 
+  bool          is_pending_sr;
+  mac_params    *params_db; 
+  
+  phy_interface *phy_h; 
+  log           *log_h; 
+  bool          initiated;
+  bool          do_ra;
+};
+}
+}
+
+#endif

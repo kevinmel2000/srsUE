@@ -24,3 +24,36 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+
+
+#include "common/log.h"
+#include "phy/phy.h"
+#include "mac/mac_params.h"
+#include "common/timers.h"
+
+#ifndef DLSPS_H
+#define DLSPS_H
+
+/* Downlink Semi-Persistent schedulign (Section 5.10.1) */
+
+namespace srslte {
+namespace ue {
+  
+class dl_sps
+{
+public:
+
+  void            clear() {}
+  void            reset() {}
+  bool            get_pending_grant(uint32_t tti, mac_interface_phy::mac_grant_t *grant) {
+    return false; 
+  }
+private:  
+  
+};
+
+} 
+}
+#endif

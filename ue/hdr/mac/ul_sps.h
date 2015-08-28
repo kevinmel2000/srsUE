@@ -24,3 +24,36 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+
+
+#include "common/log.h"
+#include "phy/phy.h"
+#include "mac/mac_params.h"
+#include "common/timers.h"
+
+#ifndef ULSPS_H
+#define ULSPS_H
+
+/* Uplink Semi-Persistent schedulign (Section 5.10.2) */
+
+namespace srslte {
+namespace ue {
+  
+typedef _Complex float cf_t; 
+
+class ul_sps
+{
+public:
+
+  void           clear() {}
+  void           reset(uint32_t tti) {}
+  bool           get_pending_grant(uint32_t tti, mac_interface_phy::mac_grant_t *grant) { return false; }
+private:  
+  
+};
+
+} 
+}
+#endif

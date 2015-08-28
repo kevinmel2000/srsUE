@@ -24,3 +24,42 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+#include <pthread.h>
+#include <stdint.h>
+#include <string>
+#include <queue>
+#include "common/threads.h"
+
+/******************************************************************************
+ *  File:         task_dispatcher.h
+ *
+ *  Description:  Implements a pool of threads. Pending tasks to execute are 
+ *                identified by a pointer. 
+ *
+ *  Reference:
+ *****************************************************************************/
+
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+
+namespace srslte {
+  
+class task_dispatcher : public thread
+{
+public:
+  task_dispatcher(uint32_t max_pending_tasks);
+  ~task_dispatcher();
+  void push_task(uint32_t task_code);
+  virtual void run_task(uint32_t task_code) = 0; 
+private:
+  std::queue<uint32_t> pending_tasks;    
+  void run_thread();  
+  pthread_mutex_t mutex; 
+  pthread_cond_t cvar; 
+  bool running;
+};
+}
+  
+#endif

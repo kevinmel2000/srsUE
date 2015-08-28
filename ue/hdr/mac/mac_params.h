@@ -24,3 +24,30 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+
+
+#include "srslte/srslte.h"
+#include "common/params_db.h"
+#include "common/mac_interface.h"
+
+#ifndef MACPARAMS_H
+#define MACPARAMS_H
+
+
+namespace srslte {
+namespace ue {
+
+  class mac_params : public params_db
+  {
+  public: 
+
+    mac_params() : params_db(mac_interface_params::NOF_PARAMS) {}
+   ~mac_params() {}
+    
+    
+  };
+}
+}
+
+#endif
