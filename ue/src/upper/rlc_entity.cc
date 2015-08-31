@@ -25,4 +25,32 @@
  *
  */
 
-#include "ue.h"
+#include "upper/rlc_entity.h"
+
+using namespace srslte;
+
+namespace srsue{
+
+rlc_entity::rlc_entity()
+  :active(false)
+{}
+
+void rlc_entity::init(srslte::log *rlc_entity_log_, RLC_MODE_ENUM mode_, uint32_t lcid_)
+{
+  rlc_entity_log = rlc_entity_log_;
+  mode    = mode_;
+  lcid    = lcid_;
+  active  = true;
+}
+
+void rlc_entity::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+{
+  //TODO
+}
+
+bool rlc_entity::is_active()
+{
+  return active;
+}
+
+}

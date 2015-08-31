@@ -25,4 +25,26 @@
  *
  */
 
-#include "ue.h"
+#ifndef NAS_H
+#define NAS_H
+
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
+
+namespace srsue {
+
+class nas
+{
+public:
+  nas(srslte::log *nas_log_);
+  void init();
+
+private:
+  srslte::log *nas_log;
+};
+
+} // namespace srsue
+
+
+#endif // NAS_H

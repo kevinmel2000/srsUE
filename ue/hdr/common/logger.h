@@ -26,15 +26,15 @@
  */
 
 /**
- * File:        ue_logger.h
+ * File:        logger.h
  * Description: Common log object. Maintains a queue of log messages
  *              and runs a thread to read messages and write to file.
  *              Multiple producers, single consumer. If full, producers
  *              increase queue size. If empty, consumer blocks.
  */
 
-#ifndef UE_LOGGER_H
-#define UE_LOGGER_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
 #include <stdio.h>
 #include <string>
@@ -47,11 +47,11 @@ namespace srsue {
 
 typedef boost::shared_ptr<std::string> str_ptr;
 
-class ue_logger
+class logger
 {
 public:
-  ue_logger(std::string filename);
-  ~ue_logger();
+  logger(std::string filename);
+  ~logger();
   void log(const char *msg);
   void log(str_ptr msg);
 
@@ -72,4 +72,4 @@ private:
 
 } // namespace srsue
 
-#endif // UE_LOGGER_H
+#endif // LOGGER_H

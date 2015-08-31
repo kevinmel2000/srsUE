@@ -17,14 +17,5 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(radio)
-add_subdirectory(common)
-add_subdirectory(phy)
-add_subdirectory(mac)
-add_subdirectory(upper)
-
-add_library(ue_lib
-            ue.cc
-)
-add_executable(ue main.cc)
-target_link_libraries(ue ue_lib ${Boost_LIBRARIES})
+file(GLOB SOURCES "*.cc")
+add_library(srsue_upper SHARED ${SOURCES})

@@ -25,4 +25,26 @@
  *
  */
 
-#include "ue.h"
+#include "upper/pdcp_entity.h"
+
+using namespace srslte;
+
+namespace srsue{
+
+pdcp_entity::pdcp_entity()
+  :active(false)
+{}
+
+void pdcp_entity::init(srslte::log *pdcp_entity_log_, uint32_t lcid_)
+{
+  pdcp_entity_log = pdcp_entity_log_;
+  lcid    = lcid_;
+  active  = true;
+}
+
+bool pdcp_entity::is_active()
+{
+  return active;
+}
+
+}

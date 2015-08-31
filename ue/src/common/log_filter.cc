@@ -26,22 +26,22 @@
  */
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "log_filter.h"
+#include "common/log_filter.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-log_filter::log_filter(std::string layer, ue_logger *logger_)
+log_filter::log_filter(std::string layer, logger *logger_)
   :log(layer)
-  ,logger(logger_)
+  ,logger_h(logger_)
 {}
 
 void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
                          uint32_t               tti,
                          char                  *msg)
 {
-  if(logger) {
+  if(logger_h) {
     std::stringstream ss;
 
     ss << now_time() << " ";
@@ -51,7 +51,7 @@ void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
     ss << msg;
 
     str_ptr s_ptr(new std::string(ss.str()));
-    logger->log(s_ptr);
+    logger_h->log(s_ptr);
   }
 }
 
@@ -61,7 +61,7 @@ void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
                          uint8_t               *hex,
                          int                    size)
 {
-  if(logger) {
+  if(logger_h) {
     std::stringstream ss;
 
     ss << now_time() << " ";
@@ -72,7 +72,7 @@ void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
     ss << hex_string(hex, size);
 
     str_ptr s_ptr(new std::string(ss.str()));
-    logger->log(s_ptr);
+    logger_h->log(s_ptr);
   }
 }
 

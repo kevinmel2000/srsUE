@@ -25,4 +25,26 @@
  *
  */
 
-#include "ue.h"
+#ifndef GW_H
+#define GW_H
+
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
+
+namespace srsue {
+
+class gw
+{
+public:
+  gw(srslte::log *gw_log_);
+  void init();
+
+private:
+  srslte::log *gw_log;
+};
+
+} // namespace srsue
+
+
+#endif // GW_H

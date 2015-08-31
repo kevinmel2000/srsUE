@@ -25,41 +25,45 @@
  *
  */
 
-#ifndef LOG_FILTER_H
-#define LOG_FILTER_H
+#ifndef RLC_H
+#define RLC_H
 
-#include <stdarg.h>
-#include <string>
 #include <common/log.h>
-#include "ue_logger.h"
+#include "common/common.h"
+#include "common/interfaces.h"
+#include "upper/rlc_entity.h"
 
 namespace srsue {
 
-class log_filter : public srslte::log
+class rlc
+    :public rlc_interface_mac
+    ,public rlc_interface_pdcp
+    ,public rlc_interface_rrc
 {
 public:
+  rlc(srslte::log *rlc_log_);
+  void init(pdcp_interface_rlc *pdcp_);
 
-  log_filter(std::string layer, ue_logger *logger_);
+  // PDCP interface
+  void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
 
-  void error(std::string message, ...);
-  void warning(std::string message, ...);
-  void info(std::string message, ...);
-  void debug(std::string message, ...);
+  // MAC interface
+  uint32_t get_buffer_state(uint32_t lcid);
+  int      read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
+  void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
 
-  void error_hex(uint8_t *hex, int size, std::string message, ...);
-  void warning_hex(uint8_t *hex, int size, std::string message, ...);
-  void info_hex(uint8_t *hex, int size, std::string message, ...);
-  void debug_hex(uint8_t *hex, int size, std::string message, ...);
+  // RRC interface
+  void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);
 
 private:
-  ue_logger *logger;
+  srslte::log        *rlc_log;
+  pdcp_interface_rlc *pdcp;
+  rlc_entity          rlc_array[SRSUE_N_RADIO_BEARERS];
 
-  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg);
-  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg, uint8_t *hex, int size);
-  std::string now_time();
-  std::string hex_string(uint8_t *hex, int size);
+  bool valid_lcid(uint32_t lcid);
 };
 
 } // namespace srsue
 
-#endif // LOG_FILTER_H
+
+#endif // RLC_H

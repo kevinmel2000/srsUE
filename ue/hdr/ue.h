@@ -24,3 +24,48 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
+/**
+ * File:        ue.h
+ * Description: Top-level UE class. Creates and links all
+ *              layers and helpers.
+ */
+
+#ifndef UE_H
+#define UE_H
+
+#include <stdarg.h>
+#include <string>
+
+#include "radio/radio_uhd.h"
+#include "phy/phy.h"
+#include "mac/mac.h"
+#include "upper/rlc.h"
+#include "upper/pdcp.h"
+#include "upper/rrc.h"
+#include "upper/gw.h"
+
+#include "common/logger.h"
+#include "common/log_filter.h"
+
+namespace srsue {
+
+class ue
+{
+public:
+  ue();
+
+private:
+  srslte::radio_uhd radio_uhd;
+  srsue::phy        phy;
+  srsue::mac        mac;
+  srsue::mac_pcap   mac_pcap;
+
+  srsue::logger     logger;
+  srsue::log_filter phy_log;
+  srsue::log_filter mac_log;
+};
+
+} // namespace srsue
+
+#endif // UE_H

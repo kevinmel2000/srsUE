@@ -25,4 +25,19 @@
  *
  */
 
-#include "ue.h"
+#include "upper/nas.h"
+
+using namespace srslte;
+
+namespace srsue{
+
+nas::nas(srslte::log *nas_log_)
+  :nas_log(nas_log_)
+{
+}
+
+void nas::init()
+{
+}
+
+} // namespace srsue

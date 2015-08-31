@@ -343,11 +343,11 @@ int main(int argc, char *argv[])
   }
   
   if (srsapps_verbose == 1) {
-    log.set_level_info();
+    log.set_level(srslte::LOG_LEVEL_INFO);
     printf("Log level info\n");
   }
   if (srsapps_verbose == 2) {
-    log.set_level_debug();
+    log.set_level(srslte::LOG_LEVEL_DEBUG);
     printf("Log level debug\n");
   }
 

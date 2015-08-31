@@ -25,15 +25,18 @@
  *
  */
 
+#define Error(fmt, ...)   phy->log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) phy->log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    phy->log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   phy->log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include <string.h>
 #include "phy/phch_worker.h"
 #include "common/mac_interface.h"
 #include "common/phy_interface.h"
 
 
-  namespace srsue {
-
-#define log_h phy->log_h
+namespace srsue {
 
 phch_worker::phch_worker() : tr_exec(10240)
 {

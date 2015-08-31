@@ -25,4 +25,19 @@
  *
  */
 
-#include "ue.h"
+#include "upper/pdcp.h"
+
+using namespace srslte;
+
+namespace srsue{
+
+pdcp::pdcp(srslte::log *pdcp_log_)
+  :pdcp_log(pdcp_log_)
+{
+}
+
+void pdcp::init()
+{
+}
+
+} // namespace srsue

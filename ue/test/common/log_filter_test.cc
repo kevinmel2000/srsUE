@@ -28,13 +28,13 @@
 #define NMSGS    100
 
 #include <stdio.h>
-#include "log_filter.h"
+#include "common/log_filter.h"
 
 using namespace srsue;
 using namespace srslte;
 
 typedef struct {
-  ue_logger *l;
+  logger *l;
   int thread_id;
 }args_t;
 
@@ -77,7 +77,7 @@ void* thread_loop_hex(void *a) {
 }
 
 void write(std::string filename) {
-  ue_logger l(filename);
+  logger l(filename);
   pthread_t threads[NTHREADS];
   args_t    args[NTHREADS];
   for(int i=0;i<NTHREADS;i++) {

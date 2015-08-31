@@ -25,45 +25,19 @@
  *
  */
 
-#ifndef RLC_LAYER_H
-#define RLC_LAYER_H
+#include "upper/gw.h"
 
-#include <common/log.h>
-#include "common.h"
-#include "interfaces.h"
-#include "rlc.h"
+using namespace srslte;
 
-namespace srsue {
+namespace srsue{
 
-class rlc_layer
-    :public rlc_interface_mac
-    ,public rlc_interface_pdcp
-    ,public rlc_interface_rrc
+gw::gw(srslte::log *gw_log_)
+  :gw_log(gw_log_)
 {
-public:
-  rlc_layer(srslte::log *rlc_log_);
-  void init(pdcp_interface_rlc *pdcp_);
+}
 
-  // PDCP interface
-  void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
-
-  // MAC interface
-  uint32_t get_buffer_state(uint32_t lcid);
-  void     read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
-  void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
-
-  // RRC interface
-  void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);
-
-private:
-  srslte::log        *rlc_log;
-  pdcp_interface_rlc *pdcp;
-  rlc rlc_array[SRSUE_N_RADIO_BEARERS];
-
-  bool valid_lcid(uint32_t lcid);
-};
+void gw::init()
+{
+}
 
 } // namespace srsue
-
-
-#endif // RLC_LAYER_H

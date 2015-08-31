@@ -25,4 +25,19 @@
  *
  */
 
-#include "ue.h"
+#include "upper/rrc.h"
+
+using namespace srslte;
+
+namespace srsue{
+
+rrc::rrc(srslte::log *rrc_log_)
+  :rrc_log(rrc_log_)
+{
+}
+
+void rrc::init()
+{
+}
+
+} // namespace srsue

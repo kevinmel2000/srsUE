@@ -17,14 +17,13 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(radio)
-add_subdirectory(common)
-add_subdirectory(phy)
-add_subdirectory(mac)
-add_subdirectory(upper)
+#######################################################################
+# LOGGER TEST
+#######################################################################
+add_executable(logger_test logger_test.cc)
+target_link_libraries(logger_test srsue_common ${Boost_LIBRARIES})
 
-add_library(ue_lib
-            ue.cc
-)
-add_executable(ue main.cc)
-target_link_libraries(ue ue_lib ${Boost_LIBRARIES})
+add_executable(log_filter_test log_filter_test.cc)
+target_link_libraries(log_filter_test srsue_common ${Boost_LIBRARIES})
+
+add_test(logger_test logger_test)

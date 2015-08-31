@@ -25,4 +25,27 @@
  *
  */
 
-#include "ue.h"
+#ifndef PDCP_ENTITY_H
+#define PDCP_ENTITY_H
+
+#include "common/log.h"
+
+namespace srsue {
+
+class pdcp_entity
+{
+public:
+  pdcp_entity();
+  void init(srslte::log *pdcp_entity_log_, uint32_t lcid_);
+  bool is_active();
+
+private:
+  srslte::log   *pdcp_entity_log;
+  bool           active;
+  uint32_t       lcid;
+};
+
+} // namespace srsue
+
+
+#endif // PDCP_ENTITY_H

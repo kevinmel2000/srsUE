@@ -25,4 +25,28 @@
  *
  */
 
-#include "ue.h"
+#ifndef PDCP_H
+#define PDCP_H
+
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
+#include "upper/pdcp_entity.h"
+
+namespace srsue {
+
+class pdcp
+{
+public:
+  pdcp(srslte::log *pdcp_log_);
+  void init();
+
+private:
+  srslte::log        *pdcp_log;
+  pdcp_entity         pdcp_array[SRSUE_N_RADIO_BEARERS];
+};
+
+} // namespace srsue
+
+
+#endif // PDCP_H
