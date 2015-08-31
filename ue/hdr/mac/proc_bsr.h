@@ -32,6 +32,7 @@
 #include "common/log.h"
 #include "mac/proc.h"
 #include "common/mac_interface.h"
+#include "common/interfaces.h"
 #include "mac/mac_params.h"
 #include "common/timers.h" 
 

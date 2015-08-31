@@ -51,6 +51,8 @@ public:
   uint32_t get_buffer_state(uint32_t lcid);
   int      read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
+  void     write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes);
+  void     write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes);
 
   // RRC interface
   void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);

@@ -78,6 +78,12 @@ void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
   }
 }
 
+void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
+{}
+
+void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
+{}
+
 /*******************************************************************************
   RRC interface
 *******************************************************************************/

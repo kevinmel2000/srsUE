@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include "common/log.h"
 #include "common/mac_interface.h"
+#include "common/interfaces.h"
 #include <vector>
 #include <stdio.h>
 
