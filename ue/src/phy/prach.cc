@@ -35,7 +35,7 @@
 #include "phy/phy.h"
 #include "common/phy_interface.h"
 
-namespace srslte {
+
 namespace srsue {
  
   
@@ -55,7 +55,7 @@ void prach::free_cell()
   }
 }
 
-void prach::init(phy_params* params_db_, log* log_h_)
+void prach::init(phy_params* params_db_, srslte::log* log_h_)
 {
   log_h = log_h_; 
   params_db = params_db_; 
@@ -136,7 +136,7 @@ int prach::tx_tti() {
   return transmitted_tti; 
 }
 
-bool prach::send(radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
+bool prach::send(srslte::radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
 {
   // Correct CFO before transmission
   srslte_cfo_correct(&cfo_h, buffer[preamble_idx], signal_buffer, cfo /srslte_symbol_sz(cell.nof_prb));            
@@ -151,5 +151,5 @@ bool prach::send(radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
   preamble_idx = -1; 
 }
   
-} // namespace ue
-} // namespace srslte
+} // namespace srsue
+

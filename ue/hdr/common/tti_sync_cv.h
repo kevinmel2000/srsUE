@@ -35,7 +35,7 @@
 #define TTISYNC_CV_H
 
 
-namespace srslte {
+
 namespace srsue {
   
   /* Implements tti_sync interface with condition variables. 
@@ -55,7 +55,6 @@ class tti_sync_cv : public tti_sync
     pthread_cond_t  cond; 
     pthread_mutex_t mutex; 
 }; 
-}
 }
 
 #endif

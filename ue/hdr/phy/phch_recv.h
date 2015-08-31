@@ -40,7 +40,7 @@
 #ifndef UEPHYRECV_H
 #define UEPHYRECV_H
 
-namespace srslte {
+
 namespace srsue {
     
 typedef _Complex float cf_t; 
@@ -49,8 +49,8 @@ class phch_recv : public thread
 {
 public:
   phch_recv();
-  bool init(radio* radio_handler, mac_interface_phy *mac, prach *prach_buffer, thread_pool *_workers_pool, 
-            phch_common *_worker_com, log* _log_h, bool do_agc = false, uint32_t prio = 1);
+  bool init(srslte::radio* radio_handler, mac_interface_phy *mac, prach *prach_buffer, srslte::thread_pool *_workers_pool,
+            phch_common *_worker_com, srslte::log* _log_h, bool do_agc = false, uint32_t prio = 1);
   void stop();
   
   uint32_t get_current_tti();
@@ -68,15 +68,15 @@ private:
   
   bool   running; 
   
-  radio             *radio_h;
-  mac_interface_phy *mac;
-  log               *log_h; 
-  thread_pool       *workers_pool; 
-  phch_common       *worker_com;
-  prach             *prach_buffer; 
+  srslte::radio       *radio_h;
+  mac_interface_phy   *mac;
+  srslte::log         *log_h;
+  srslte::thread_pool *workers_pool;
+  phch_common         *worker_com;
+  prach               *prach_buffer;
   
-  srslte_ue_sync_t   ue_sync;
-  srslte_ue_mib_t    ue_mib;
+  srslte_ue_sync_t    ue_sync;
+  srslte_ue_mib_t     ue_mib;
 
   enum {
     IDLE, CELL_SEARCH, SYNCING, SYNC_DONE
@@ -99,7 +99,6 @@ private:
   void          free_cell();
 };
 
-}
 }
 
 #endif

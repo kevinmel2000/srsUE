@@ -36,7 +36,7 @@
 
 /* Power headroom report procedure */
 
-namespace srslte {
+
 namespace srsue {
 
 class phr_proc : public proc
@@ -51,7 +51,6 @@ public:
     
   }
 };
-}
 }
 
 #endif

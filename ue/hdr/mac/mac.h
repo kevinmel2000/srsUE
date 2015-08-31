@@ -46,14 +46,14 @@
 #ifndef UEMAC_H
 #define UEMAC_H
 
-namespace srslte {
+
 namespace srsue {
   
-class mac : public mac_interface_phy, mac_interface_rlc, thread, timer_callback, mac_interface_params
+class mac : public mac_interface_phy, mac_interface_rlc, thread, srslte::timer_callback, mac_interface_params
 {
 public:
   mac();
-  bool init(phy_interface *phy, rlc_interface_mac *rlc, log *log_h);
+  bool init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h);
   void stop();
 
   /******** Interface from PHY (PHY -> MAC) ****************/ 
@@ -102,7 +102,7 @@ private:
   tti_sync_cv        ttisync; 
   phy_interface     *phy_h; 
   rlc_interface_mac *rlc_h; 
-  log               *log_h; 
+  srslte::log       *log_h;
   
   mac_params    params_db; 
   
@@ -127,9 +127,9 @@ private:
   phr_proc      phr_procedure; 
   
   /* Functions for MAC Timers */
-  timers        timers_db; 
-  void          setup_timers();
-  void          timeAlignmentTimerExpire();
+  srslte::timers  timers_db;
+  void            setup_timers();
+  void            timeAlignmentTimerExpire();
 
   // pointer to MAC PCAP object
   mac_pcap* pcap;
@@ -141,5 +141,5 @@ private:
 };
 
 } 
-}
+
 #endif

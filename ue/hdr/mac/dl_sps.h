@@ -38,7 +38,7 @@
 
 /* Downlink Semi-Persistent schedulign (Section 5.10.1) */
 
-namespace srslte {
+
 namespace srsue {
   
 class dl_sps
@@ -55,5 +55,5 @@ private:
 };
 
 } 
-}
+
 #endif

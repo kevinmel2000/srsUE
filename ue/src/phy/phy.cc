@@ -42,7 +42,7 @@
 
 using namespace std; 
 
-namespace srslte {
+
 namespace srsue {
 
 phy::phy() : workers_pool(NOF_WORKERS), 
@@ -51,16 +51,16 @@ phy::phy() : workers_pool(NOF_WORKERS),
 {
 }
 
-bool phy::init(radio* radio_handler_, mac_interface_phy *mac, log *log_h) {
+bool phy::init(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h) {
   return init_(radio_handler_, mac, log_h, false);
 }
 
-bool phy::init_agc(radio* radio_handler_, mac_interface_phy *mac, log *log_h) {
+bool phy::init_agc(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h) {
   return init_(radio_handler_, mac, log_h, true);
 }
 
 
-bool phy::init_(radio* radio_handler_, mac_interface_phy *mac, log *log_h_, bool do_agc)
+bool phy::init_(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h_, bool do_agc)
 {
 
   mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -254,12 +254,5 @@ uint32_t phy::tti_to_subf(uint32_t tti) {
   return tti%10; 
 }
 
-
-
-
-
-
-
   
-}
 }

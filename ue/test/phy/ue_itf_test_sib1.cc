@@ -83,7 +83,7 @@ void parse_args(prog_args_t *args, int argc, char **argv) {
   }
 }
 
-srslte::srsue::phy my_phy;
+srsue::phy my_phy;
 bool bch_decoded = false; 
 uint32_t total_pkts=0;
 uint32_t total_dci=0;
@@ -92,7 +92,7 @@ uint8_t payload[1024];
 srslte_softbuffer_rx_t softbuffer; 
 
 /******** MAC Interface implementation */
-class testmac : public srslte::srsue::mac_interface_phy
+class testmac : public srsue::mac_interface_phy
 {
 public:
   void new_grant_ul(mac_grant_t grant, tb_action_ul_t *action) {

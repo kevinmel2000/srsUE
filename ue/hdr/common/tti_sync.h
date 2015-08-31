@@ -35,7 +35,7 @@
 #define TTISYNC_H
 
 
-namespace srslte {
+
 namespace srsue {
   
   /* Interface used for PHY-MAC synchronization (producer-consumer model). 
@@ -74,7 +74,6 @@ class tti_sync
     uint32_t producer_cntr;
     uint32_t consumer_cntr;
 }; 
-}
 }
 
 #endif

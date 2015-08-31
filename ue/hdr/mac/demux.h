@@ -40,14 +40,14 @@
 
 /* Logical Channel Demultiplexing and MAC CE dissassemble */   
 
-namespace srslte {
+
 namespace srsue {
 
 class demux
 {
 public:
   demux();
-  void init(phy_interface* phy_h_, rlc_interface_mac *rlc, log* log_h_, timers* timers_db_);
+  void init(phy_interface* phy_h_, rlc_interface_mac *rlc, srslte::log* log_h_, srslte::timers* timers_db_);
 
   void     process_pdus();
   uint8_t* request_buffer(uint32_t len);
@@ -86,15 +86,14 @@ private:
   } buff_header_t;
 
   // Mutex for exclusive access
-  qbuff      pdu_q[NOF_PDU_Q]; 
-  bool       used_q[NOF_PDU_Q]; 
+  srslte::qbuff pdu_q[NOF_PDU_Q];
+  bool          used_q[NOF_PDU_Q];
   
   phy_interface     *phy_h; 
-  log               *log_h;  
-  timers            *timers_db; 
+  srslte::log       *log_h;
+  srslte::timers    *timers_db;
   rlc_interface_mac *rlc;
 };
-}
 }
 
 #endif

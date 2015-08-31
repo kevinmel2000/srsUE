@@ -40,14 +40,14 @@
 
 /* Buffer status report procedure */
 
-namespace srslte {
+
 namespace srsue {
 
-class bsr_proc : public proc, timer_callback
+class bsr_proc : public proc, srslte::timer_callback
 {
 public:
   bsr_proc();
-  void init(rlc_interface_mac *rlc, log *log_h, mac_params *params_db, timers *timers_db);
+  void init(rlc_interface_mac *rlc, srslte::log *log_h, mac_params *params_db, srslte::timers *timers_db);
   void step(uint32_t tti);  
   void reset();
   void setup_lcg(uint32_t lcid, uint32_t new_lcg);
@@ -74,12 +74,12 @@ private:
   
   const static int QUEUE_STATUS_PERIOD_MS = 500; 
   
-  bool       reset_sr; 
-  mac_params *params_db; 
-  timers     *timers_db; 
-  log        *log_h; 
+  bool              reset_sr;
+  mac_params        *params_db;
+  srslte::timers    *timers_db;
+  srslte::log       *log_h;
   rlc_interface_mac *rlc;
-  bool       initiated;
+  bool              initiated;
   const static int MAX_LCID = 6; 
   int        lcg[MAX_LCID];
   uint32_t   last_pending_data[MAX_LCID];
@@ -99,7 +99,6 @@ private:
   char* bsr_type_tostring(triggered_bsr_type_t type); 
   char* bsr_format_tostring(bsr_format_t format);
 };
-}
 }
 
 #endif

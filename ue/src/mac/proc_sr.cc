@@ -29,14 +29,14 @@
 #include "mac/mac_params.h"
 
 
-namespace srslte {
+
 namespace srsue {
 
 sr_proc::sr_proc() {
   initiated = false; 
 }
   
-void sr_proc::init(phy_interface* phy_h_, log* log_h_, mac_params* params_db_)
+void sr_proc::init(phy_interface* phy_h_, srslte::log* log_h_, mac_params* params_db_)
 {
   log_h     = log_h_;
   params_db = params_db_; 
@@ -97,6 +97,5 @@ void sr_proc::start()
   }
 }
 
-}
 }
 

@@ -32,7 +32,7 @@
 #include "mac/pdu.h"
 #include "srslte/srslte.h"
 
-namespace srslte {
+
   namespace srsue {
    
     
@@ -728,5 +728,4 @@ bool rar_subh::read_subheader(uint8_t** ptr)
 }
 
     
-  }
 }

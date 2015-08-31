@@ -39,7 +39,7 @@
 #ifndef UEPHYWORKERCOMMON_H
 #define UEPHYWORKERCOMMON_H
 
-namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
 namespace srsue {
 
 /* Subclass that manages variables common to all workers */
@@ -47,11 +47,11 @@ namespace srsue {
   public:
     /* Common variables used by all phy workers */
     phy_params        *params_db; 
-    log               *log_h; 
+    srslte::log       *log_h;
     mac_interface_phy *mac;
 
     phch_common(uint32_t nof_workers);
-    void init(phy_params *_params, log *_log, radio *_radio, mac_interface_phy *_mac);
+    void init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac);
     
     /* For RNTI searches, -1 means now or forever */
     
@@ -80,7 +80,7 @@ namespace srsue {
     std::vector<pthread_mutex_t>    tx_mutex; 
     
     bool               is_first_of_burst;
-    radio             *radio_h;
+    srslte::radio      *radio_h;
     float              cfo;
     
     
@@ -108,7 +108,6 @@ namespace srsue {
     
   };
   
-}
 }
 
 #endif

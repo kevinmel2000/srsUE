@@ -29,7 +29,7 @@
 #include "mac/mac.h"
 #include "mac/mux.h"
 
-namespace srslte {
+
   namespace srsue {
     
 bsr_proc::bsr_proc()
@@ -47,7 +47,7 @@ bsr_proc::bsr_proc()
   triggered_bsr_type=NONE; 
 }
 
-void bsr_proc::init(rlc_interface_mac *rlc_, log* log_h_, mac_params* params_db_, timers *timers_db_)
+void bsr_proc::init(rlc_interface_mac *rlc_, srslte::log* log_h_, mac_params* params_db_, srslte::timers *timers_db_)
 {
   log_h     = log_h_; 
   rlc       = rlc_; 
@@ -357,5 +357,4 @@ uint32_t bsr_proc::find_max_priority_lcid() {
   return max_idx; 
 }
 
-}
 }

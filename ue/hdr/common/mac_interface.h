@@ -41,7 +41,7 @@
 #ifndef MAC_INTERFACE_H
 #define MAC_INTERFACE_H
 
-namespace srslte {
+
 namespace srsue {
   
 /* Interface PHY -> MAC */
@@ -209,7 +209,7 @@ public:
 };
 
 }
-}
+
 
 #endif
   

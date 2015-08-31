@@ -34,7 +34,7 @@
 #include "mac/mac.h"
 #include "mac/pcap.h"
 
-namespace srslte {
+
 namespace srsue {
 
 mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS) 
@@ -47,7 +47,7 @@ mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS)
   signals_pregenerated = false; 
 }
   
-bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, log *log_h_)
+bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h_)
 {
   started = false; 
   phy_h = phy;
@@ -340,6 +340,6 @@ void mac::setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_t
 }
 
 }
-}
+
 
 

@@ -41,7 +41,7 @@
 
 /* Downlink HARQ entity as defined in 5.3.2 of 36.321 */
 
-namespace srslte {
+
 namespace srsue {
   
 class dl_harq_entity
@@ -52,7 +52,7 @@ public:
   const static uint32_t HARQ_BCCH_PID = NOF_HARQ_PROC; 
   
   dl_harq_entity();
-  bool init(log *log_h_, mac_params *params_db, timers *timers_, demux *demux_unit);
+  bool init(srslte::log *log_h_, mac_params *params_db, srslte::timers *timers_, demux *demux_unit);
   
   
   /***************** PHY->MAC interface for DL processes **************************/
@@ -80,7 +80,7 @@ private:
     
     bool            is_initiated; 
     dl_harq_entity *harq_entity; 
-    log            *log_h; 
+    srslte::log    *log_h;
     
     uint32_t        pid;    
     uint8_t        *payload_buffer_ptr; 
@@ -97,14 +97,14 @@ private:
   dl_sps           dl_sps_assig;
   
   dl_harq_process  proc[NOF_HARQ_PROC+1];
-  timers          *timers_db; 
+  srslte::timers   *timers_db;
   mac_params      *params_db; 
   demux           *demux_unit; 
-  log             *log_h; 
+  srslte::log     *log_h;
   mac_pcap        *pcap; 
   uint16_t         last_temporal_crnti;
 };
 
 } 
-}
+
 #endif

@@ -35,7 +35,7 @@
 #define PHYPARAMS_H
 
 
-namespace srslte {
+
 namespace srsue {
 
   class phy_params : public params_db
@@ -47,7 +47,6 @@ namespace srsue {
     
     
   };
-}
 }
 
 #endif

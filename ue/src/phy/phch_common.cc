@@ -31,7 +31,7 @@
 #include "srslte/srslte.h"
 #include "phy/phch_common.h"
 
-namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
 namespace srsue {
 
 phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
@@ -48,7 +48,7 @@ phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
   sr_last_tx_tti = -1;
 }
   
-void phch_common::init(phy_params *_params, log *_log, radio *_radio, mac_interface_phy *_mac) 
+void phch_common::init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac)
 {
   params_db = _params;
   log_h     = _log; 
@@ -198,5 +198,4 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
   pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_workers]);
 }    
 
-}
 }

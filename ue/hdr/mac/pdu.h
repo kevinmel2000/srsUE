@@ -38,7 +38,7 @@
 
 /* MAC PDU Packing/Unpacking functions. Section 6 of 36.321 */   
 
-namespace srslte {
+
 namespace srsue {
 
   
@@ -324,7 +324,6 @@ private:
   uint8_t    backoff_indicator; 
 };
 
-}
 }
 
 #endif

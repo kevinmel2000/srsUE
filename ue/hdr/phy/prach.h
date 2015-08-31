@@ -36,7 +36,7 @@
 #ifndef UEPRACH_H
 #define UEPRACH_H
 
-namespace srslte {
+
 namespace srsue {
 
   class prach {
@@ -46,19 +46,19 @@ namespace srsue {
       initiated = false; 
       signal_buffer = NULL; 
     }
-    void           init(phy_params *params_db, log *log_h);
+    void           init(phy_params *params_db, srslte::log *log_h);
     bool           init_cell(srslte_cell_t cell);
     void           free_cell();
     bool           prepare_to_send(uint32_t preamble_idx, int allowed_subframe = -1, float target_power_dbm = -1);
     bool           is_ready_to_send(uint32_t current_tti);
     int            tx_tti();
     
-    bool           send(radio* radio_handler, float cfo, srslte_timestamp_t rx_time);
+    bool           send(srslte::radio* radio_handler, float cfo, srslte_timestamp_t rx_time);
     
   private: 
     static const uint32_t tx_advance_sf = 4; // Number of subframes to advance transmission
     phy_params    *params_db; 
-    log           *log_h; 
+    srslte::log   *log_h;
     int            preamble_idx;  
     int            allowed_subframe; 
     bool           initiated;   
@@ -73,5 +73,5 @@ namespace srsue {
   };
 
 }
-}
+
 #endif

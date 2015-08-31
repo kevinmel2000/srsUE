@@ -30,7 +30,7 @@
 #include "common/mac_interface.h"
 #include "common/phy_interface.h"
 
-namespace srslte {
+
   namespace srsue {
 
 #define log_h phy->log_h
@@ -255,7 +255,7 @@ bool phch_worker::extract_fft_and_pdcch_llr() {
 
 /********************* Downlink processing functions ****************************/
 
-bool phch_worker::decode_pdcch_dl(srslte::srsue::mac_interface_phy::mac_grant_t* grant)
+bool phch_worker::decode_pdcch_dl(srsue::mac_interface_phy::mac_grant_t* grant)
 {
   dl_rnti = phy->get_dl_rnti(tti); 
   if (dl_rnti) {
@@ -636,5 +636,4 @@ void phch_worker::tr_log_end()
 }
 
 
-  }
 }

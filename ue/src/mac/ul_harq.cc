@@ -29,7 +29,7 @@
 #include "mac/mac.h"
 #include "mac/ul_harq.h"
 
-namespace srslte {
+
   namespace srsue {
 
   /***********************************************************
@@ -38,7 +38,7 @@ namespace srslte {
   * 
   *********************************************************/
     
-bool ul_harq_entity::init(log *log_h_, mac_params *params_db_, timers *timers_db_, mux *mux_unit_) {
+bool ul_harq_entity::init(srslte::log *log_h_, mac_params *params_db_, srslte::timers *timers_db_, mux *mux_unit_) {
   log_h     = log_h_; 
   mux_unit  = mux_unit_; 
   params_db = params_db_; 
@@ -345,5 +345,4 @@ uint32_t ul_harq_entity::ul_harq_process::get_nof_retx()
   return current_tx_nb;
 }
 
-}
 }

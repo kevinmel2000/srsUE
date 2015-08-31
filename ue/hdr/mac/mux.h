@@ -40,7 +40,7 @@
 
 /* Logical Channel Multiplexing and Prioritization + Msg3 Buffer */   
 
-namespace srslte {
+
 namespace srsue {
 
 class mux
@@ -48,7 +48,7 @@ class mux
 public:
   mux();
   void     reset();
-  void     init(rlc_interface_mac *rlc, log *log_h, bsr_proc *bsr_procedure);
+  void     init(rlc_interface_mac *rlc, srslte::log *log_h, bsr_proc *bsr_procedure);
 
   bool     is_pending_ccch_sdu();
   bool     is_pending_any_sdu();
@@ -84,14 +84,14 @@ private:
   // Mutex for exclusive access
   pthread_mutex_t mutex; 
 
-  log               *log_h;
+  srslte::log       *log_h;
   rlc_interface_mac *rlc; 
   bsr_proc          *bsr_procedure;
   uint16_t           pending_crnti_ce;
   
   /* Msg3 Buffer */
   static const uint32_t MSG3_BUFF_SZ = 128; 
-  qbuff                 msg3_buff; 
+  srslte::qbuff         msg3_buff;
   
   /* PDU Buffer */
   sch_pdu               pdu_msg; 
@@ -100,7 +100,7 @@ private:
   
 };
 }
-}
+
 
 #endif
 

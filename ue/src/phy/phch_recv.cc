@@ -34,15 +34,15 @@
 #include "phy/phch_common.h"
 #include "phy/phch_recv.h"
 
-namespace srslte {
+
 namespace srsue {
  
 phch_recv::phch_recv() { 
   running = false; 
 }
 
-bool phch_recv::init(radio* _radio_handler, mac_interface_phy *_mac, prach* _prach_buffer, thread_pool* _workers_pool, 
-                     phch_common* _worker_com, log* _log_h, bool do_agc_, uint32_t prio)
+bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, prach* _prach_buffer, srslte::thread_pool* _workers_pool,
+                     phch_common* _worker_com, srslte::log* _log_h, bool do_agc_, uint32_t prio)
 {
   radio_h      = _radio_handler;
   log_h        = _log_h;     
@@ -65,7 +65,7 @@ void phch_recv::stop() {
 
 int radio_recv_wrapper_cs(void *h, void *data, uint32_t nsamples, srslte_timestamp_t *rx_time)
 {
-  radio *radio_h = (radio*) h;
+  srslte::radio *radio_h = (srslte::radio*) h;
   if (radio_h->rx_now(data, nsamples, rx_time)) {
     return nsamples;
   } else {
@@ -74,7 +74,7 @@ int radio_recv_wrapper_cs(void *h, void *data, uint32_t nsamples, srslte_timesta
 }
 
 double callback_set_rx_gain(void *h, double gain) {
-  radio *radio_handler = (radio*) h;
+  srslte::radio *radio_handler = (srslte::radio*) h;
   return radio_handler->set_rx_gain_th(gain);
 }
 
@@ -367,5 +367,4 @@ void phch_recv::sync_stop()
   phy_state = IDLE; 
 }
 
-}
 }

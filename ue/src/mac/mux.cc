@@ -29,7 +29,7 @@
 #include "mac/mux.h"
 #include "mac/mac.h"
 
-namespace srslte {
+
 namespace srsue {
 
 mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
@@ -50,7 +50,7 @@ mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
   pending_crnti_ce = 0;
 }
 
-void mux::init(rlc_interface_mac *rlc_, log *log_h_, bsr_proc *bsr_procedure_)
+void mux::init(rlc_interface_mac *rlc_, srslte::log *log_h_, bsr_proc *bsr_procedure_)
 {
   log_h      = log_h_;
   rlc        = rlc_;
@@ -352,5 +352,4 @@ uint8_t* mux::msg3_get(uint8_t *payload, uint32_t pdu_sz)
 }
 
   
-}
 }
