@@ -41,7 +41,7 @@
 /* Logical Channel Multiplexing and Prioritization + Msg3 Buffer */   
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 class mux
 {

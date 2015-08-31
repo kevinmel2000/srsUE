@@ -42,7 +42,7 @@
 #define MAC_INTERFACE_H
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
 /* Interface PHY -> MAC */
 class mac_interface_phy

@@ -36,7 +36,7 @@
 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
   class phy_params : public params_db
   {

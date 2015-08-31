@@ -42,7 +42,7 @@
 /* Downlink HARQ entity as defined in 5.3.2 of 36.321 */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
 class dl_harq_entity
 {

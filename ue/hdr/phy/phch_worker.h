@@ -39,7 +39,7 @@
 #define UEPHYWORKER_H
 
 namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-namespace ue {
+namespace srsue {
 
 class phch_worker : public thread_pool::worker
 {

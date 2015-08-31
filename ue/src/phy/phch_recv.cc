@@ -35,7 +35,7 @@
 #include "phy/phch_recv.h"
 
 namespace srslte {
-namespace ue {
+namespace srsue {
  
 phch_recv::phch_recv() { 
   running = false; 

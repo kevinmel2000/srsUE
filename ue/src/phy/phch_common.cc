@@ -32,7 +32,7 @@
 #include "phy/phch_common.h"
 
 namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-namespace ue {
+namespace srsue {
 
 phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
 {

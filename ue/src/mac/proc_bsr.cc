@@ -30,7 +30,7 @@
 #include "mac/mux.h"
 
 namespace srslte {
-  namespace ue {
+  namespace srsue {
     
 bsr_proc::bsr_proc()
 {

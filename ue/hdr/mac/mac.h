@@ -47,7 +47,7 @@
 #define UEMAC_H
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
 class mac : public mac_interface_phy, mac_interface_rlc, thread, timer_callback, mac_interface_params
 {

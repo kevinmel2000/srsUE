@@ -30,7 +30,7 @@
 #include "mac/mac.h"
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
 {

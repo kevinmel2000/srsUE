@@ -35,7 +35,7 @@
 #include "mac/pcap.h"
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS) 
 {

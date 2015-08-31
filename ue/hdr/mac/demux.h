@@ -41,7 +41,7 @@
 /* Logical Channel Demultiplexing and MAC CE dissassemble */   
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 class demux
 {

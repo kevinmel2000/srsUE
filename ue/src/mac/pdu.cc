@@ -33,7 +33,7 @@
 #include "srslte/srslte.h"
 
 namespace srslte {
-  namespace ue {
+  namespace srsue {
    
     
 void sch_pdu::fprint(FILE* stream)

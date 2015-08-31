@@ -36,7 +36,7 @@
 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
   /* Implements tti_sync interface with condition variables. 
    */

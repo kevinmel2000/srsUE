@@ -41,7 +41,7 @@
 /* Buffer status report procedure */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 class bsr_proc : public proc, timer_callback
 {

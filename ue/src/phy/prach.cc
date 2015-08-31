@@ -36,7 +36,7 @@
 #include "common/phy_interface.h"
 
 namespace srslte {
-namespace ue {
+namespace srsue {
  
   
 void prach::free_cell() 

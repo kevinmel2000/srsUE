@@ -30,7 +30,7 @@
 #include "mac/demux.h"
 
 namespace srslte {
-namespace ue {
+namespace srsue {
     
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {

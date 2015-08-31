@@ -37,7 +37,7 @@
 #define UEPRACH_H
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
   class prach {
   public: 

@@ -46,7 +46,7 @@
 /* Random access procedure as specified in Section 5.1 of 36.321 */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 class ra_proc : public proc,timer_callback
 {

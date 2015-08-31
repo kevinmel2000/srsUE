@@ -45,7 +45,7 @@
 #define UEPHY_H
 
 namespace srslte {
-namespace ue {
+namespace srsue {
     
 typedef _Complex float cf_t; 
 

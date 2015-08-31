@@ -39,7 +39,7 @@
 /* Scheduling Request procedure as defined in 5.4.4 of 36.321 */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 class sr_proc : public proc
 {

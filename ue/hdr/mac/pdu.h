@@ -39,7 +39,7 @@
 /* MAC PDU Packing/Unpacking functions. Section 6 of 36.321 */   
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
   
 template<class SubH>

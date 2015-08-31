@@ -43,7 +43,7 @@
 using namespace std; 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 phy::phy() : workers_pool(NOF_WORKERS), 
              workers(NOF_WORKERS), 

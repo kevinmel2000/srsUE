@@ -37,7 +37,7 @@
 /* Random access procedure as specified in Section 5.1 of 36.321 */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 // Table 7.2-1. Backoff Parameter values
 uint32_t backoff_table[16] = {0, 10, 20, 30, 40, 60, 80, 120, 160, 240, 320, 480, 960, 960, 960, 960};

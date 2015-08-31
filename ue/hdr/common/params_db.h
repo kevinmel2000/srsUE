@@ -34,7 +34,7 @@
 #define PARAMS_H
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   class params_db
   {
   public: 

@@ -36,7 +36,7 @@
 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
   /* Interface used for PHY-MAC synchronization (producer-consumer model). 
    * The consumer waits while its counter is lower than the producer counter. 

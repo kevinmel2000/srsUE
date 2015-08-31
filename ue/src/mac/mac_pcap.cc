@@ -33,7 +33,7 @@
 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
  
 void mac_pcap::enable(bool en)
 {

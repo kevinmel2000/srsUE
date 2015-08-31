@@ -40,7 +40,7 @@
 #define UEPHYWORKERCOMMON_H
 
 namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-namespace ue {
+namespace srsue {
 
 /* Subclass that manages variables common to all workers */
   class phch_common {

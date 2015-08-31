@@ -31,7 +31,7 @@
 #include "mac/dl_harq.h"
 
 namespace srslte {
-  namespace ue {
+  namespace srsue {
     
 
   /***********************************************************

@@ -30,7 +30,7 @@
 
 
 namespace srslte {
-namespace ue {
+namespace srsue {
 
 sr_proc::sr_proc() {
   initiated = false; 

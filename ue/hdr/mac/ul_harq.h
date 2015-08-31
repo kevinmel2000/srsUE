@@ -39,7 +39,7 @@
 /* Uplink HARQ entity as defined in 5.4.2 of 36.321 */
 
 namespace srslte {
-namespace ue {
+namespace srsue {
   
 class ul_harq_entity
 {

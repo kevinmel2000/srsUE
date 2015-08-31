@@ -30,7 +30,7 @@
 #include "mac/ul_harq.h"
 
 namespace srslte {
-  namespace ue {
+  namespace srsue {
 
   /***********************************************************
   * 
