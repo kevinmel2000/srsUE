@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "liblte/hdr/liblte_rrc.h"
+#include "liblte_rrc.h"
 #include "radio/radio_uhd.h"
 #include "phy/phy.h"
 #include "common/mac_interface.h"
@@ -368,7 +368,7 @@ public:
         return 6;
       }
     } else if (lcid == 1) {
-      if (connsetup_decoded && nsegm_dcch < 2) {        
+      if (connsetup_decoded && nsegm_dcch < 2) {    
         return lengths[nsegm_dcch];
       } else if (send_ack == 1) {
         return 2; 
@@ -409,14 +409,15 @@ public:
           memcpy(payload, setupComplete, 80);
           return 80; 
         } else {
+          uint32_t r = 0; 
           if (nof_bytes >= lengths[nsegm_dcch]) {
             printf("Sending Connection Setup Complete %d/2 length %d\n", nsegm_dcch, lengths[nsegm_dcch]);
             memcpy(payload, setupComplete_segm[nsegm_dcch], lengths[nsegm_dcch]);            
+            r = lengths[nsegm_dcch];
+            nsegm_dcch++;
           } else {
-            bzero(payload, nof_bytes);
-          }          
-          uint32_t r = lengths[nsegm_dcch];
-          nsegm_dcch++;
+            r = 0;
+          }                    
           return r; 
         }
       } else if (send_ack == 1) {
@@ -550,7 +551,7 @@ int main(int argc, char *argv[])
   
   while(1) {
     uint32_t tti; 
-    if (my_rlc.mib_decoded) {
+    if (my_rlc.mib_decoded && mac.get_current_tti()) {
       if (!my_rlc.sib1_decoded) {
         usleep(10000);
         tti = mac.get_current_tti();           

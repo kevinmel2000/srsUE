@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -111,7 +111,7 @@ public:
   
 private:
     
-  const static int NOF_WORKERS         = 1; 
+  const static int NOF_WORKERS         = 2; 
   const static int SF_RECV_THREAD_PRIO = 1;
   const static int WORKERS_THREAD_PRIO = 0; 
   
@@ -131,11 +131,6 @@ private:
   
   bool         init_(radio *radio_handler, mac_interface_phy *mac, log *log_h, bool do_agc);
 
-  trace<uint32_t> tr_start_time;
-  trace<uint32_t> tr_end_time;
-  bool tr_enabled; 
-  void tr_log_start();
-  void tr_log_end();    
 };
 
 } 

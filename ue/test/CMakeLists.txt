@@ -20,7 +20,7 @@
 ########################################################################
 # LOGGER TEST
 ########################################################################
-#include_directories(${PROJECT_SOURCE_DIR}/ue/hdr)
+#include_directories(${PROJECT_SOURCE_DIR}/hdr)
 
 #add_executable(ue_logger_test ue_logger_test.cc)
 #target_link_libraries(ue_logger_test ue_lib ${Boost_LIBRARIES})

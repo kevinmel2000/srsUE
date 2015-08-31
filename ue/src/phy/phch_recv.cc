@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -286,12 +286,14 @@ void phch_recv::run_thread()
         } 
        break;
       case SYNC_DONE:
-        worker = (phch_worker*) workers_pool->wait_worker();
+        tti = (tti + 1) % 10240;
+        worker = (phch_worker*) workers_pool->wait_worker(tti);
         if (worker) {          
           buffer = worker->get_buffer();
           if (srslte_ue_sync_zerocopy(&ue_sync, buffer) == 1) {
-            tti = (tti + 1) % 10240;
             log_h->step(tti);
+
+            Debug("Worker %d synchronized\n", worker->get_id());
             
             float cfo = srslte_ue_sync_get_cfo(&ue_sync)/15000; 
             worker->set_cfo(cfo);
@@ -304,6 +306,8 @@ void phch_recv::run_thread()
             srslte_timestamp_add(&tx_time, 0, 4e-3 - time_adv_sec);
             srslte_timestamp_add(&tx_time_prach, 0, 4e-3);
             worker->set_tx_time(tx_time);
+            
+            Debug("Settting TTI=%d to worker %d\n", tti, worker->get_id());
             worker->set_tti(tti);
 
             // Check if we need to TX a PRACH 
@@ -318,6 +322,8 @@ void phch_recv::run_thread()
             }            
             workers_pool->start_worker(worker);             
             mac->tti_clock(tti);
+          } else {
+            worker->release();
           }
         } else {
           // wait_worker() only returns NULL if it's being closed. Quit now to avoid unnecessary loops here

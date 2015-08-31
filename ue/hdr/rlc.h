@@ -28,7 +28,7 @@
 #ifndef RLC_H
 #define RLC_H
 
-#include <srsapps/common/log.h>
+#include <common/log.h>
 #include "liblte/hdr/liblte_rrc.h"
 #include "liblte/hdr/liblte_rlc.h"
 

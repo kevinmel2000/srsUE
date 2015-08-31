@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -35,7 +35,7 @@ namespace srslte {
 
 #define log_h phy->log_h
 
-phch_worker::phch_worker()
+phch_worker::phch_worker() : tr_exec(10240)
 {
   phy = NULL; 
   signal_buffer = NULL; 
@@ -43,6 +43,7 @@ phch_worker::phch_worker()
   cell_initiated  = false; 
   pregen_enabled  = false; 
   rar_cqi_request = false; 
+  trace_enabled   = false; 
   cfi = 0;
   
   reset_ul_params();
@@ -120,7 +121,11 @@ void phch_worker::work_imp()
   if (!cell_initiated) {
     return; 
   }
+  
+  Debug("TTI %d running\n", tti);
 
+  tr_log_start();
+  
   reset_uci();
 
   bool ul_grant_available = false; 
@@ -148,7 +153,8 @@ void phch_worker::work_imp()
       /* Decode PDSCH if instructed to do so */
       dl_ack = dl_action.default_ack; 
       if (dl_action.decode_enabled) {
-        dl_ack = decode_pdsch(&dl_action.phy_grant.dl, dl_action.payload_ptr, dl_action.softbuffer, dl_action.rv, dl_action.rnti);      
+        dl_ack = decode_pdsch(&dl_action.phy_grant.dl, dl_action.payload_ptr, 
+                              dl_action.softbuffer, dl_action.rv, dl_action.rnti);      
       }
       if (dl_action.generate_ack_callback && dl_action.decode_enabled) {
         phy->mac->tb_decoded(dl_ack, dl_mac_grant.rnti_type, dl_mac_grant.pid);
@@ -205,9 +211,11 @@ void phch_worker::work_imp()
     encode_srs();
     tx_signal = true; 
   } 
+
+  tr_log_end();
   
   phy->worker_end(tti, tx_signal, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb), tx_time);
-
+  
   if (dl_action.decode_enabled && !dl_action.generate_ack_callback) {
     phy->mac->tb_decoded(dl_ack, dl_mac_grant.rnti_type, dl_mac_grant.pid);
   }
@@ -296,10 +304,8 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
     if (ue_dl.pdsch_cfg.grant.mcs.mod > 0 && ue_dl.pdsch_cfg.grant.mcs.tbs >= 0) {
       
       if (srslte_pdsch_decode_rnti(&ue_dl.pdsch, &ue_dl.pdsch_cfg, softbuffer, ue_dl.sf_symbols, 
-                                    ue_dl.ce, 0, rnti, payload_bits) == 0) 
+                                    ue_dl.ce, 0, rnti, payload) == 0) 
       {
-        // FIXME: TEMPORAL
-        srslte_bit_unpack_vector(payload_bits, payload, grant->mcs.tbs);
         Debug("TB decoded OK\n");
         return true; 
       } else {
@@ -447,7 +453,7 @@ void phch_worker::set_tx_time(srslte_timestamp_t _tx_time)
 }
 
 void phch_worker::normalize() {
-  srslte_vec_norm_cfc(signal_buffer, 0.6, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));  
+  srslte_vec_norm_cfc(signal_buffer, 0.8, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));  
 }
 
 void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, uint32_t current_tx_nb, 
@@ -458,11 +464,8 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
     Error("Configuring UL grant\n");
   }
     
-  // FIXME: TEMPORAL
-  srslte_bit_pack_vector(payload, payload_bits, grant->mcs.tbs);
-    
   if (srslte_ue_ul_pusch_encode_rnti_softbuffer(&ue_ul, 
-                                                payload_bits, uci_data, 
+                                                payload, uci_data, 
                                                 softbuffer,
                                                 rnti, 
                                                 signal_buffer)) 
@@ -477,6 +480,12 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
         rnti, ue_ul.pusch.shortened?"yes":"no");
 
   normalize();
+  
+  /*
+  char filename[128];
+  sprintf(filename, "pusch%d",tti+4);
+  srslte_vec_save_file(filename, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb)*sizeof(cf_t));
+  */
 }
 
 void phch_worker::encode_pucch()
@@ -600,7 +609,31 @@ void phch_worker::set_ul_params()
   
 }
 
+/********** Execution time trace function ************/
 
+void phch_worker::start_trace() {
+  trace_enabled = true; 
+}
+
+void phch_worker::write_trace(std::string filename) {
+  tr_exec.writeToBinary(filename + ".exec");
+}
+
+void phch_worker::tr_log_start()
+{
+  if (trace_enabled) {
+    gettimeofday(&tr_time[1], NULL);
+  }
+}
+
+void phch_worker::tr_log_end()
+{
+  if (trace_enabled) {
+    gettimeofday(&tr_time[2], NULL);
+    get_time_interval(tr_time);
+    tr_exec.push(tti, tr_time[0].tv_usec);
+  }
+}
 
 
   }

@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -74,6 +74,8 @@ namespace srslte {
       void start_rx();
       void stop_rx();
       
+      void set_tti(uint32_t tti);
+      
     private:
       
       void save_trace(uint32_t is_eob, srslte_timestamp_t *usrp_time);
@@ -96,7 +98,7 @@ namespace srslte {
       trace<uint32_t> tr_tx_time;
       trace<uint32_t> tr_is_eob;
       bool trace_enabled;
-      uint32_t my_tti;
+      uint32_t tti;
   }; 
 }
 

@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -31,6 +31,7 @@
 #include "srslte/srslte.h"
 #include "common/thread_pool.h"
 #include "common/phy_interface.h"
+#include "common/trace.h"
 #include "phy/phch_common.h"
 
 
@@ -60,6 +61,9 @@ public:
   void  set_crnti(uint16_t rnti);
   void  enable_pregen_signals(bool enabled);
   
+  void start_trace();
+  void write_trace(std::string filename);
+  
 private: 
   /* Inherited from thread_pool::worker. Function called every subframe to run the DL/UL processing */
   void work_imp();
@@ -85,6 +89,12 @@ private:
   bool srs_is_ready_to_send();
   void normalize();
   
+  void tr_log_start();
+  void tr_log_end();
+  struct timeval tr_time[3];
+  trace<uint32_t> tr_exec;
+  bool trace_enabled; 
+  
   /* Common objects */  
   phch_common    *phy;
   srslte_cell_t  cell; 
@@ -104,9 +114,6 @@ private:
   srslte_timestamp_t tx_time; 
   srslte_uci_data_t  uci_data; 
   uint16_t           ul_rnti;
-
-  // FIXME: THIS IS TEMPORAL. Need to change srslte to accept bits for payload
-  uint8_t payload_bits[64*1024];
   
   // UL configuration parameters 
   srslte_refsignal_srs_cfg_t        srs_cfg;           

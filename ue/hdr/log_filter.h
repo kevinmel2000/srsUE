@@ -30,7 +30,7 @@
 
 #include <stdarg.h>
 #include <string>
-#include <srsapps/common/log.h>
+#include <common/log.h>
 #include "ue_logger.h"
 
 namespace srsue {

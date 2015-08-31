@@ -20,6 +20,7 @@
 find_package(UHD)
 
 if(UHD_FOUND)  
+  include_directories(${CMAKE_SOURCE_DIR}/liblte/hdr)
   add_executable(mac_test mac_test.cc)
-  target_link_libraries(mac_test srsue_common srsue_mac srsue_phy srsue_radio lte srslte srslte_uhd)
+  target_link_libraries(mac_test srsue_common srsue_mac srsue_phy srsue_radio lte)
 endif(UHD_FOUND)

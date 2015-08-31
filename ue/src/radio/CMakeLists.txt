@@ -19,5 +19,5 @@
 
 file(GLOB SOURCES "*.cc")
 add_library(srsue_radio SHARED ${SOURCES})
-target_link_libraries(srsue_radio srslte srslte_uhd)
+target_link_libraries(srsue_radio ${SRSLTE_LIBRARY_CUHD})
 

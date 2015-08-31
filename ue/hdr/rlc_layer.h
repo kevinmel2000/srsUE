@@ -28,7 +28,7 @@
 #ifndef RLC_LAYER_H
 #define RLC_LAYER_H
 
-#include <srsapps/common/log.h>
+#include <common/log.h>
 #include "common.h"
 #include "interfaces.h"
 #include "rlc.h"

@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -33,7 +33,7 @@
 #include "mac/proc.h"
 #include "common/mac_interface.h"
 #include "mac/mac_params.h"
-#include "common/timers.h"
+#include "common/timers.h" 
 
 #ifndef PROCBSR_H
 #define PROCBSR_H

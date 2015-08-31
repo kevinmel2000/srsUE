@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -133,8 +133,11 @@ sch_subh::cetype bsr_format_convert(bsr_proc::bsr_format_t format) {
 // Multiplexing and logical channel priorization as defined in Section 5.4.3
 uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 {
-
-  pthread_mutex_lock(&mutex);
+  
+  if (pthread_mutex_trylock(&mutex)) {
+    printf("M");fflush(stdout);
+    pthread_mutex_lock(&mutex);
+  }
     
   // Update Bj
   for (int i=0;i<NOF_UL_LCH;i++) {    
@@ -148,9 +151,9 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   }
   
 // Logical Channel Procedure
-   
+
   pdu_msg.init_tx(payload, pdu_sz, true);
-  
+
   // MAC control element for C-RNTI or data from UL-CCCH
   bool is_first = true; 
   if (!allocate_sdu(0, &pdu_msg, &is_first)) {
@@ -223,11 +226,13 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   }
 
   Debug("Assembled MAC PDU msg size %d/%d bytes\n", pdu_msg.size(), pdu_sz);
-  //pdu_msg.fprint(stdout);  
-  pthread_mutex_unlock(&mutex);
 
   /* Generate MAC PDU and save to buffer */
-  return pdu_msg.write_packet();   
+  uint8_t *ret = pdu_msg.write_packet();   
+  
+  pthread_mutex_unlock(&mutex);
+
+  return ret; 
 }
 
 void mux::append_crnti_ce_next_tx(uint16_t crnti) {
@@ -262,7 +267,7 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t
         pdu_msg->next();
         int sdu_len2 = sdu_len; 
         sdu_len = pdu_msg->get()->set_sdu(lcid, sdu_len, rlc, is_first?*is_first:false);
-        if (sdu_len >= 0) { // new SDU could be added
+        if (sdu_len > 0) { // new SDU could be added
           if (is_first) {
             *is_first = false;           
           }
@@ -271,6 +276,18 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t
           }
                     
           Info("Allocated SDU lcid=%d nbytes=%d, buffer_state=%d\n", lcid, sdu_len, buffer_state);
+          /*
+          char str[64];
+          int len = 10; 
+          if (len > sdu_len) {
+            len = sdu_len; 
+          }
+          uint8_t *x=pdu_msg->get()->get_sdu_ptr();
+          for (int i=0;i<len;i++) {
+            sprintf(str, "0x%x, ", x[i]);
+          }
+          Info("Payload: %s\n", str);
+          */
           return true;               
         } else {
           Info("Could not add SDU rem_size=%d, sdu_len=%d\n", pdu_msg->rem_size(), sdu_len2);

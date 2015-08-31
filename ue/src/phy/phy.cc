@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
+ * Copyright 2013-2014 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -10,37 +10,11 @@
  * This file is part of the srsUE library.
  *
  * srsUE is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
- *
- * srsUE is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * A copy of the GNU Affero General Public License can be found in
- * the LICENSE file in the top-level directory of this distribution
- * and at http://www.gnu.org/licenses/.
- *
- */
-/**
- *
- * \section COPYRIGHT
- *
- * Copyright 2013-2014 The srsLTE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
- *
- * \section LICENSE
- *
- * This file is part of the srsLTE library.
- *
- * srsLTE is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
  *
- * srsLTE is distributed in the hope that it will be useful,
+ * srsUE is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
@@ -51,6 +25,8 @@
  *
  */
 
+#include <string>
+#include <sstream>
 #include <string.h>
 #include <strings.h>
 #include <pthread.h>
@@ -64,10 +40,14 @@
 #include "phy/phy.h"
 #include "phy/phch_worker.h"
 
+using namespace std; 
+
 namespace srslte {
 namespace ue {
 
-phy::phy() : tr_end_time(1024*10), tr_start_time(1024*10), workers_pool(NOF_WORKERS), workers(NOF_WORKERS)
+phy::phy() : workers_pool(NOF_WORKERS), 
+             workers(NOF_WORKERS), 
+             workers_common(NOF_WORKERS)
 {
 }
 
@@ -109,40 +89,24 @@ bool phy::init_(radio* radio_handler_, mac_interface_phy *mac, log *log_h_, bool
 }
 void phy::start_trace()
 {
-  tr_enabled = true; 
+  for (int i=0;i<NOF_WORKERS;i++) {
+    workers[i].start_trace();
+  }
+  printf("trace started\n");
 }
 
 void phy::write_trace(std::string filename)
 {
-  tr_start_time.writeToBinary(filename + ".start");
-  tr_end_time.writeToBinary(filename + ".end");
-}
-
-void phy::tr_log_start()
-{
-  if (tr_enabled) {
-    tr_start_time.push_cur_time_us(sf_recv.get_current_tti());
-  }
-}
-
-void phy::tr_log_end()
-{
-  if (tr_enabled) {
-    tr_end_time.push_cur_time_us(sf_recv.get_current_tti());
+  for (int i=0;i<NOF_WORKERS;i++) {
+    string i_str = static_cast<ostringstream*>( &(ostringstream() << i) )->str();
+    workers[i].write_trace(filename + "_" + i_str);
   }
 }
 
 void phy::stop()
 {  
-  workers_pool.stop();
   sf_recv.stop();
-  
-  for (int i=0;i<NOF_WORKERS;i++) {
-    workers[i].free_cell();
-    workers[i].stop();
-  }
-    
-  prach_buffer.free_cell(); 
+  workers_pool.stop();
 }
 
 void phy::set_timeadv_rar(uint32_t ta_cmd) {
