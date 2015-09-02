@@ -29,8 +29,8 @@
 #define RLC_ENTITY_H
 
 #include <common/log.h>
-#include "liblte/hdr/liblte_rrc.h"
-#include "liblte/hdr/liblte_rlc.h"
+#include "liblte_rrc.h"
+#include "liblte_rlc.h"
 
 namespace srsue {
 

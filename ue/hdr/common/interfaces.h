@@ -28,7 +28,7 @@
 #ifndef INTERFACES_H
 #define INTERFACES_H
 
-#include "liblte/hdr/liblte_rrc.h"
+#include "liblte_rrc.h"
 #include "upper/rlc_entity.h"
 
 namespace srsue {
