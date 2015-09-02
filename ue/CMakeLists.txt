@@ -17,6 +17,7 @@
 # and at http://www.gnu.org/licenses/.
 #
 
+include_directories(${CMAKE_SOURCE_DIR}/liblte/hdr)
 include_directories(hdr)
 add_subdirectory(src)
 add_subdirectory(test)
