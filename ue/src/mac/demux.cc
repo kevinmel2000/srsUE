@@ -25,12 +25,16 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 #include "mac/mac.h"
 #include "mac/demux.h"
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
     
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {
@@ -40,7 +44,7 @@ demux::demux() : mac_msg(20), pending_mac_msg(20)
   }
 }
 
-void demux::init(phy_interface* phy_h_, rlc_interface_mac *rlc_, log* log_h_, timers* timers_db_)
+void demux::init(phy_interface* phy_h_, rlc_interface_mac *rlc_, srslte::log* log_h_, srslte::timers* timers_db_)
 {
   phy_h     = phy_h_; 
   log_h     = log_h_; 
@@ -245,5 +249,4 @@ bool demux::process_ce(sch_subh *subh) {
 }
 
 
-}
 }

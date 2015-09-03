@@ -155,7 +155,7 @@ int rar_unpack(uint8_t *buffer, rar_msg_t *msg)
 
 
 
-srslte::ue::phy my_phy;
+srsue::phy my_phy;
 bool bch_decoded = false; 
 
 uint8_t payload[10240]; 
@@ -171,23 +171,23 @@ uint32_t nof_rtx_connsetup = 0;
 uint32_t rv_value[4] = {0, 2, 3, 1}; 
 
 void config_phy() {
-  my_phy.set_param(srslte::ue::phy_interface_params::PRACH_CONFIG_INDEX, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PRACH_FREQ_OFFSET, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PRACH_HIGH_SPEED_FLAG, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PRACH_ROOT_SEQ_IDX, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PRACH_ZC_CONFIG, 11);
+  my_phy.set_param(srsue::phy_interface_params::PRACH_CONFIG_INDEX, 0);
+  my_phy.set_param(srsue::phy_interface_params::PRACH_FREQ_OFFSET, 0);
+  my_phy.set_param(srsue::phy_interface_params::PRACH_HIGH_SPEED_FLAG, 0);
+  my_phy.set_param(srsue::phy_interface_params::PRACH_ROOT_SEQ_IDX, 0);
+  my_phy.set_param(srsue::phy_interface_params::PRACH_ZC_CONFIG, 11);
 
-  my_phy.set_param(srslte::ue::phy_interface_params::DMRS_GROUP_HOPPING_EN, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::DMRS_SEQUENCE_HOPPING_EN, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUSCH_HOPPING_N_SB, 2);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUSCH_RS_CYCLIC_SHIFT, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUSCH_RS_GROUP_ASSIGNMENT, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUSCH_HOPPING_OFFSET, 0);
+  my_phy.set_param(srsue::phy_interface_params::DMRS_GROUP_HOPPING_EN, 0);
+  my_phy.set_param(srsue::phy_interface_params::DMRS_SEQUENCE_HOPPING_EN, 0);
+  my_phy.set_param(srsue::phy_interface_params::PUSCH_HOPPING_N_SB, 2);
+  my_phy.set_param(srsue::phy_interface_params::PUSCH_RS_CYCLIC_SHIFT, 0);
+  my_phy.set_param(srsue::phy_interface_params::PUSCH_RS_GROUP_ASSIGNMENT, 0);
+  my_phy.set_param(srsue::phy_interface_params::PUSCH_HOPPING_OFFSET, 0);
 
-  my_phy.set_param(srslte::ue::phy_interface_params::PUCCH_DELTA_SHIFT, 2);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUCCH_CYCLIC_SHIFT, 0);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUCCH_N_PUCCH_1, 1);
-  my_phy.set_param(srslte::ue::phy_interface_params::PUCCH_N_RB_2, 2);
+  my_phy.set_param(srsue::phy_interface_params::PUCCH_DELTA_SHIFT, 2);
+  my_phy.set_param(srsue::phy_interface_params::PUCCH_CYCLIC_SHIFT, 0);
+  my_phy.set_param(srsue::phy_interface_params::PUCCH_N_PUCCH_1, 1);
+  my_phy.set_param(srsue::phy_interface_params::PUCCH_N_RB_2, 2);
 
   my_phy.configure_ul_params();
   my_phy.configure_prach_params();
@@ -199,7 +199,7 @@ srslte_softbuffer_tx_t softbuffer_tx;
 uint16_t temp_c_rnti; 
 
 /******** MAC Interface implementation */
-class testmac : public srslte::ue::mac_interface_phy
+class testmac : public srsue::mac_interface_phy
 {
 public:
   
@@ -343,11 +343,11 @@ int main(int argc, char *argv[])
   }
   
   if (srsapps_verbose == 1) {
-    log.set_level_info();
+    log.set_level(srslte::LOG_LEVEL_INFO);
     printf("Log level info\n");
   }
   if (srsapps_verbose == 2) {
-    log.set_level_debug();
+    log.set_level(srslte::LOG_LEVEL_DEBUG);
     printf("Log level debug\n");
   }
 

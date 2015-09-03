@@ -38,8 +38,8 @@
 
 /* Uplink Semi-Persistent schedulign (Section 5.10.2) */
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   
 typedef _Complex float cf_t; 
 
@@ -55,5 +55,5 @@ private:
 };
 
 } 
-}
+
 #endif

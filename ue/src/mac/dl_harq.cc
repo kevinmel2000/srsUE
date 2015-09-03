@@ -25,13 +25,17 @@
  *
  */
 
-#include "phy/phy.h"
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
+#include "phy/phy.h"
 #include "mac/mac.h"
 #include "mac/dl_harq.h"
 
-namespace srslte {
-  namespace ue {
+
+namespace srsue {
     
 
   /***********************************************************
@@ -44,7 +48,7 @@ dl_harq_entity::dl_harq_entity()
 {
   pcap = NULL; 
 }
-bool dl_harq_entity::init(log* log_h_, mac_params *params_db_, timers* timers_, demux *demux_unit_)
+bool dl_harq_entity::init(srslte::log* log_h_, mac_params *params_db_, srslte::timers* timers_, demux *demux_unit_)
 {
   timers_db  = timers_; 
   demux_unit = demux_unit_; 
@@ -304,5 +308,4 @@ void dl_harq_entity::dl_harq_process::tb_decoded(bool ack_)
 
 
     
-}
 }

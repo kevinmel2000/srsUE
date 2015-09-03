@@ -36,6 +36,8 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
 
+#include "ue.h"
+
 //TODO: Get version from cmake
 #define VERSION "0.1.0"
 
@@ -53,44 +55,7 @@ void sig_int_handler(int signo)
  ***********************************************************************/
 string config_file;
 
-typedef struct {
-  float   dl_freq;
-  float   ul_freq;
-  float   rx_gain;
-  float   tx_gain;
-}rf_args_t;
-
-typedef struct {
-  bool    enable;
-  string  filename;
-}pcap_args_t;
-
-typedef struct {
-  string  phy_level;
-  int     phy_hex_limit;
-  string  mac_level;
-  int     mac_hex_limit;
-  string  rlc_level;
-  int     rlc_hex_limit;
-  string  pdcp_level;
-  int     pdcp_hex_limit;
-  string  rrc_level;
-  int     rrc_hex_limit;
-  string  gw_level;
-  int     gw_hex_limit;
-  string  nas_level;
-  int     nas_hex_limit;
-  string  all_level;
-  int     all_hex_limit;
-}log_args_t;
-
-typedef struct {
-  rf_args_t   rf;
-  pcap_args_t pcap;
-  log_args_t  log;
-}all_args_t;
-
-void parse_args(all_args_t *args, int argc, char* argv[]) {
+void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
 
     // Command line only options
     bpo::options_description general("General options");
@@ -183,7 +148,7 @@ void parse_args(all_args_t *args, int argc, char* argv[]) {
 int main(int argc, char *argv[]) {
 
   signal(SIGINT, sig_int_handler);
-  all_args_t args;
+  srsue::all_args_t args;
 
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
   parse_args(&args, argc, argv);

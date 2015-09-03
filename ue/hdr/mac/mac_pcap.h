@@ -32,8 +32,8 @@
 #ifndef MACPCAP_H
 #define MACPCAP_H
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
 class mac_pcap
 {
@@ -59,6 +59,6 @@ private:
 };
 
 }
-}
+
 
 #endif

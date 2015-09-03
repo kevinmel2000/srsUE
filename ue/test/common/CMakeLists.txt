@@ -17,7 +17,13 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-include_directories(${CMAKE_SOURCE_DIR}/liblte/hdr)
-include_directories(hdr)
-add_subdirectory(src)
-add_subdirectory(test)
+#######################################################################
+# LOGGER TEST
+#######################################################################
+add_executable(logger_test logger_test.cc)
+target_link_libraries(logger_test srsue_common ${Boost_LIBRARIES})
+
+add_executable(log_filter_test log_filter_test.cc)
+target_link_libraries(log_filter_test srsue_common ${Boost_LIBRARIES})
+
+add_test(logger_test logger_test)

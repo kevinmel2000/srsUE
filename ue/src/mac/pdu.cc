@@ -32,8 +32,8 @@
 #include "mac/pdu.h"
 #include "srslte/srslte.h"
 
-namespace srslte {
-  namespace ue {
+
+  namespace srsue {
    
     
 void sch_pdu::fprint(FILE* stream)
@@ -728,5 +728,4 @@ bool rar_subh::read_subheader(uint8_t** ptr)
 }
 
     
-  }
 }

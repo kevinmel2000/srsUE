@@ -44,8 +44,8 @@
 #ifndef UEPHY_H
 #define UEPHY_H
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
     
 typedef _Complex float cf_t; 
 
@@ -53,8 +53,8 @@ class phy : public phy_interface, phy_interface_params
 {
 public:
   phy();
-  bool init(radio *radio_handler, mac_interface_phy *mac, log *log_h);
-  bool init_agc(radio *radio_handler, mac_interface_phy *mac, log *log_h);
+  bool init(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
+  bool init_agc(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
   void stop();
   
   void set_crnti(uint16_t rnti);
@@ -115,10 +115,10 @@ private:
   const static int SF_RECV_THREAD_PRIO = 1;
   const static int WORKERS_THREAD_PRIO = 0; 
   
-  radio         *radio_handler;
-  log           *log_h; 
+  srslte::radio         *radio_handler;
+  srslte::log           *log_h;
 
-  thread_pool              workers_pool; 
+  srslte::thread_pool      workers_pool;
   std::vector<phch_worker> workers;
   phch_common              workers_common; 
   phch_recv                sf_recv; 
@@ -129,10 +129,10 @@ private:
   /* Current time advance */
   uint32_t     n_ta;
   
-  bool         init_(radio *radio_handler, mac_interface_phy *mac, log *log_h, bool do_agc);
+  bool init_(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, bool do_agc);
 
 };
 
 } 
-}
+
 #endif

@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2013-2015 The srsUE Developers. See the
+ * Copyright 2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -25,36 +25,32 @@
  *
  */
 
+#include "upper/rlc_entity.h"
 
+using namespace srslte;
 
-#include <pthread.h>
-#include "common/tti_sync.h"
+namespace srsue{
 
+rlc_entity::rlc_entity()
+  :active(false)
+{}
 
-#ifndef TTISYNC_CV_H
-#define TTISYNC_CV_H
-
-
-
-namespace srsue {
-  
-  /* Implements tti_sync interface with condition variables. 
-   */
-  
-class tti_sync_cv : public tti_sync
+void rlc_entity::init(srslte::log *rlc_entity_log_, RLC_MODE_ENUM mode_, uint32_t lcid_)
 {
-  public: 
-             tti_sync_cv(uint32_t modulus = 10240);
-            ~tti_sync_cv();
-    void     increase();
-    uint32_t wait();      
-    void     resync();
-    void     set_producer_cntr(uint32_t producer_cntr);
-    
-  private: 
-    pthread_cond_t  cond; 
-    pthread_mutex_t mutex; 
-}; 
+  rlc_entity_log = rlc_entity_log_;
+  mode    = mode_;
+  lcid    = lcid_;
+  active  = true;
 }
 
-#endif
+void rlc_entity::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+{
+  //TODO
+}
+
+bool rlc_entity::is_active()
+{
+  return active;
+}
+
+}

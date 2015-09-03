@@ -40,8 +40,8 @@
 #ifndef PHY_INTERFACE_H
 #define PHY_INTERFACE_H
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   
 class phy_interface_params 
 {
@@ -159,7 +159,6 @@ public:
   
 };
   
-}
 }
 
 #endif

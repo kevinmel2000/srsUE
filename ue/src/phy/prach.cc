@@ -25,6 +25,11 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include <string.h>
 #include <strings.h>
 #include <pthread.h>
@@ -35,8 +40,8 @@
 #include "phy/phy.h"
 #include "common/phy_interface.h"
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
  
   
 void prach::free_cell() 
@@ -55,7 +60,7 @@ void prach::free_cell()
   }
 }
 
-void prach::init(phy_params* params_db_, log* log_h_)
+void prach::init(phy_params* params_db_, srslte::log* log_h_)
 {
   log_h = log_h_; 
   params_db = params_db_; 
@@ -136,7 +141,7 @@ int prach::tx_tti() {
   return transmitted_tti; 
 }
 
-bool prach::send(radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
+bool prach::send(srslte::radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
 {
   // Correct CFO before transmission
   srslte_cfo_correct(&cfo_h, buffer[preamble_idx], signal_buffer, cfo /srslte_symbol_sz(cell.nof_prb));            
@@ -151,5 +156,5 @@ bool prach::send(radio *radio_handler, float cfo, srslte_timestamp_t tx_time)
   preamble_idx = -1; 
 }
   
-} // namespace ue
-} // namespace srslte
+} // namespace srsue
+

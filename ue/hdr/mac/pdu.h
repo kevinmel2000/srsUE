@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include "common/log.h"
 #include "common/mac_interface.h"
+#include "common/interfaces.h"
 #include <vector>
 #include <stdio.h>
 
@@ -38,8 +39,8 @@
 
 /* MAC PDU Packing/Unpacking functions. Section 6 of 36.321 */   
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
   
 template<class SubH>
@@ -324,7 +325,6 @@ private:
   uint8_t    backoff_indicator; 
 };
 
-}
 }
 
 #endif

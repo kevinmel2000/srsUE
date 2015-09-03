@@ -38,8 +38,8 @@
 
 /* Uplink HARQ entity as defined in 5.4.2 of 36.321 */
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   
 class ul_harq_entity
 {
@@ -49,7 +49,7 @@ public:
   static uint32_t pidof(uint32_t tti);
   
   ul_harq_entity() {  pcap = NULL; }
-  bool init(log *log_h, mac_params *params_db, timers* timers_, mux *mux_unit);
+  bool init(srslte::log *log_h, mac_params *params_db, srslte::timers* timers_, mux *mux_unit);
   void reset();
   void reset_ndi();
 
@@ -90,7 +90,7 @@ private:
     uint32_t                    current_irv; 
     bool                        harq_feedback; 
     bool                        ndi; 
-    log                         *log_h; 
+    srslte::log                 *log_h;
     ul_harq_entity              *harq_entity; 
     bool                        is_grant_configured; 
     srslte_softbuffer_tx_t      softbuffer; 
@@ -116,14 +116,14 @@ private:
   
   ul_sps           ul_sps_assig;
 
-  timers          *timers_db; 
+  srslte::timers  *timers_db;
   mux             *mux_unit;
   ul_harq_process proc[NOF_HARQ_PROC];
-  log             *log_h; 
+  srslte::log     *log_h;
   mac_params      *params_db; 
   mac_pcap        *pcap; 
 };
 
 } 
-}
+
 #endif

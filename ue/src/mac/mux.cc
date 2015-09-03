@@ -25,12 +25,16 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 #include "mac/mux.h"
 #include "mac/mac.h"
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
 mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
 {
@@ -50,7 +54,7 @@ mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
   pending_crnti_ce = 0;
 }
 
-void mux::init(rlc_interface_mac *rlc_, log *log_h_, bsr_proc *bsr_procedure_)
+void mux::init(rlc_interface_mac *rlc_, srslte::log *log_h_, bsr_proc *bsr_procedure_)
 {
   log_h      = log_h_;
   rlc        = rlc_;
@@ -352,5 +356,4 @@ uint8_t* mux::msg3_get(uint8_t *payload, uint32_t pdu_sz)
 }
 
   
-}
 }

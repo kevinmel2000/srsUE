@@ -25,19 +25,19 @@
  *
  */
 
-#include "rlc_layer.h"
+#include "upper/rlc.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-rlc_layer::rlc_layer(srslte::log *rlc_log_)
+rlc::rlc(srslte::log *rlc_log_)
   :rlc_log(rlc_log_)
 {
   rlc_array[0].init(rlc_log, RLC_MODE_TM, 0); // SRB0
 }
 
-void rlc_layer::init(pdcp_interface_rlc *pdcp_)
+void rlc::init(pdcp_interface_rlc *pdcp_)
 {
   pdcp = pdcp_;
 }
@@ -45,7 +45,7 @@ void rlc_layer::init(pdcp_interface_rlc *pdcp_)
 /*******************************************************************************
   PDCP interface
 *******************************************************************************/
-void rlc_layer::write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
+void rlc::write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
     rlc_array[lcid].write_sdu(payload, nof_bytes);
@@ -55,7 +55,7 @@ void rlc_layer::write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 /*******************************************************************************
   MAC interface
 *******************************************************************************/
-uint32_t rlc_layer::get_buffer_state(uint32_t lcid)
+uint32_t rlc::get_buffer_state(uint32_t lcid)
 {
   if(valid_lcid(lcid)) {
     return rlc_array[lcid].get_buffer_state();
@@ -64,24 +64,30 @@ uint32_t rlc_layer::get_buffer_state(uint32_t lcid)
   }
 }
 
-void rlc_layer::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
+int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
     rlc_array[lcid].read_pdu(payload, nof_bytes);
   }
 }
 
-void rlc_layer::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
+void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
     rlc_array[lcid].write_pdu(payload, nof_bytes);
   }
 }
 
+void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
+{}
+
+void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
+{}
+
 /*******************************************************************************
   RRC interface
 *******************************************************************************/
-void rlc_layer::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+void rlc::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     rlc_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
@@ -95,7 +101,7 @@ void rlc_layer::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG
 /*******************************************************************************
   Helpers
 *******************************************************************************/
-bool rlc_layer::valid_lcid(uint32_t lcid)
+bool rlc::valid_lcid(uint32_t lcid)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     rlc_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);

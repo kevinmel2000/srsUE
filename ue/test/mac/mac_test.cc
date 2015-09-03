@@ -113,29 +113,29 @@ uint32_t sib_start_tti(uint32_t tti, uint32_t period, uint32_t x) {
   return (period*10*(1+tti/(period*10))+x)%10240; // the 1 means next opportunity
 }
 
-void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::ue::mac *mac, srslte::ue::phy *phy) {
+void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srsue::mac *mac, srsue::phy *phy) {
   // RACH-CONFIGCOMMON
   if (sib2->rr_config_common_sib.rach_cnfg.preambles_group_a_cnfg.present) {
-    mac->set_param(srslte::ue::mac_interface_params::RA_NOFGROUPAPREAMBLES, 
+    mac->set_param(srsue::mac_interface_params::RA_NOFGROUPAPREAMBLES, 
                    liblte_rrc_message_size_group_a_num[sib2->rr_config_common_sib.rach_cnfg.preambles_group_a_cnfg.size_of_ra]);
-    mac->set_param(srslte::ue::mac_interface_params::RA_MESSAGESIZEA, 
+    mac->set_param(srsue::mac_interface_params::RA_MESSAGESIZEA, 
                    liblte_rrc_message_size_group_a_num[sib2->rr_config_common_sib.rach_cnfg.preambles_group_a_cnfg.msg_size]);
-    mac->set_param(srslte::ue::mac_interface_params::RA_MESSAGEPOWEROFFSETB, 
+    mac->set_param(srsue::mac_interface_params::RA_MESSAGEPOWEROFFSETB, 
                    liblte_rrc_message_power_offset_group_b_num[sib2->rr_config_common_sib.rach_cnfg.preambles_group_a_cnfg.msg_pwr_offset_group_b]);        
   }
-  mac->set_param(srslte::ue::mac_interface_params::RA_NOFPREAMBLES, 
+  mac->set_param(srsue::mac_interface_params::RA_NOFPREAMBLES, 
                  liblte_rrc_number_of_ra_preambles_num[sib2->rr_config_common_sib.rach_cnfg.num_ra_preambles]);
-  mac->set_param(srslte::ue::mac_interface_params::RA_POWERRAMPINGSTEP, 
+  mac->set_param(srsue::mac_interface_params::RA_POWERRAMPINGSTEP, 
                  liblte_rrc_power_ramping_step_num[sib2->rr_config_common_sib.rach_cnfg.pwr_ramping_step]);
-  mac->set_param(srslte::ue::mac_interface_params::RA_INITRECEIVEDPOWER, 
+  mac->set_param(srsue::mac_interface_params::RA_INITRECEIVEDPOWER, 
                  liblte_rrc_preamble_initial_received_target_power_num[sib2->rr_config_common_sib.rach_cnfg.preamble_init_rx_target_pwr]);
-  mac->set_param(srslte::ue::mac_interface_params::RA_PREAMBLETRANSMAX, 
+  mac->set_param(srsue::mac_interface_params::RA_PREAMBLETRANSMAX, 
                  liblte_rrc_preamble_trans_max_num[sib2->rr_config_common_sib.rach_cnfg.preamble_trans_max]);
-  mac->set_param(srslte::ue::mac_interface_params::RA_RESPONSEWINDOW, 
+  mac->set_param(srsue::mac_interface_params::RA_RESPONSEWINDOW, 
                  liblte_rrc_ra_response_window_size_num[sib2->rr_config_common_sib.rach_cnfg.ra_resp_win_size]);
-  mac->set_param(srslte::ue::mac_interface_params::RA_CONTENTIONTIMER, 
+  mac->set_param(srsue::mac_interface_params::RA_CONTENTIONTIMER, 
                  liblte_rrc_mac_contention_resolution_timer_num[sib2->rr_config_common_sib.rach_cnfg.mac_con_res_timer]);
-  mac->set_param(srslte::ue::mac_interface_params::HARQ_MAXMSG3TX, 
+  mac->set_param(srsue::mac_interface_params::HARQ_MAXMSG3TX, 
                  sib2->rr_config_common_sib.rach_cnfg.max_harq_msg3_tx);
   
   printf("Set RACH ConfigCommon: NofPreambles=%d, ResponseWindow=%d, ContentionResolutionTimer=%d ms, MaxTrials=%d\n",  
@@ -145,27 +145,27 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::u
          liblte_rrc_preamble_trans_max_num[sib2->rr_config_common_sib.rach_cnfg.preamble_trans_max]);
   
   // PDSCH ConfigCommon
-  mac->set_param(srslte::ue::mac_interface_params::PDSCH_RSPOWER, 
+  mac->set_param(srsue::mac_interface_params::PDSCH_RSPOWER, 
                  sib2->rr_config_common_sib.pdsch_cnfg.rs_power);
-  mac->set_param(srslte::ue::mac_interface_params::PDSCH_PB, 
+  mac->set_param(srsue::mac_interface_params::PDSCH_PB, 
                  sib2->rr_config_common_sib.pdsch_cnfg.p_b);
 
   // PUSCH ConfigCommon
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_EN_64QAM, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_EN_64QAM, 
                  sib2->rr_config_common_sib.pusch_cnfg.enable_64_qam);
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_HOPPING_OFFSET, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_HOPPING_OFFSET, 
                  sib2->rr_config_common_sib.pusch_cnfg.pusch_hopping_offset);
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_HOPPING_N_SB, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_HOPPING_N_SB, 
                  sib2->rr_config_common_sib.pusch_cnfg.n_sb);
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_HOPPING_INTRA_SF, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_HOPPING_INTRA_SF, 
                  sib2->rr_config_common_sib.pusch_cnfg.hopping_mode == LIBLTE_RRC_HOPPING_MODE_INTRA_AND_INTER_SUBFRAME?1:0);
-  phy->set_param(srslte::ue::phy_interface_params::DMRS_GROUP_HOPPING_EN, 
+  phy->set_param(srsue::phy_interface_params::DMRS_GROUP_HOPPING_EN, 
                  sib2->rr_config_common_sib.pusch_cnfg.ul_rs.group_hopping_enabled?1:0);
-  phy->set_param(srslte::ue::phy_interface_params::DMRS_SEQUENCE_HOPPING_EN, 
+  phy->set_param(srsue::phy_interface_params::DMRS_SEQUENCE_HOPPING_EN, 
                  sib2->rr_config_common_sib.pusch_cnfg.ul_rs.sequence_hopping_enabled?1:0);
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_RS_CYCLIC_SHIFT, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_RS_CYCLIC_SHIFT, 
                  sib2->rr_config_common_sib.pusch_cnfg.ul_rs.cyclic_shift);
-  phy->set_param(srslte::ue::phy_interface_params::PUSCH_RS_GROUP_ASSIGNMENT, 
+  phy->set_param(srsue::phy_interface_params::PUSCH_RS_GROUP_ASSIGNMENT, 
                  sib2->rr_config_common_sib.pusch_cnfg.ul_rs.group_assignment_pusch);
 
   printf("Set PUSCH ConfigCommon: HopOffset=%d, RSGroup=%d, RSNcs=%d, N_sb=%d\n",
@@ -175,13 +175,13 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::u
     sib2->rr_config_common_sib.pusch_cnfg.n_sb);
   
   // PUCCH ConfigCommon
-  phy->set_param(srslte::ue::phy_interface_params::PUCCH_DELTA_SHIFT, 
+  phy->set_param(srsue::phy_interface_params::PUCCH_DELTA_SHIFT, 
                  liblte_rrc_delta_pucch_shift_num[sib2->rr_config_common_sib.pucch_cnfg.delta_pucch_shift]);
-  phy->set_param(srslte::ue::phy_interface_params::PUCCH_CYCLIC_SHIFT, 
+  phy->set_param(srsue::phy_interface_params::PUCCH_CYCLIC_SHIFT, 
                  sib2->rr_config_common_sib.pucch_cnfg.n_cs_an);
-  phy->set_param(srslte::ue::phy_interface_params::PUCCH_N_PUCCH_1, 
+  phy->set_param(srsue::phy_interface_params::PUCCH_N_PUCCH_1, 
                  sib2->rr_config_common_sib.pucch_cnfg.n1_pucch_an);
-  phy->set_param(srslte::ue::phy_interface_params::PUCCH_N_RB_2, 
+  phy->set_param(srsue::phy_interface_params::PUCCH_N_RB_2, 
                  sib2->rr_config_common_sib.pucch_cnfg.n_rb_cqi);
   printf("Set PUCCH ConfigCommon: DeltaShift=%d, CyclicShift=%d, N1=%d, NRB=%d\n",
          liblte_rrc_delta_pucch_shift_num[sib2->rr_config_common_sib.pucch_cnfg.delta_pucch_shift],
@@ -191,15 +191,15 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::u
 
   
   // PRACH Configcommon
-  phy->set_param(srslte::ue::phy_interface_params::PRACH_ROOT_SEQ_IDX, 
+  phy->set_param(srsue::phy_interface_params::PRACH_ROOT_SEQ_IDX, 
                  sib2->rr_config_common_sib.prach_cnfg.root_sequence_index);
-  phy->set_param(srslte::ue::phy_interface_params::PRACH_HIGH_SPEED_FLAG, 
+  phy->set_param(srsue::phy_interface_params::PRACH_HIGH_SPEED_FLAG, 
                  sib2->rr_config_common_sib.prach_cnfg.prach_cnfg_info.high_speed_flag?1:0);
-  phy->set_param(srslte::ue::phy_interface_params::PRACH_FREQ_OFFSET, 
+  phy->set_param(srsue::phy_interface_params::PRACH_FREQ_OFFSET, 
                  sib2->rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_freq_offset);
-  phy->set_param(srslte::ue::phy_interface_params::PRACH_ZC_CONFIG, 
+  phy->set_param(srsue::phy_interface_params::PRACH_ZC_CONFIG, 
                  sib2->rr_config_common_sib.prach_cnfg.prach_cnfg_info.zero_correlation_zone_config);
-  phy->set_param(srslte::ue::phy_interface_params::PRACH_CONFIG_INDEX, 
+  phy->set_param(srsue::phy_interface_params::PRACH_CONFIG_INDEX, 
                  sib2->rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_config_index);
 
   printf("Set PRACH ConfigCommon: SeqIdx=%d, HS=%d, FreqOffset=%d, ZC=%d, ConfigIndex=%d\n", 
@@ -211,9 +211,9 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::u
   
   // SRS ConfigCommon
   if (sib2->rr_config_common_sib.srs_ul_cnfg.present) {
-    phy->set_param(srslte::ue::phy_interface_params::SRS_CS_BWCFG, sib2->rr_config_common_sib.srs_ul_cnfg.bw_cnfg);
-    phy->set_param(srslte::ue::phy_interface_params::SRS_CS_SFCFG, sib2->rr_config_common_sib.srs_ul_cnfg.subfr_cnfg);
-    phy->set_param(srslte::ue::phy_interface_params::SRS_CS_ACKNACKSIMUL, sib2->rr_config_common_sib.srs_ul_cnfg.ack_nack_simul_tx);
+    phy->set_param(srsue::phy_interface_params::SRS_CS_BWCFG, sib2->rr_config_common_sib.srs_ul_cnfg.bw_cnfg);
+    phy->set_param(srsue::phy_interface_params::SRS_CS_SFCFG, sib2->rr_config_common_sib.srs_ul_cnfg.subfr_cnfg);
+    phy->set_param(srsue::phy_interface_params::SRS_CS_ACKNACKSIMUL, sib2->rr_config_common_sib.srs_ul_cnfg.ack_nack_simul_tx);
   }
 
   printf("Set SRS ConfigCommon: BW-Configuration=%d, SF-Configuration=%d, ACKNACK=%d\n", 
@@ -225,29 +225,29 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srslte::u
   
 }
 
-void process_connsetup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *msg, srslte::ue::mac *mac, srslte::ue::phy *phy) {
+void process_connsetup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *msg, srsue::mac *mac, srsue::phy *phy) {
   
   // FIXME: There's an error parsing the connectionSetup message. This value is hard-coded: 
  
   if (msg->rr_cnfg.phy_cnfg_ded_present) {
-    phy->set_param(srslte::ue::phy_interface_params::PUCCH_N_PUCCH_SR, 
+    phy->set_param(srsue::phy_interface_params::PUCCH_N_PUCCH_SR, 
                   msg->rr_cnfg.phy_cnfg_ded.sched_request_cnfg.sr_pucch_resource_idx);
-    phy->set_param(srslte::ue::phy_interface_params::SR_CONFIG_INDEX, 
+    phy->set_param(srsue::phy_interface_params::SR_CONFIG_INDEX, 
                   msg->rr_cnfg.phy_cnfg_ded.sched_request_cnfg.sr_cnfg_idx);
-    phy->set_param(srslte::ue::phy_interface_params::UCI_I_OFFSET_ACK, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_ack_idx);
-    phy->set_param(srslte::ue::phy_interface_params::UCI_I_OFFSET_CQI, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_cqi_idx);
-    phy->set_param(srslte::ue::phy_interface_params::UCI_I_OFFSET_RI, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_ri_idx);
+    phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_ACK, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_ack_idx);
+    phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_CQI, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_cqi_idx);
+    phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_RI, msg->rr_cnfg.phy_cnfg_ded.pusch_cnfg_ded.beta_offset_ri_idx);
   
     if (msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded_present && msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.setup_present) {
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_CS, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.cyclic_shift);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_DURATION, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.duration);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_NRRC, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.freq_domain_pos);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_BW, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_bandwidth);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_CONFIGINDEX, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_cnfg_idx);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_HOP, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_hopping_bandwidth);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_CYCLICSHIFT, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.cyclic_shift);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_UE_TXCOMB, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.tx_comb);
-      phy->set_param(srslte::ue::phy_interface_params::SRS_IS_CONFIGURED, 1);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_CS, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.cyclic_shift);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_DURATION, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.duration);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_NRRC, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.freq_domain_pos);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_BW, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_bandwidth);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_CONFIGINDEX, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_cnfg_idx);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_HOP, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_hopping_bandwidth);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_CYCLICSHIFT, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.cyclic_shift);
+      phy->set_param(srsue::phy_interface_params::SRS_UE_TXCOMB, msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.tx_comb);
+      phy->set_param(srsue::phy_interface_params::SRS_IS_CONFIGURED, 1);
     }
   }
   printf("Set PHY configuration: SR-n_pucch=%d, SR-ConfigIndex=%d, SRS-ConfigIndex=%d, SRS-bw=%d, SRS-Nrcc=%d, SRS-hop=%d, SRS-Ncs=%d\n", 
@@ -259,15 +259,15 @@ void process_connsetup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *msg, srslte::ue::mac 
          msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.srs_hopping_bandwidth,
          msg->rr_cnfg.phy_cnfg_ded.srs_ul_cnfg_ded.cyclic_shift);
   
-  mac->set_param(srslte::ue::mac_interface_params::HARQ_MAXTX, 
+  mac->set_param(srsue::mac_interface_params::HARQ_MAXTX, 
                  liblte_rrc_max_harq_tx_num[msg->rr_cnfg.mac_main_cnfg.explicit_value.ulsch_cnfg.max_harq_tx]);
-  mac->set_param(srslte::ue::mac_interface_params::SR_TRANS_MAX, 
+  mac->set_param(srsue::mac_interface_params::SR_TRANS_MAX, 
                  liblte_rrc_dsr_trans_max_num[msg->rr_cnfg.phy_cnfg_ded.sched_request_cnfg.dsr_trans_max]);
-  mac->set_param(srslte::ue::mac_interface_params::SR_PUCCH_CONFIGURED, 1);
+  mac->set_param(srsue::mac_interface_params::SR_PUCCH_CONFIGURED, 1);
   
-  mac->set_param(srslte::ue::mac_interface_params::BSR_TIMER_RETX, 
+  mac->set_param(srsue::mac_interface_params::BSR_TIMER_RETX, 
                  liblte_rrc_retransmission_bsr_timer_num[msg->rr_cnfg.mac_main_cnfg.explicit_value.ulsch_cnfg.retx_bsr_timer]);
-  mac->set_param(srslte::ue::mac_interface_params::BSR_TIMER_PERIODIC, 
+  mac->set_param(srsue::mac_interface_params::BSR_TIMER_PERIODIC, 
                  liblte_rrc_periodic_bsr_timer_num[msg->rr_cnfg.mac_main_cnfg.explicit_value.ulsch_cnfg.periodic_bsr_timer]);
   
   printf("Set MAC configuration: dsr-TransMAX: %d, harq-MaxReTX=%d, bsr-TimerReTX=%d, bsr-TimerPeriodic=%d\n", 
@@ -322,9 +322,9 @@ uint8_t reply[2] = {0x00, 0x04};
 
 
 srslte::radio_uhd radio_uhd; 
-srslte::ue::phy phy; 
-srslte::ue::mac mac; 
-srslte::ue::mac_pcap mac_pcap; 
+srsue::phy phy; 
+srsue::mac mac; 
+srsue::mac_pcap mac_pcap; 
 
 prog_args_t prog_args; 
   
@@ -341,7 +341,7 @@ void sig_int_handler(int signo)
   exit(0);
 }
 
-class rlctest : public srslte::ue::rlc_interface_mac {
+class rlctest : public srsue::rlc_interface_mac {
 public:
   bool mib_decoded; 
   bool sib1_decoded; 
@@ -395,7 +395,7 @@ public:
       for (int i=0;i<nbytes;i++) {
         ue_cri_ptr[nbytes-i-1] = (uint8_t) srslte_bit_unpack(&ptr, 8);
       }
-      mac.set_param(srslte::ue::mac_interface_params::CONTENTION_ID, uecri);
+      mac.set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
 
       // Send ConnectionRequest Packet
       printf("Send ConnectionRequest %d/%d bytes\n", nbytes, nof_bytes);
@@ -446,7 +446,7 @@ public:
           connsetup_decoded = true; 
           break;
         case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_REJ:
-          mac.set_param(srslte::ue::mac_interface_params::RNTI_C, 0);
+          mac.set_param(srsue::mac_interface_params::RNTI_C, 0);
           break;
       } 
     } else if (lcid == 1) {
@@ -481,13 +481,13 @@ public:
         printf("SIB1 received %d bytes, CellID=%d, si_window=%d, sib2_period=%d\n", 
                 nof_bytes, dlsch_msg.sibs[0].sib.sib1.cell_id&0xfff, si_window_len, sib2_period);          
         sib1_decoded = true;         
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       } else if (dlsch_msg.sibs[0].sib_type == LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2) {
         
         printf("SIB2 received %d bytes\n", nof_bytes);
         setup_mac_phy_sib2(&dlsch_msg.sibs[0].sib.sib2, &mac, &phy);        
         sib2_decoded = true; 
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       }
     }
   }
@@ -506,12 +506,12 @@ int main(int argc, char *argv[])
   
   switch (prog_args.verbose) {
     case 1:
-      mac_log.set_level_info();
-      phy_log.set_level_info();
+      mac_log.set_level(srslte::LOG_LEVEL_INFO);
+      phy_log.set_level(srslte::LOG_LEVEL_INFO);
       break;
     case 2: 
-      mac_log.set_level_debug();
-      phy_log.set_level_debug();
+      mac_log.set_level(srslte::LOG_LEVEL_DEBUG);
+      phy_log.set_level(srslte::LOG_LEVEL_DEBUG);
       break;
   }
  
@@ -555,13 +555,13 @@ int main(int argc, char *argv[])
       if (!my_rlc.sib1_decoded) {
         usleep(10000);
         tti = mac.get_current_tti();           
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_ST, sib_start_tti(tti, 2, 5));
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_LEN, 1);                
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, sib_start_tti(tti, 2, 5));
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, 1);                
       } else if (!my_rlc.sib2_decoded) {        
         usleep(10000);
         tti = mac.get_current_tti(); 
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_ST, sib_start_tti(tti, my_rlc.sib2_period, 0));
-        mac.set_param(srslte::ue::mac_interface_params::BCCH_SI_WINDOW_LEN, my_rlc.si_window_len);              
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, sib_start_tti(tti, my_rlc.sib2_period, 0));
+        mac.set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, my_rlc.si_window_len);              
       }
     }
     usleep(50000);

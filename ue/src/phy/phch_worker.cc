@@ -25,15 +25,18 @@
  *
  */
 
+#define Error(fmt, ...)   phy->log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) phy->log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    phy->log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   phy->log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include <string.h>
 #include "phy/phch_worker.h"
 #include "common/mac_interface.h"
 #include "common/phy_interface.h"
 
-namespace srslte {
-  namespace ue {
 
-#define log_h phy->log_h
+namespace srsue {
 
 phch_worker::phch_worker() : tr_exec(10240)
 {
@@ -255,7 +258,7 @@ bool phch_worker::extract_fft_and_pdcch_llr() {
 
 /********************* Downlink processing functions ****************************/
 
-bool phch_worker::decode_pdcch_dl(srslte::ue::mac_interface_phy::mac_grant_t* grant)
+bool phch_worker::decode_pdcch_dl(srsue::mac_interface_phy::mac_grant_t* grant)
 {
   dl_rnti = phy->get_dl_rnti(tti); 
   if (dl_rnti) {
@@ -636,5 +639,4 @@ void phch_worker::tr_log_end()
 }
 
 
-  }
 }

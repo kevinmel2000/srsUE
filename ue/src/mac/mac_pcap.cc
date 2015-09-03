@@ -32,8 +32,8 @@
 #include "mac/mac_pcap.h"
 
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
  
 void mac_pcap::enable(bool en)
 {
@@ -94,4 +94,4 @@ void mac_pcap::write_dl_sirnti(uint8_t* pdu, uint32_t pdu_len_bytes, bool crc_ok
 
   
 }
-}
+

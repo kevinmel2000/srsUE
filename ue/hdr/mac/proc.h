@@ -34,8 +34,8 @@
 
 /* Interface for a MAC procedure */
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   
 class proc
 {
@@ -56,7 +56,6 @@ public:
 private:
   bool running; 
 };
-}
 }
 
 #endif

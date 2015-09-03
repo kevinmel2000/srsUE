@@ -25,6 +25,11 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include <string.h>
 #include <strings.h>
 #include <pthread.h>
@@ -34,8 +39,8 @@
 #include "mac/mac.h"
 #include "mac/pcap.h"
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
 mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS) 
 {
@@ -47,7 +52,7 @@ mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS)
   signals_pregenerated = false; 
 }
   
-bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, log *log_h_)
+bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h_)
 {
   started = false; 
   phy_h = phy;
@@ -340,6 +345,6 @@ void mac::setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_t
 }
 
 }
-}
+
 
 

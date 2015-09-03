@@ -35,8 +35,8 @@
 #define TTISYNC_H
 
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   
   /* Interface used for PHY-MAC synchronization (producer-consumer model). 
    * The consumer waits while its counter is lower than the producer counter. 
@@ -74,7 +74,6 @@ class tti_sync
     uint32_t producer_cntr;
     uint32_t consumer_cntr;
 }; 
-}
 }
 
 #endif

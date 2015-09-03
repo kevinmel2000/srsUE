@@ -25,18 +25,23 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include "mac/proc_sr.h"
 #include "mac/mac_params.h"
 
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
 sr_proc::sr_proc() {
   initiated = false; 
 }
   
-void sr_proc::init(phy_interface* phy_h_, log* log_h_, mac_params* params_db_)
+void sr_proc::init(phy_interface* phy_h_, srslte::log* log_h_, mac_params* params_db_)
 {
   log_h     = log_h_;
   params_db = params_db_; 
@@ -97,6 +102,5 @@ void sr_proc::start()
   }
 }
 
-}
 }
 

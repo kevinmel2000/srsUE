@@ -33,8 +33,8 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
   class params_db
   {
   public: 
@@ -66,6 +66,6 @@ namespace ue {
     int64_t *db;
   };
 }
-}
+
 
 #endif

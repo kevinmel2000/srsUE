@@ -28,7 +28,10 @@
 #ifndef INTERFACES_H
 #define INTERFACES_H
 
-#include "liblte/hdr/liblte_rrc.h"
+#include "liblte_rrc.h"
+#include "upper/rlc_entity.h"
+
+namespace srsue {
 
 /*******************************************************************************
   PDCP interface for GW
@@ -60,7 +63,7 @@ class pdcp_interface_rlc
 *******************************************************************************/
 class rlc_interface_rrc
 {
-  virtual void     add_rlc(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
+  virtual void     add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 };
 
 /*******************************************************************************
@@ -84,13 +87,19 @@ public:
    * This function should return quickly. */
   virtual uint32_t get_buffer_state(uint32_t lcid) = 0;
 
+  const static int MAX_PDU_SEGMENTS = 20;
+
   /* MAC calls RLC to get RLC segment of nof_bytes length.
    * Segmentation happens in this function. RLC PDU is stored in payload. */
-  virtual void     read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual int     read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
 
   /* MAC calls RLC to push an RLC PDU. This function is called from an independent MAC thread.
    * PDU gets placed into the buffer and higher layer thread gets notified. */
   virtual void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void     write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void     write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes) = 0;
 };
+
+} // namespace srsue
 
 #endif // INTERFACES_H

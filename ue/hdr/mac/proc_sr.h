@@ -38,14 +38,14 @@
 
 /* Scheduling Request procedure as defined in 5.4.4 of 36.321 */
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
 class sr_proc : public proc
 {
 public:
   sr_proc();
-  void init(phy_interface *phy_h, log *log_h, mac_params *params_db);
+  void init(phy_interface *phy_h, srslte::log *log_h, mac_params *params_db);
   void step(uint32_t tti);  
   void reset();
   void start();
@@ -58,11 +58,10 @@ private:
   mac_params    *params_db; 
   
   phy_interface *phy_h; 
-  log           *log_h; 
+  srslte::log   *log_h;
   bool          initiated;
   bool          do_ra;
 };
-}
 }
 
 #endif

@@ -2,7 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2013-2015 The srsUE Developers. See the
+ * Copyright 2015 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
  * \section LICENSE
@@ -25,36 +25,19 @@
  *
  */
 
+#include "upper/pdcp.h"
 
+using namespace srslte;
 
-#include <pthread.h>
-#include "common/tti_sync.h"
+namespace srsue{
 
-
-#ifndef TTISYNC_CV_H
-#define TTISYNC_CV_H
-
-
-
-namespace srsue {
-  
-  /* Implements tti_sync interface with condition variables. 
-   */
-  
-class tti_sync_cv : public tti_sync
+pdcp::pdcp(srslte::log *pdcp_log_)
+  :pdcp_log(pdcp_log_)
 {
-  public: 
-             tti_sync_cv(uint32_t modulus = 10240);
-            ~tti_sync_cv();
-    void     increase();
-    uint32_t wait();      
-    void     resync();
-    void     set_producer_cntr(uint32_t producer_cntr);
-    
-  private: 
-    pthread_cond_t  cond; 
-    pthread_mutex_t mutex; 
-}; 
 }
 
-#endif
+void pdcp::init()
+{
+}
+
+} // namespace srsue

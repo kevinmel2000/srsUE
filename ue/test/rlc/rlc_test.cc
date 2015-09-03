@@ -26,35 +26,3 @@
  */
 
 
-
-#include <pthread.h>
-#include "common/tti_sync.h"
-
-
-#ifndef TTISYNC_CV_H
-#define TTISYNC_CV_H
-
-
-
-namespace srsue {
-  
-  /* Implements tti_sync interface with condition variables. 
-   */
-  
-class tti_sync_cv : public tti_sync
-{
-  public: 
-             tti_sync_cv(uint32_t modulus = 10240);
-            ~tti_sync_cv();
-    void     increase();
-    uint32_t wait();      
-    void     resync();
-    void     set_producer_cntr(uint32_t producer_cntr);
-    
-  private: 
-    pthread_cond_t  cond; 
-    pthread_mutex_t mutex; 
-}; 
-}
-
-#endif

@@ -25,32 +25,26 @@
  *
  */
 
-#include "rlc.h"
+#ifndef RRC_H
+#define RRC_H
 
-using namespace srslte;
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
 
-namespace srsue{
+namespace srsue {
 
-rlc::rlc()
-  :active(false)
-{}
-
-void rlc::init(srslte::log *rlc_log_, RLC_MODE_ENUM mode_, uint32_t lcid_)
+class rrc
 {
-  rlc_log = rlc_log_;
-  mode    = mode_;
-  lcid    = lcid_;
-  active  = true;
-}
+public:
+  rrc(srslte::log *rrc_log_);
+  void init();
 
-void rlc::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
-{
-  //TODO
-}
+private:
+  srslte::log *rrc_log;
+};
 
-bool rlc::is_active()
-{
-  return active;
-}
+} // namespace srsue
 
-}
+
+#endif // RRC_H

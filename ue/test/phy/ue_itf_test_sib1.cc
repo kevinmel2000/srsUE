@@ -83,7 +83,7 @@ void parse_args(prog_args_t *args, int argc, char **argv) {
   }
 }
 
-srslte::ue::phy my_phy;
+srsue::phy my_phy;
 bool bch_decoded = false; 
 uint32_t total_pkts=0;
 uint32_t total_dci=0;
@@ -92,7 +92,7 @@ uint8_t payload[1024];
 srslte_softbuffer_rx_t softbuffer; 
 
 /******** MAC Interface implementation */
-class testmac : public srslte::ue::mac_interface_phy
+class testmac : public srsue::mac_interface_phy
 {
 public:
   void new_grant_ul(mac_grant_t grant, tb_action_ul_t *action) {
@@ -165,11 +165,11 @@ int main(int argc, char *argv[])
   }
   
   if (srsapps_verbose == 1) {
-    log.set_level_info();
+    log.set_level(srslte::LOG_LEVEL_INFO);
     printf("Log level info\n");
   }
   if (srsapps_verbose == 2) {
-    log.set_level_debug();
+    log.set_level(srslte::LOG_LEVEL_DEBUG);
     printf("Log level debug\n");
   }
     

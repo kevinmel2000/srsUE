@@ -18,6 +18,5 @@
 #
 
 include_directories(${CMAKE_SOURCE_DIR}/liblte/hdr)
-include_directories(hdr)
-add_subdirectory(src)
-add_subdirectory(test)
+#add_executable(rlc_test rlc_test.cc)
+#target_link_libraries(rlc_test srsue_common srsue_rlc srsue_mac srsue_phy srsue_radio lte)

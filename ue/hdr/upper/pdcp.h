@@ -25,41 +25,28 @@
  *
  */
 
-#ifndef LOG_FILTER_H
-#define LOG_FILTER_H
+#ifndef PDCP_H
+#define PDCP_H
 
-#include <stdarg.h>
-#include <string>
-#include <common/log.h>
-#include "ue_logger.h"
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
+#include "upper/pdcp_entity.h"
 
 namespace srsue {
 
-class log_filter : public srslte::log
+class pdcp
 {
 public:
-
-  log_filter(std::string layer, ue_logger *logger_);
-
-  void error(std::string message, ...);
-  void warning(std::string message, ...);
-  void info(std::string message, ...);
-  void debug(std::string message, ...);
-
-  void error_hex(uint8_t *hex, int size, std::string message, ...);
-  void warning_hex(uint8_t *hex, int size, std::string message, ...);
-  void info_hex(uint8_t *hex, int size, std::string message, ...);
-  void debug_hex(uint8_t *hex, int size, std::string message, ...);
+  pdcp(srslte::log *pdcp_log_);
+  void init();
 
 private:
-  ue_logger *logger;
-
-  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg);
-  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg, uint8_t *hex, int size);
-  std::string now_time();
-  std::string hex_string(uint8_t *hex, int size);
+  srslte::log        *pdcp_log;
+  pdcp_entity         pdcp_array[SRSUE_N_RADIO_BEARERS];
 };
 
 } // namespace srsue
 
-#endif // LOG_FILTER_H
+
+#endif // PDCP_H

@@ -38,10 +38,10 @@
 #ifndef UEPHYWORKER_H
 #define UEPHYWORKER_H
 
-namespace srslte {                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-namespace ue {
 
-class phch_worker : public thread_pool::worker
+namespace srsue {
+
+class phch_worker : public srslte::thread_pool::worker
 {
 public:
   
@@ -92,7 +92,7 @@ private:
   void tr_log_start();
   void tr_log_end();
   struct timeval tr_time[3];
-  trace<uint32_t> tr_exec;
+  srslte::trace<uint32_t> tr_exec;
   bool trace_enabled; 
   
   /* Common objects */  
@@ -129,7 +129,6 @@ private:
   
   
 };
-}
 }
 
 #endif

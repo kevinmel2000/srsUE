@@ -45,14 +45,14 @@
 
 /* Random access procedure as specified in Section 5.1 of 36.321 */
 
-namespace srslte {
-namespace ue {
 
-class ra_proc : public proc,timer_callback
+namespace srsue {
+
+class ra_proc : public proc, srslte::timer_callback
 {
   public:
     ra_proc() : rar_pdu_msg(20) {pcap = NULL;};
-    bool init(phy_interface *phy_h, log *log_h, mac_params *params_db, timers *timers_db, mux *mux_unit, demux *demux_unit);
+    bool init(phy_interface *phy_h, srslte::log *log_h, mac_params *params_db, srslte::timers *timers_db, mux *mux_unit, demux *demux_unit);
     void reset();
     void start_pdcch_order();
     void start_rlc_order();
@@ -142,13 +142,13 @@ private:
     bool        first_rar_received; 
     void        read_params();
     
-    phy_interface *phy_h; 
-    log           *log_h; 
-    mac_params    *params_db;
-    timers        *timers_db;
-    mux           *mux_unit; 
-    demux         *demux_unit; 
-    mac_pcap      *pcap; 
+    phy_interface   *phy_h;
+    srslte::log     *log_h;
+    mac_params      *params_db;
+    srslte::timers  *timers_db;
+    mux             *mux_unit;
+    demux           *demux_unit;
+    mac_pcap        *pcap;
         
     uint64_t    transmitted_contention_id;
     uint16_t    transmitted_crnti; 
@@ -168,7 +168,6 @@ private:
     uint32_t rar_grant_tti;
     bool msg3_flushed;
 };
-}
 }
 
 #endif

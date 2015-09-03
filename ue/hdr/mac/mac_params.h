@@ -35,8 +35,8 @@
 #define MACPARAMS_H
 
 
-namespace srslte {
-namespace ue {
+
+namespace srsue {
 
   class mac_params : public params_db
   {
@@ -48,6 +48,6 @@ namespace ue {
     
   };
 }
-}
+
 
 #endif

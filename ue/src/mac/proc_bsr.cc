@@ -25,12 +25,17 @@
  *
  */
 
+#define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
 #include "mac/proc_bsr.h"
 #include "mac/mac.h"
 #include "mac/mux.h"
 
-namespace srslte {
-  namespace ue {
+
+  namespace srsue {
     
 bsr_proc::bsr_proc()
 {
@@ -47,7 +52,7 @@ bsr_proc::bsr_proc()
   triggered_bsr_type=NONE; 
 }
 
-void bsr_proc::init(rlc_interface_mac *rlc_, log* log_h_, mac_params* params_db_, timers *timers_db_)
+void bsr_proc::init(rlc_interface_mac *rlc_, srslte::log* log_h_, mac_params* params_db_, srslte::timers *timers_db_)
 {
   log_h     = log_h_; 
   rlc       = rlc_; 
@@ -357,5 +362,4 @@ uint32_t bsr_proc::find_max_priority_lcid() {
   return max_idx; 
 }
 
-}
 }

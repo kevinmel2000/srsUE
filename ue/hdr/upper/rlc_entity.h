@@ -25,12 +25,12 @@
  *
  */
 
-#ifndef RLC_H
-#define RLC_H
+#ifndef RLC_ENTITY_H
+#define RLC_ENTITY_H
 
 #include <common/log.h>
-#include "liblte/hdr/liblte_rrc.h"
-#include "liblte/hdr/liblte_rlc.h"
+#include "liblte_rrc.h"
+#include "liblte_rlc.h"
 
 namespace srsue {
 
@@ -44,11 +44,11 @@ static const char rlc_mode_text[RLC_MODE_N_ITEMS][20] = {"Transparent Mode",
                                                          "Unacknowledged Mode",
                                                          "Acknowledged Mode"};
 
-class rlc
+class rlc_entity
 {
 public:
-  rlc();
-  void init(srslte::log *rlc_log_, RLC_MODE_ENUM mode_, uint32_t lcid_);
+  rlc_entity();
+  void init(srslte::log *rlc_entity_log_, RLC_MODE_ENUM mode_, uint32_t lcid_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
   bool is_active();
 
@@ -70,7 +70,7 @@ private:
   void handle_am_sdu(LIBLTE_BYTE_MSG_STRUCT *sdu);
   void handle_am_pdu(LIBLTE_BYTE_MSG_STRUCT *pdu);
 
-  srslte::log   *rlc_log;
+  srslte::log   *rlc_entity_log;
   bool           active;
   RLC_MODE_ENUM  mode;
   uint32_t       lcid;
@@ -79,4 +79,4 @@ private:
 } // namespace srsue
 
 
-#endif // RLC_H
+#endif // RLC_ENTITY_H
