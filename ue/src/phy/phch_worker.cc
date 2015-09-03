@@ -601,6 +601,9 @@ void phch_worker::set_ul_params()
   bzero(&cqi_cfg, sizeof(srslte_cqi_cfg_t));
   cqi_cfg.configured           = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_CONFIGURED)?true:false;
   cqi_cfg.pmi_idx              = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_PMI_IDX); 
+  cqi_cfg.simul_cqi_ack        = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_SIMULT_ACK)?true:false;
+  cqi_cfg.format_is_subband    = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND)?true:false;
+  cqi_cfg.subband_k            = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND_K);
   
   /* SR configuration */
   I_sr                         = (uint32_t) phy->params_db->get_param(phy_interface_params::SR_CONFIG_INDEX);
