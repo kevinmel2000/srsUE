@@ -247,7 +247,7 @@ static const char liblte_rlc_e2_field_text[LIBLTE_RLC_E2_FIELD_N_ITEMS][20] = {"
     Document Reference: 36.322 v10.0.0 Section 6.2.1.3
 *********************************************************************/
 // Defines
-#define LIBLTE_RLC_UMD_MAX_N_DATA 5
+#define LIBLTE_RLC_UMD_MAX_N_DATA 20
 // Enums
 typedef enum{
     LIBLTE_RLC_UMD_SN_SIZE_5_BITS = 0,

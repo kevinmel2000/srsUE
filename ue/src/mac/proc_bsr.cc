@@ -224,7 +224,7 @@ void bsr_proc::step(uint32_t tti)
     for (int i=0;i<MAX_LCID;i++) {
       sprintf(str, "%s%d (%d), ", str, rlc->get_buffer_state(i), last_pending_data[i]);
     }
-    Info("QUEUE status: %s\n", str);
+    Warning("QUEUE status: %s\n", str);
     last_print = tti; 
   }
   
