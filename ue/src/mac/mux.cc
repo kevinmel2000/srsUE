@@ -139,7 +139,6 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 {
   
   if (pthread_mutex_trylock(&mutex)) {
-    printf("M");fflush(stdout);
     pthread_mutex_lock(&mutex);
   }
     
