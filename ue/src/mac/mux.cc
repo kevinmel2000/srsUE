@@ -189,7 +189,7 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     if (pdu_msg.new_subh()) {
       phr_included = true; 
       pdu_msg.next();
-      pdu_msg.get()->set_phr(30);
+      pdu_msg.get()->set_phr(46);
     }
   }
 
