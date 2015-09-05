@@ -79,10 +79,12 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     return false; 
   }
 
-  srslte_ue_ul_set_normalization(&ue_ul, false); 
+  srslte_ue_ul_set_normalization(&ue_ul, true); 
   srslte_ue_ul_set_cfo_enable(&ue_ul, true);
   
   cell_initiated = true; 
+  
+  snr = 0; 
   
   return true; 
 }
@@ -177,9 +179,11 @@ void phch_worker::work_imp()
     
     /***** Uplink Processing + Transmission *******/
     
-    /* Generate UCI */
+    /* Generate SR if required*/
     set_uci_sr();    
-    set_uci_cqi();
+    
+    /* Generate periodic CQI reports if required */
+    set_uci_periodic_cqi();
     
     
     /* Check if we have UL grant. ul_phy_grant will be overwritten by new grant */
@@ -427,13 +431,27 @@ void phch_worker::set_uci_sr()
   } 
 }
 
-void phch_worker::set_uci_cqi()
+void phch_worker::set_uci_periodic_cqi()
 {
-  if (cqi_cfg.configured || rar_cqi_request) {
-    if (srslte_cqi_send(cqi_cfg.pmi_idx, tti+4)) {
-      uci_data.uci_cqi_len = 4; 
-      uint8_t cqi[4] = {1, 1, 1, 1}; 
-      uci_data.uci_cqi = cqi;          
+  if (period_cqi.configured || rar_cqi_request) {
+    if (srslte_cqi_send(period_cqi.pmi_idx, tti+4)) {
+      srslte_cqi_value_t cqi_report;
+      if (period_cqi.format_is_subband) {
+        // TODO: Implement subband periodic reports
+        cqi_report.type = SRSLTE_CQI_TYPE_SUBBAND;
+        snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
+        cqi_report.subband.subband_cqi = srslte_cqi_from_snr(snr);
+        cqi_report.subband.subband_label = 0;
+        printf("Warning: Subband CQI periodic reports not implemented\n");
+      } else {
+        cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
+        snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
+        cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
+        if (cqi_report.wideband.wideband_cqi > 14) {
+          cqi_report.wideband.wideband_cqi = 14; 
+        } 
+      }
+      uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
       rar_cqi_request = false; 
     }
   }
@@ -456,7 +474,18 @@ void phch_worker::set_tx_time(srslte_timestamp_t _tx_time)
 }
 
 void phch_worker::normalize() {
-  srslte_vec_norm_cfc(signal_buffer, 0.8, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));  
+  //srslte_vec_norm_cfc(signal_buffer, 0.8, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));  
+  // Compute peak
+  /*
+  float max = 0; 
+  float *t = (float*) signal_buffer;
+  for (int i=0;i<2*SRSLTE_SF_LEN_PRB(cell.nof_prb);i++) {
+    if (fabsf(t[i]) > max) {
+      max = fabsf(t[i]);
+    }
+  }
+  printf("max=%f\n", max);
+  */
 }
 
 void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, uint32_t current_tx_nb, 
@@ -482,20 +511,20 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
         uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",uci_data.scheduling_request?"yes":"no", 
         rnti, ue_ul.pusch.shortened?"yes":"no");
 
-  normalize();
-  
-  /*
-  char filename[128];
-  sprintf(filename, "pusch%d",tti+4);
-  srslte_vec_save_file(filename, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb)*sizeof(cf_t));
-  */
+  normalize();  
 }
 
 void phch_worker::encode_pucch()
 {
 
-  if (uci_data.scheduling_request || uci_data.uci_ack_len > 0) 
+  if (uci_data.scheduling_request || uci_data.uci_ack_len > 0 || uci_data.uci_cqi_len > 0) 
   {
+    
+    // Drop CQI if there is collision with ACK 
+    if (!period_cqi.simul_cqi_ack && uci_data.uci_ack_len > 0 && uci_data.uci_cqi_len > 0) {
+      uci_data.uci_cqi_len = 0; 
+    }
+    
     if (srslte_ue_ul_pucch_encode(&ue_ul, uci_data, last_dl_pdcch_ncce, tti+4, signal_buffer)) {
       Error("Encoding PUCCH\n");
     }
@@ -536,7 +565,7 @@ void phch_worker::reset_ul_params()
   bzero(&pucch_cfg, sizeof(srslte_pucch_cfg_t));
   bzero(&pucch_sched, sizeof(srslte_pucch_sched_t));
   bzero(&srs_cfg, sizeof(srslte_refsignal_srs_cfg_t));
-  bzero(&cqi_cfg, sizeof(srslte_cqi_cfg_t));
+  bzero(&period_cqi, sizeof(srslte_cqi_periodic_cfg_t));
   I_sr = 0; 
 }
 
@@ -598,12 +627,12 @@ void phch_worker::set_ul_params()
   srslte_ue_ul_set_cfg(&ue_ul, &dmrs_cfg, &srs_cfg, &pucch_cfg, &pucch_sched, &uci_cfg, &pusch_hopping);
 
   /* CQI configuration */
-  bzero(&cqi_cfg, sizeof(srslte_cqi_cfg_t));
-  cqi_cfg.configured           = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_CONFIGURED)?true:false;
-  cqi_cfg.pmi_idx              = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_PMI_IDX); 
-  cqi_cfg.simul_cqi_ack        = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_SIMULT_ACK)?true:false;
-  cqi_cfg.format_is_subband    = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND)?true:false;
-  cqi_cfg.subband_k            = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND_K);
+  bzero(&period_cqi, sizeof(srslte_cqi_periodic_cfg_t));
+  period_cqi.configured        = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_CONFIGURED)?true:false;
+  period_cqi.pmi_idx           = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_PMI_IDX); 
+  period_cqi.simul_cqi_ack     = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_SIMULT_ACK)?true:false;
+  period_cqi.format_is_subband = (bool)     phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND)?true:false;
+  period_cqi.subband_size      = (uint32_t) phy->params_db->get_param(phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND_K);
   
   /* SR configuration */
   I_sr                         = (uint32_t) phy->params_db->get_param(phy_interface_params::SR_CONFIG_INDEX);

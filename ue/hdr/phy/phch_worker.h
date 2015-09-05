@@ -84,7 +84,7 @@ private:
   void encode_srs();
   void reset_uci();
   void set_uci_sr();
-  void set_uci_cqi();
+  void set_uci_periodic_cqi();
   void set_uci_ack(bool ack);
   bool srs_is_ready_to_send();
   void normalize();
@@ -122,10 +122,11 @@ private:
   srslte_pusch_hopping_cfg_t        pusch_hopping; 
   srslte_pucch_sched_t              pucch_sched; 
   srslte_uci_cfg_t                  uci_cfg; 
-  srslte_cqi_cfg_t                  cqi_cfg; 
+  srslte_cqi_periodic_cfg_t         period_cqi; 
   uint32_t                          I_sr; 
   float                             cfo;
   bool                              rar_cqi_request;
+  double snr;
   
   
 };
