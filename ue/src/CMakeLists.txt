@@ -23,8 +23,11 @@ add_subdirectory(phy)
 add_subdirectory(mac)
 add_subdirectory(upper)
 
-add_library(ue_lib
-            ue.cc
-)
-add_executable(ue main.cc)
-target_link_libraries(ue ue_lib ${Boost_LIBRARIES})
+add_executable(ue main.cc ue.cc)
+target_link_libraries(ue    srsue_upper
+                            srsue_common
+                            srsue_mac
+                            srsue_phy
+                            srsue_radio
+                            lte
+                            ${Boost_LIBRARIES})

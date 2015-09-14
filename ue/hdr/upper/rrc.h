@@ -34,14 +34,57 @@
 
 namespace srsue {
 
+// RRC states (3GPP 36.331 v10.0.0)
+typedef enum{
+    RRC_STATE_IDLE = 0,
+    RRC_STATE_WAIT_FOR_CON_SETUP,
+    RRC_STATE_COMPLETING_SETUP,
+    RRC_STATE_RRC_CONNECTED,
+    RRC_STATE_N_ITEMS,
+}rrc_state_t;
+static const char rrc_state_text[RRC_STATE_N_ITEMS][100] = {"IDLE",
+                                                            "WAIT FOR CON SETUP",
+                                                            "COMPLETING SETUP",
+                                                            "RRC CONNECTED"};
+
+
 class rrc
+    :public rrc_interface_nas
+    ,public rrc_interface_pdcp
 {
 public:
-  rrc(srslte::log *rrc_log_);
-  void init();
+  rrc();
+  void init(phy_interface_rrc     *phy_,
+            mac_interface_rrc     *mac_,
+            rlc_interface_rrc     *rlc_,
+            pdcp_interface_rrc    *pdcp_,
+            nas_interface_rrc     *nas_,
+            srslte::log           *rrc_log_);
 
 private:
-  srslte::log *rrc_log;
+  srslte::log           *rrc_log;
+  phy_interface_rrc     *phy;
+  mac_interface_rrc     *mac;
+  rlc_interface_rrc     *rlc;
+  pdcp_interface_rrc    *pdcp;
+  nas_interface_rrc     *nas;
+
+  srsue_byte_buffer_t   pdcp_buf;
+  srsue_byte_buffer_t   nas_buf;
+  srsue_bit_buffer_t    bit_buf;
+
+  rrc_state_t           state;
+
+  bool                  mib_decoded;
+  bool                  sib1_decoded;
+  bool                  sib2_decoded;
+
+  void write_pdu(srsue_byte_buffer_t *pdu);
+  void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
+  void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu);
+
+  void send_con_request();
+  uint32_t sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
 };
 
 } // namespace srsue

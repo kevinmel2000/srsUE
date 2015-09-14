@@ -28,7 +28,8 @@
 #ifndef RLC_ENTITY_H
 #define RLC_ENTITY_H
 
-#include <common/log.h>
+#include "common/log.h"
+#include "common/common.h"
 #include "liblte_rrc.h"
 #include "liblte_rlc.h"
 
@@ -53,7 +54,7 @@ public:
   bool is_active();
 
   // PDCP interface
-  void write_sdu(uint8_t *payload, uint32_t nof_bytes);
+  void write_sdu(srsue_byte_buffer_t *sdu);
 
   // MAC interface
   uint32_t get_buffer_state();

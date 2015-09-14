@@ -35,13 +35,19 @@
 namespace srsue {
 
 class gw
+    :public gw_interface_pdcp
 {
 public:
-  gw(srslte::log *gw_log_);
-  void init();
+  gw();
+  void init(pdcp_interface_gw *pdcp_, ue_interface *ue_, srslte::log *gw_log_);
+
+  // UE interface
+  bool check_ul_buffers();
 
 private:
-  srslte::log *gw_log;
+  srslte::log       *gw_log;
+  pdcp_interface_gw *pdcp;
+  ue_interface      *ue;
 };
 
 } // namespace srsue

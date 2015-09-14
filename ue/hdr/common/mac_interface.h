@@ -113,20 +113,6 @@ public:
   
 };
 
-/* Interface RLC -> MAC */
-class mac_interface_rlc
-{
-public:
- 
-  /* RLC configures a logical channel */
-  virtual void    setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_tti, uint32_t BSD) = 0;  
-  
-  virtual uint32_t get_current_tti() = 0;
-  
-  virtual void    reconfiguration() = 0; 
-  virtual void    reset() = 0; 
-};
-
 class mac_interface_params 
 {
 public: 
@@ -181,6 +167,21 @@ public:
   /* Sets/gets a parameter */
   virtual void    set_param(mac_param_t param, int64_t value) = 0; 
   virtual int64_t get_param(mac_param_t param) = 0;  
+};
+
+/* Interface RRC -> MAC */
+class mac_interface_rrc
+    :public mac_interface_params
+{
+public:
+
+  /* RRC configures a logical channel */
+  virtual void    setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_tti, uint32_t BSD) = 0;
+
+  virtual uint32_t get_current_tti() = 0;
+
+  virtual void    reconfiguration() = 0;
+  virtual void    reset() = 0;
 };
 
 }

@@ -1,0 +1,21 @@
+[rf]
+dl_freq = 2680000000
+ul_freq = 2560000000
+rx_gain = 10
+tx_gain = 10
+
+[pcap]
+enable = true
+filename = /tmp/ue.pcap
+
+[trace]
+enable = true
+phy_filename = /tmp/ue.phy_trace
+radio_filename = /tmp/ue.radio_trace
+
+[log]
+rrc_level = debug
+mac_level = debug
+all_level = info
+all_hex_limit = -1
+filename = /tmp/ue.log

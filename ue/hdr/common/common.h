@@ -28,8 +28,85 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+/*******************************************************************************
+                              INCLUDES
+*******************************************************************************/
+
+#include <stdint.h>
+#include <string.h>
+
+/*******************************************************************************
+                              DEFINES
+*******************************************************************************/
+
+#define SRSUE_UE_CATEGORY     3
+
 #define SRSUE_N_SRB           3
 #define SRSUE_N_DRB           8
 #define SRSUE_N_RADIO_BEARERS 11
+
+// Cat 3 UE - Max number of DL-SCH transport block bits received within a TTI
+// 3GPP 36.306 Table 4.1.1
+#define SRSUE_MAX_BUFFER_SIZE 102048
+
+/*******************************************************************************
+                              TYPEDEFS
+*******************************************************************************/
+
+typedef enum{
+    SRSUE_RB_ID_SRB0 = 0,
+    SRSUE_RB_ID_SRB1,
+    SRSUE_RB_ID_SRB2,
+    SRSUE_RB_ID_DRB1,
+    SRSUE_RB_ID_DRB2,
+    SRSUE_RB_ID_DRB3,
+    SRSUE_RB_ID_DRB4,
+    SRSUE_RB_ID_DRB5,
+    SRSUE_RB_ID_DRB6,
+    SRSUE_RB_ID_DRB7,
+    SRSUE_RB_ID_DRB8,
+    SRSUE_RB_ID_N_ITEMS,
+}srsue_rb_id_t;
+static const char srsue_rb_id_text[SRSUE_RB_ID_N_ITEMS][20] = { "SRB0",
+                                                                "SRB1",
+                                                                "SRB2",
+                                                                "DRB1",
+                                                                "DRB2",
+                                                                "DRB3",
+                                                                "DRB4",
+                                                                "DRB5",
+                                                                "DRB6",
+                                                                "DRB7",
+                                                                "DRB8"};
+
+struct srsue_byte_buffer_t{
+    uint32_t N_bytes;
+    uint8_t  msg[SRSUE_MAX_BUFFER_SIZE];
+
+    srsue_byte_buffer_t():N_bytes(0){}
+    srsue_byte_buffer_t(const srsue_byte_buffer_t& buf){
+      N_bytes = buf.N_bytes;
+      memcpy(msg, buf.msg, N_bytes);
+    }
+    srsue_byte_buffer_t & operator= (const srsue_byte_buffer_t & buf){
+      N_bytes = buf.N_bytes;
+      memcpy(msg, buf.msg, N_bytes);
+    }
+};
+
+struct srsue_bit_buffer_t{
+    uint32_t N_bits;
+    uint8_t  msg[SRSUE_MAX_BUFFER_SIZE];
+
+    srsue_bit_buffer_t():N_bits(0){}
+    srsue_bit_buffer_t(const srsue_bit_buffer_t& buf){
+      N_bits = buf.N_bits;
+      memcpy(msg, buf.msg, N_bits);
+    }
+    srsue_bit_buffer_t & operator= (const srsue_bit_buffer_t & buf){
+      N_bits = buf.N_bits;
+      memcpy(msg, buf.msg, N_bits);
+    }
+};
 
 #endif // COMMON_H

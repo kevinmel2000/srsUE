@@ -25,20 +25,18 @@
  *
  */
 
-#include "upper/nas.h"
+#include "upper/user.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-nas::nas()
-  :state(EMM_STATE_NULL)
+user::user()
 {}
 
-void nas::init(rrc_interface_nas *rrc_, srslte::log *nas_log_)
+void user::init(srslte::log *user_log_)
 {
-  rrc     = rrc_;
-  nas_log = nas_log_;
+  user_log = user_log_;
 }
 
 } // namespace srsue

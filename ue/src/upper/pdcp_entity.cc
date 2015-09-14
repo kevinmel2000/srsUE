@@ -47,4 +47,7 @@ bool pdcp_entity::is_active()
   return active;
 }
 
+void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu){}
+void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu){}
+
 }

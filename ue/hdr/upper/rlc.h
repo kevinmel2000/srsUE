@@ -28,9 +28,10 @@
 #ifndef RLC_H
 #define RLC_H
 
-#include <common/log.h>
+#include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
+#include "common/msg_queue.h"
 #include "upper/rlc_entity.h"
 
 namespace srsue {
@@ -41,11 +42,13 @@ class rlc
     ,public rlc_interface_rrc
 {
 public:
-  rlc(srslte::log *rlc_log_);
-  void init(pdcp_interface_rlc *pdcp_);
+  rlc();
+  void init(pdcp_interface_rlc *pdcp_,
+            ue_interface *ue_,
+            srslte::log *rlc_log_);
 
   // PDCP interface
-  void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes);
+  void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
 
   // MAC interface
   uint32_t get_buffer_state(uint32_t lcid);
@@ -57,10 +60,21 @@ public:
   // RRC interface
   void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);
 
+  // UE interface
+  bool check_retx_buffers();
+  bool check_dl_buffers();
+
 private:
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
+  ue_interface       *ue;
   rlc_entity          rlc_array[SRSUE_N_RADIO_BEARERS];
+
+  srsue_byte_buffer_t mac_buf;
+
+  // Thread-safe queues for MAC messages
+  msg_queue           bcch_bch_queue;
+  msg_queue           bcch_dlsch_queue;
 
   bool valid_lcid(uint32_t lcid);
 };

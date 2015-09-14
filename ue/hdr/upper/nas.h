@@ -34,14 +34,37 @@
 
 namespace srsue {
 
+// EMM states (3GPP 24.302 v10.0.0)
+typedef enum{
+    EMM_STATE_NULL = 0,
+    EMM_STATE_DEREGISTERED,
+    EMM_STATE_REGISTERED_INITIATED,
+    EMM_STATE_REGISTERED,
+    EMM_STATE_SERVICE_REQUEST_INITIATED,
+    EMM_STATE_DEREGISTERED_INITIATED,
+    EMM_STATE_TAU_INITIATED,
+    EMM_STATE_N_ITEMS,
+}emm_state_t;
+static const char emm_state_text[EMM_STATE_N_ITEMS][100] = {"NULL",
+                                                            "DEREGISTERED",
+                                                            "REGISTERED INITIATED",
+                                                            "REGISTERED",
+                                                            "SERVICE REQUEST INITIATED",
+                                                            "DEREGISTERED INITIATED",
+                                                            "TRACKING AREA UPDATE INITIATED"};
+
 class nas
+    :public nas_interface_rrc
 {
 public:
-  nas(srslte::log *nas_log_);
-  void init();
+  nas();
+  void init(rrc_interface_nas *rrc_, srslte::log *nas_log_);
 
 private:
-  srslte::log *nas_log;
+  srslte::log       *nas_log;
+  rrc_interface_nas *rrc;
+
+  emm_state_t        state;
 };
 
 } // namespace srsue

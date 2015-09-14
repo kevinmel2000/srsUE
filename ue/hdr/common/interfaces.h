@@ -29,57 +29,91 @@
 #define INTERFACES_H
 
 #include "liblte_rrc.h"
+#include "common/common.h"
 #include "upper/rlc_entity.h"
+#include "mac_interface.h"
+#include "phy_interface.h"
 
 namespace srsue {
 
-/*******************************************************************************
-  PDCP interface for GW
-*******************************************************************************/
+// UE interface
+class ue_interface
+{
+public:
+  virtual void notify() = 0;
+};
+
+// GW interface for PDCP
+class gw_interface_pdcp
+{
+public:
+  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+};
+
+// NAS interface for RRC
+class nas_interface_rrc
+{
+public:
+  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+};
+
+// RRC interface for NAS
+class rrc_interface_nas
+{
+public:
+  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+};
+
+// RRC interface for PDCP
+class rrc_interface_pdcp
+{
+public:
+  virtual void write_pdu(srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu) = 0;
+};
+
+// PDCP interface for GW
 class pdcp_interface_gw
 {
-  virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+public:
+  virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
 };
 
-/*******************************************************************************
-  PDCP interface for RRC
-*******************************************************************************/
+// PDCP interface for RRC
 class pdcp_interface_rrc
 {
-  virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+public:
+  virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
 };
 
-/*******************************************************************************
-  PDCP interface for RLC
-*******************************************************************************/
+// PDCP interface for RLC
 class pdcp_interface_rlc
 {
+public:
   /* RLC calls PDCP to push a PDCP PDU. */
-  virtual void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu) = 0;
 };
 
-/*******************************************************************************
-  RLC interface for RRC
-*******************************************************************************/
+// RLC interface for RRC
 class rlc_interface_rrc
 {
-  virtual void     add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
+public:
+  virtual void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 };
 
-/*******************************************************************************
-  RLC interface for PDCP
-*******************************************************************************/
+// RLC interface for PDCP
 class rlc_interface_pdcp
 {
+public:
   /* PDCP calls RLC to push an RLC SDU. SDU gets placed into the RLC buffer and MAC pulls
    * RLC PDUs according to TB size. */
-  virtual void     write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
 };
 
-
-/*******************************************************************************
-  RLC interface for MAC
-*******************************************************************************/
+//RLC interface for MAC
 class rlc_interface_mac
 {
 public:
@@ -95,9 +129,9 @@ public:
 
   /* MAC calls RLC to push an RLC PDU. This function is called from an independent MAC thread.
    * PDU gets placed into the buffer and higher layer thread gets notified. */
-  virtual void     write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
-  virtual void     write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes) = 0;
-  virtual void     write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes) = 0;
 };
 
 } // namespace srsue

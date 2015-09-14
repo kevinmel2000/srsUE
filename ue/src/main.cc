@@ -67,13 +67,17 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
     // Command line or config file options
     bpo::options_description common("Configuration options");
     common.add_options()
-        ("rf.dl_freq",        bpo::value<float>(&args->rf.dl_freq),       "Downlink centre frequency")
-        ("rf.ul_freq",        bpo::value<float>(&args->rf.ul_freq),       "Uplink centre frequency")
-        ("rf.rx_gain",        bpo::value<float>(&args->rf.rx_gain),       "Front-end receiver gain")
-        ("rf.tx_gain",        bpo::value<float>(&args->rf.tx_gain),       "Front-end transmitter gain")
+        ("rf.dl_freq",        bpo::value<float>(&args->rf.dl_freq)->default_value(2680000000),  "Downlink centre frequency")
+        ("rf.ul_freq",        bpo::value<float>(&args->rf.ul_freq)->default_value(2560000000),  "Uplink centre frequency")
+        ("rf.rx_gain",        bpo::value<float>(&args->rf.rx_gain)->default_value(10),          "Front-end receiver gain")
+        ("rf.tx_gain",        bpo::value<float>(&args->rf.tx_gain)->default_value(10),          "Front-end transmitter gain")
 
-        ("pcap.enable",                                                   "Enable MAC packet captures for wireshark")
-        ("pcap.filename",     bpo::value<string>(&args->pcap.filename),   "MAC layer capture filename")
+        ("pcap.enable",       bpo::value<bool>(&args->pcap.enable)->default_value(false),           "Enable MAC packet captures for wireshark")
+        ("pcap.filename",     bpo::value<string>(&args->pcap.filename)->default_value("ue.pcap"),   "MAC layer capture filename")
+
+        ("trace.enable",      bpo::value<bool>(&args->trace.enable)->default_value(false),                  "Enable PHY and radio timing traces")
+        ("trace.phy_filename",bpo::value<string>(&args->trace.phy_filename)->default_value("ue.phy_trace"), "PHY timing traces filename")
+        ("trace.radio_filename",bpo::value<string>(&args->trace.radio_filename)->default_value("ue.radio_trace"), "Radio timing traces filename")
 
         ("log.phy_level",     bpo::value<string>(&args->log.phy_level),   "PHY log level")
         ("log.phy_hex_limit", bpo::value<int>(&args->log.phy_hex_limit),  "PHY log hex dump limit")
@@ -89,8 +93,13 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         ("log.gw_hex_limit",  bpo::value<int>(&args->log.gw_hex_limit),   "GW log hex dump limit")
         ("log.nas_level",     bpo::value<string>(&args->log.nas_level),   "NAS log level")
         ("log.nas_hex_limit", bpo::value<int>(&args->log.nas_hex_limit),  "NAS log hex dump limit")
-        ("log.all_level",     bpo::value<string>(&args->log.all_level),   "ALL log level")
-        ("log.all_hex_limit", bpo::value<int>(&args->log.all_hex_limit),  "ALL log hex dump limit")
+        ("log.user_level",    bpo::value<string>(&args->log.user_level),  "USER log level")
+        ("log.user_hex_limit",bpo::value<int>(&args->log.user_hex_limit), "USER log hex dump limit")
+
+        ("log.all_level",     bpo::value<string>(&args->log.all_level)->default_value("info"),   "ALL log level")
+        ("log.all_hex_limit", bpo::value<int>(&args->log.all_hex_limit)->default_value(32),  "ALL log hex dump limit")
+
+        ("log.filename",      bpo::value<string>(&args->log.filename)->default_value("/tmp/ue.log"),"Log filename")
     ;
 
     // Positional options - config file location
@@ -139,8 +148,60 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         bpo::notify(vm);
     }
 
-    if (vm.count("enable_pcap")) {
-      args->pcap.enable = true;
+    // Apply all_level to any unset layers
+    if (vm.count("log.all_level")) {
+      if(!vm.count("log.phy_level")) {
+        args->log.phy_level = args->log.all_level;
+      }
+      if(!vm.count("log.mac_level")) {
+        args->log.mac_level = args->log.all_level;
+      }
+      if(!vm.count("log.rlc_level")) {
+        args->log.rlc_level = args->log.all_level;
+      }
+      if(!vm.count("log.pdcp_level")) {
+        args->log.pdcp_level = args->log.all_level;
+      }
+      if(!vm.count("log.rrc_level")) {
+        args->log.rrc_level = args->log.all_level;
+      }
+      if(!vm.count("log.nas_level")) {
+        args->log.nas_level = args->log.all_level;
+      }
+      if(!vm.count("log.gw_level")) {
+        args->log.gw_level = args->log.all_level;
+      }
+      if(!vm.count("log.user_level")) {
+        args->log.user_level = args->log.all_level;
+      }
+    }
+
+    // Apply all_hex_limit to any unset layers
+    if (vm.count("log.all_hex_limit")) {
+      if(!vm.count("log.phy_hex_limit")) {
+        args->log.phy_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.mac_hex_limit")) {
+        args->log.mac_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.rlc_hex_limit")) {
+        args->log.rlc_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.pdcp_hex_limit")) {
+        args->log.pdcp_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.rrc_hex_limit")) {
+        args->log.rrc_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.nas_hex_limit")) {
+        args->log.nas_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.gw_hex_limit")) {
+        args->log.gw_hex_limit = args->log.all_hex_limit;
+      }
+      if(!vm.count("log.user_hex_limit")) {
+        args->log.user_hex_limit = args->log.all_hex_limit;
+      }
     }
 }
 
@@ -152,6 +213,10 @@ int main(int argc, char *argv[]) {
 
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
   parse_args(&args, argc, argv);
+
+  srsue::ue ue(&args);
+  ue.init();
+
   while(1) {
     usleep(100000);
   }

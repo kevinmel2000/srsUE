@@ -25,20 +25,26 @@
  *
  */
 
-#include "upper/nas.h"
+#ifndef USER_H
+#define USER_H
 
-using namespace srslte;
+#include "common/log.h"
+#include "common/common.h"
+#include "common/interfaces.h"
 
-namespace srsue{
+namespace srsue {
 
-nas::nas()
-  :state(EMM_STATE_NULL)
-{}
-
-void nas::init(rrc_interface_nas *rrc_, srslte::log *nas_log_)
+class user
 {
-  rrc     = rrc_;
-  nas_log = nas_log_;
-}
+public:
+  user();
+  void init(srslte::log *user_log_);
+
+private:
+  srslte::log *user_log;
+};
 
 } // namespace srsue
+
+
+#endif // USER_H

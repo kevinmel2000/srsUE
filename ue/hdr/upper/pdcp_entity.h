@@ -29,6 +29,7 @@
 #define PDCP_ENTITY_H
 
 #include "common/log.h"
+#include "common/common.h"
 
 namespace srsue {
 
@@ -38,6 +39,9 @@ public:
   pdcp_entity();
   void init(srslte::log *pdcp_entity_log_, uint32_t lcid_);
   bool is_active();
+
+  void write_sdu(srsue_byte_buffer_t *sdu);
+  void write_pdu(srsue_byte_buffer_t *pdu);
 
 private:
   srslte::log   *pdcp_entity_log;

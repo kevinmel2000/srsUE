@@ -31,13 +31,22 @@ using namespace srslte;
 
 namespace srsue{
 
-gw::gw(srslte::log *gw_log_)
-  :gw_log(gw_log_)
+gw::gw()
+{}
+
+void gw::init(pdcp_interface_gw *pdcp_, ue_interface *ue_, srslte::log *gw_log_)
 {
+  pdcp    = pdcp_;
+  ue      = ue_;
+  gw_log  = gw_log_;
 }
 
-void gw::init()
+/*******************************************************************************
+  UE interface
+*******************************************************************************/
+bool gw::check_ul_buffers()
 {
+  return false;
 }
 
 } // namespace srsue

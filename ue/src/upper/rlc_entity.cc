@@ -53,4 +53,12 @@ bool rlc_entity::is_active()
   return active;
 }
 
+// PDCP interface
+void rlc_entity::write_sdu(srsue_byte_buffer_t *sdu){}
+
+// MAC interface
+uint32_t rlc_entity::get_buffer_state(){return 0;}
+void     rlc_entity::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
+void    rlc_entity:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
+
 }

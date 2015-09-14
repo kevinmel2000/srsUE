@@ -158,6 +158,13 @@ public:
   virtual void reset() = 0;
   
 };
+
+class phy_interface_rrc
+    :public phy_interface_params
+{
+public:
+  virtual bool status_is_sync() = 0;
+};
   
 }
 

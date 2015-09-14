@@ -49,7 +49,11 @@
 
 namespace srsue {
   
-class mac : public mac_interface_phy, mac_interface_rlc, thread, srslte::timer_callback, mac_interface_params
+class mac
+    :public mac_interface_phy
+    ,public mac_interface_rrc
+    ,public thread
+    ,public srslte::timer_callback
 {
 public:
   mac();

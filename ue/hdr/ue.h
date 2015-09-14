@@ -45,11 +45,18 @@
 #include "upper/rrc.h"
 #include "upper/nas.h"
 #include "upper/gw.h"
+#include "upper/user.h"
 
+#include "common/interfaces.h"
+#include "common/threads.h"
 #include "common/logger.h"
 #include "common/log_filter.h"
 
 namespace srsue {
+
+/*******************************************************************************
+  UE Parameters
+*******************************************************************************/
 
 typedef struct {
   float         dl_freq;
@@ -64,54 +71,88 @@ typedef struct {
 }pcap_args_t;
 
 typedef struct {
+  bool          enable;
+  std::string   phy_filename;
+  std::string   radio_filename;
+}trace_args_t;
+
+typedef struct {
   std::string   phy_level;
-  int           phy_hex_limit;
   std::string   mac_level;
-  int           mac_hex_limit;
   std::string   rlc_level;
-  int           rlc_hex_limit;
   std::string   pdcp_level;
-  int           pdcp_hex_limit;
   std::string   rrc_level;
-  int           rrc_hex_limit;
   std::string   gw_level;
-  int           gw_hex_limit;
   std::string   nas_level;
-  int           nas_hex_limit;
+  std::string   user_level;
   std::string   all_level;
+  int           phy_hex_limit;
+  int           mac_hex_limit;
+  int           rlc_hex_limit;
+  int           pdcp_hex_limit;
+  int           rrc_hex_limit;
+  int           gw_hex_limit;
+  int           nas_hex_limit;
+  int           user_hex_limit;
   int           all_hex_limit;
+  std::string   filename;
 }log_args_t;
 
 typedef struct {
   rf_args_t     rf;
   pcap_args_t   pcap;
+  trace_args_t  trace;
   log_args_t    log;
 }all_args_t;
 
+/*******************************************************************************
+  Main UE class
+*******************************************************************************/
+
 class ue
+    :public thread
+    ,public ue_interface
 {
 public:
-  ue();
+  ue(all_args_t *args_);
+  ~ue();
+  void init();
+  void stop();
+  void notify();
+
+protected:
+  void run_thread();
 
 private:
-  srslte::radio_uhd radio_uhd;
-  srsue::phy        phy;
-  srsue::mac        mac;
-  srsue::mac_pcap   mac_pcap;
-  srsue::rlc        rlc;
-  srsue::pdcp       pdcp;
-  srsue::rrc        rrc;
-  srsue::nas        nas;
-  srsue::gw         gw;
+  srslte::radio_uhd *radio_uhd;
+  srsue::phy        *phy;
+  srsue::mac        *mac;
+  srsue::mac_pcap   *mac_pcap;
+  srsue::rlc        *rlc;
+  srsue::pdcp       *pdcp;
+  srsue::rrc        *rrc;
+  srsue::nas        *nas;
+  srsue::gw         *gw;
+  srsue::user       *user;
 
-  srsue::logger     logger;
-  srsue::log_filter phy_log;
-  srsue::log_filter mac_log;
-  srsue::log_filter rlc_log;
-  srsue::log_filter pdcp_log;
-  srsue::log_filter rrc_log;
-  srsue::log_filter nas_log;
-  srsue::log_filter gw_log;
+  srsue::logger     *logger;
+  srsue::log_filter *phy_log;
+  srsue::log_filter *mac_log;
+  srsue::log_filter *rlc_log;
+  srsue::log_filter *pdcp_log;
+  srsue::log_filter *rrc_log;
+  srsue::log_filter *nas_log;
+  srsue::log_filter *gw_log;
+  srsue::log_filter *user_log;
+
+  all_args_t       *args;
+  bool              started;
+
+  bool              have_data;
+  boost::condition  condition;
+  boost::mutex      mutex;
+
+  srslte::LOG_LEVEL_ENUM level(std::string l);
 };
 
 } // namespace srsue

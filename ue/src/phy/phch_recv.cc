@@ -179,7 +179,7 @@ bool phch_recv::cell_search(int force_N_id_2)
   cell.cp   = found_cells[max_peak_cell].cp; 
   cellsearch_cfo = found_cells[max_peak_cell].cfo;
   
-  Info("\nFound CELL ID: %d CP: %s, CFO: %f\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo);
+  Info("Found CELL ID: %d CP: %s, CFO: %f\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo);
   
   srslte_ue_mib_sync_t ue_mib_sync; 
 

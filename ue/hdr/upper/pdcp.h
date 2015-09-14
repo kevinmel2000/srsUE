@@ -36,14 +36,28 @@
 namespace srsue {
 
 class pdcp
+    :public pdcp_interface_gw
+    ,public pdcp_interface_rlc
+    ,public pdcp_interface_rrc
 {
 public:
-  pdcp(srslte::log *pdcp_log_);
-  void init();
+  pdcp();
+  void init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface_pdcp *gw_, srslte::log *pdcp_log_);
+
+  void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
+
+  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
+  void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu);
+  void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu);
 
 private:
   srslte::log        *pdcp_log;
   pdcp_entity         pdcp_array[SRSUE_N_RADIO_BEARERS];
+  rlc_interface_pdcp *rlc;
+  rrc_interface_pdcp *rrc;
+  gw_interface_pdcp  *gw;
+
+  bool valid_lcid(uint32_t lcid);
 };
 
 } // namespace srsue

@@ -49,7 +49,9 @@ namespace srsue {
     
 typedef _Complex float cf_t; 
 
-class phy : public phy_interface, phy_interface_params
+class phy
+    : public phy_interface
+    , public phy_interface_rrc
 {
 public:
   phy();

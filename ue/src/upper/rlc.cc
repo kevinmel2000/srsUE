@@ -31,24 +31,29 @@ using namespace srslte;
 
 namespace srsue{
 
-rlc::rlc(srslte::log *rlc_log_)
-  :rlc_log(rlc_log_)
-{
-  rlc_array[0].init(rlc_log, RLC_MODE_TM, 0); // SRB0
-}
+rlc::rlc()
+  :bcch_bch_queue(2)
+  ,bcch_dlsch_queue(2)
+{}
 
-void rlc::init(pdcp_interface_rlc *pdcp_)
+void rlc::init(pdcp_interface_rlc *pdcp_,
+               ue_interface *ue_,
+               srslte::log *rlc_log_)
 {
-  pdcp = pdcp_;
+  pdcp    = pdcp_;
+  ue      = ue_;
+  rlc_log = rlc_log_;
+
+  rlc_array[0].init(rlc_log, RLC_MODE_TM, 0); // SRB0
 }
 
 /*******************************************************************************
   PDCP interface
 *******************************************************************************/
-void rlc::write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
+void rlc::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 {
   if(valid_lcid(lcid)) {
-    rlc_array[lcid].write_sdu(payload, nof_bytes);
+    rlc_array[lcid].write_sdu(sdu);
   }
 }
 
@@ -79,10 +84,18 @@ void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 }
 
 void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
-{}
+{
+  rlc_log->info_hex(payload, nof_bytes, "BCCH BCH message received.");
+  bcch_bch_queue.write(payload, nof_bytes);
+  ue->notify();
+}
 
 void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
-{}
+{
+  rlc_log->info_hex(payload, nof_bytes, "BCCH DLSCH message received.");
+  bcch_dlsch_queue.write(payload, nof_bytes);
+  ue->notify();
+}
 
 /*******************************************************************************
   RRC interface
@@ -99,16 +112,41 @@ void rlc::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUC
 }
 
 /*******************************************************************************
+  UE interface
+*******************************************************************************/
+bool rlc::check_retx_buffers()
+{
+  return false;
+}
+
+bool rlc::check_dl_buffers()
+{
+  bool ret = false;
+
+  if(bcch_bch_queue.try_read(mac_buf))
+  {
+    pdcp->write_pdu_bcch_bch(&mac_buf);
+    ret = true;
+  }
+  if(bcch_dlsch_queue.try_read(mac_buf))
+  {
+    pdcp->write_pdu_bcch_dlsch(&mac_buf);
+    ret = true;
+  }
+  // TODO: Check each of the RB buffers
+
+  return ret;
+}
+
+/*******************************************************************************
   Helpers
 *******************************************************************************/
 bool rlc::valid_lcid(uint32_t lcid)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
-    rlc_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
     return false;
   }
   if(!rlc_array[lcid].is_active()) {
-    rlc_log->error("RLC entity for logical channel %d has not been activated", lcid);
     return false;
   }
   return true;

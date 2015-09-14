@@ -84,7 +84,7 @@ void logger::reader_loop() {
     lock.unlock();
     not_full.notify_one();
     if(logfile)
-      fprintf(logfile, "%s\n", s.get()->c_str());
+      fprintf(logfile, "%s", s.get()->c_str());
   }
 }
 
@@ -93,7 +93,7 @@ void logger::flush() {
   for(it=buffer.begin();it!=buffer.end();it++)
   {
     if(logfile)
-      fprintf(logfile, "%s\n", it->get()->c_str());
+      fprintf(logfile, "%s", it->get()->c_str());
   }
 }
 

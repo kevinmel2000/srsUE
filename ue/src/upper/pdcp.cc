@@ -31,13 +31,53 @@ using namespace srslte;
 
 namespace srsue{
 
-pdcp::pdcp(srslte::log *pdcp_log_)
-  :pdcp_log(pdcp_log_)
+pdcp::pdcp()
+{}
+
+void pdcp::init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface_pdcp *gw_, srslte::log *pdcp_log_)
 {
+  rlc       = rlc_;
+  rrc       = rrc_;
+  gw        = gw_;
+  pdcp_log  = pdcp_log_;
 }
 
-void pdcp::init()
+void pdcp::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 {
+  if(valid_lcid(lcid))
+    pdcp_array[lcid].write_sdu(sdu);
+}
+
+
+void pdcp::write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
+{
+  if(valid_lcid(lcid))
+    pdcp_array[lcid].write_pdu(sdu);
+}
+
+void pdcp::write_pdu_bcch_bch(srsue_byte_buffer_t *sdu)
+{
+  rrc->write_pdu_bcch_bch(sdu);
+}
+void pdcp::write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu)
+{
+  rrc->write_pdu_bcch_dlsch(sdu);
+}
+
+/*******************************************************************************
+  Helpers
+*******************************************************************************/
+bool pdcp::valid_lcid(uint32_t lcid)
+{
+  if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
+    pdcp_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
+    return false;
+  }
+  if(!pdcp_array[lcid].is_active()) {
+    pdcp_log->error("RLC entity for logical channel %d has not been activated", lcid);
+    return false;
+  }
+  return true;
 }
 
 } // namespace srsue
