@@ -207,17 +207,19 @@ void mac::run_thread() {
 void mac::search_si_rnti() 
 {
 
-  // Setup PDCCH search
-  int _si_window_start  = params_db.get_param(mac_interface_params::BCCH_SI_WINDOW_ST); 
-  int _si_window_length = params_db.get_param(mac_interface_params::BCCH_SI_WINDOW_LEN); 
-  
-  if ((tti >= si_window_start + si_window_length) && si_search_in_progress) {
+  // Cancel expired SI searches
+  if ((tti >= si_window_start + si_window_length + 2) && si_search_in_progress) {
     si_search_in_progress = false; 
     phy_h->pdcch_dl_search_reset();
     Debug("SI search window expired (%d >= %d+%d)\n", tti, si_window_start, si_window_length);
     params_db.set_param(mac_interface_params::BCCH_SI_WINDOW_ST, -1);
     params_db.set_param(mac_interface_params::BCCH_SI_WINDOW_LEN, -1);
   }
+
+  // Setup PDCCH search
+  int _si_window_start  = params_db.get_param(mac_interface_params::BCCH_SI_WINDOW_ST); 
+  int _si_window_length = params_db.get_param(mac_interface_params::BCCH_SI_WINDOW_LEN); 
+  
 
   if (_si_window_length > 0 && _si_window_start >= 0 && !si_search_in_progress) {     
     si_window_length = _si_window_length;

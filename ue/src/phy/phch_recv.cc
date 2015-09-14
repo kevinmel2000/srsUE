@@ -133,6 +133,7 @@ bool phch_recv::cell_search(int force_N_id_2)
 
   bzero(found_cells, 3*sizeof(srslte_ue_cellsearch_result_t));
 
+  Info("Starting Cell search...\n");
   if (srslte_ue_cellsearch_init(&cs, radio_recv_wrapper_cs, radio_h)) {
     Error("Initiating UE cell search\n");
     return false; 
@@ -269,8 +270,6 @@ void phch_recv::run_thread()
           radio_h->set_tx_srate((float) srslte_sampling_freq_hz(cell.nof_prb));
           Info("Cell found. Synchronizing...\n");
           phy_state = SYNCING;
-        } else {
-          phy_state = IDLE; 
         }
         break;
       case SYNCING:
