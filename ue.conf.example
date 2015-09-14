@@ -5,11 +5,11 @@ rx_gain = 10
 tx_gain = 10
 
 [pcap]
-enable = true
+enable = false
 filename = /tmp/ue.pcap
 
 [trace]
-enable = true
+enable = false
 phy_filename = /tmp/ue.phy_trace
 radio_filename = /tmp/ue.radio_trace
 
