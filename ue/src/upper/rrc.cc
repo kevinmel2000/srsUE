@@ -82,9 +82,10 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
     if (LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_1 == dlsch_msg.sibs[0].sib_type && RRC_STATE_SIB1_SEARCH == state) {
       memcpy(&sib1, &dlsch_msg.sibs[0].sib.sib1, sizeof(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_1_STRUCT));
       rrc_log->info("SIB1 received, CellID=%d, si_window=%d, sib2_period=%d\n",
-                    dlsch_msg.sibs[0].sib.sib1.cell_id&0xfff,
-                    sib1.si_window_length,
-                    sib1.sched_info[0].si_periodicity);
+                    sib1.cell_id&0xfff,
+                    liblte_rrc_si_window_length_num[sib1.si_window_length],
+                    liblte_rrc_si_periodicity_num[sib1.sched_info[0].si_periodicity]);
+      
       state = RRC_STATE_SIB2_SEARCH;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       //TODO: use SIB1 info or store it
@@ -109,7 +110,7 @@ void rrc::sib_search()
 {
   bool      searching = true;
   uint32_t  tti ;
-  uint32_t  si_win_start;
+  uint32_t  si_win_start, si_win_len;
 
   sib1_received = false; 
   sib2_received = false; 
@@ -137,10 +138,16 @@ void rrc::sib_search()
       usleep(10000);
       if (!sib2_received) {
         tti          = mac->get_current_tti();
-        si_win_start = sib_start_tti(tti, sib1.sched_info[0].si_periodicity, 0);
-        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, si_win_start);
-        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, sib1.si_window_length);
-        rrc_log->debug("Instructed MAC to search for SIB2, win_start=%d, win_len=%d\n", si_win_start, sib1.si_window_length);
+        si_win_start = sib_start_tti(tti, 
+                                     liblte_rrc_si_periodicity_num[sib1.sched_info[0].si_periodicity], 
+                                     0);
+        si_win_len   = liblte_rrc_si_window_length_num[sib1.si_window_length];
+        
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST,  si_win_start);
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, si_win_len);
+        
+        rrc_log->debug("Instructed MAC to search for SIB2, win_start=%d, win_len=%d\n", 
+                       si_win_start, si_win_len);
       }
       break;
     default:

@@ -49,11 +49,11 @@ typedef enum {
   LOG_LEVEL_DEBUG,
   LOG_LEVEL_N_ITEMS
 } LOG_LEVEL_ENUM;
-static const char log_level_text[LOG_LEVEL_N_ITEMS][16] = {"None",
-                                                           "Error",
+static const char log_level_text[LOG_LEVEL_N_ITEMS][16] = {"None   ",
+                                                           "Error  ",
                                                            "Warning",
-                                                           "Info",
-                                                           "Debug"};
+                                                           "Info   ",
+                                                           "Debug  "};
 
 class log
 {

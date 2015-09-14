@@ -271,7 +271,9 @@ bool phch_worker::decode_pdcch_dl(srsue::mac_interface_phy::mac_grant_t* grant)
 
     srslte_dci_msg_t dci_msg; 
     srslte_ra_dl_dci_t dci_unpacked;
-
+    
+    Debug("Looking for RNTI=0x%x\n", dl_rnti);
+    
     if (srslte_ue_dl_find_dl_dci_type(&ue_dl, &dci_msg, cfi, tti%10, dl_rnti, type) != 1) {
       return false; 
     }

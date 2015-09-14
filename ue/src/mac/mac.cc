@@ -143,7 +143,7 @@ void mac::run_thread() {
   while(started) {
 
     /* Warning: Here order of invocation of procedures is important!! */
-    tti = (ttisync.wait() + 1)%10240;
+    tti = ttisync.wait();
     
     if (started) {
       log_h->step(tti);
