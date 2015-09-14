@@ -393,13 +393,13 @@ public:
       uint32_t nbytes = bit_msg.N_bits/8;
       uint8_t *ptr = bit_msg.msg; 
       for (int i=0;i<nbytes;i++) {
-        ue_cri_ptr[nbytes-i-1] = (uint8_t) srslte_bit_unpack(&ptr, 8);
+        ue_cri_ptr[nbytes-i-1] = (uint8_t) srslte_bit_pack(&ptr, 8);
       }
       mac.set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
 
       // Send ConnectionRequest Packet
       printf("Send ConnectionRequest %d/%d bytes\n", nbytes, nof_bytes);
-      srslte_bit_unpack_vector(bit_msg.msg, payload, nbytes*8);
+      srslte_bit_pack_vector(bit_msg.msg, payload, nbytes*8);
       bzero(&payload[nbytes], (nof_bytes-nbytes)*sizeof(uint8_t));
       return nof_bytes;
     } else if (lcid == 1) {
@@ -435,7 +435,7 @@ public:
       LIBLTE_RRC_DL_CCCH_MSG_STRUCT dl_ccch_msg;
       printf("ConnSetup received %d bytes\n", nof_bytes);
       srslte_vec_fprint_byte(stdout, payload, nof_bytes);
-      srslte_bit_pack_vector(payload, bit_msg.msg, nof_bytes*8);
+      srslte_bit_unpack_vector(payload, bit_msg.msg, nof_bytes*8);
       bit_msg.N_bits = nof_bytes*8; 
       liblte_rrc_unpack_dl_ccch_msg(&bit_msg, &dl_ccch_msg);
       printf("Response: %s\n", liblte_rrc_dl_ccch_msg_type_text[dl_ccch_msg.msg_type]);
@@ -461,7 +461,7 @@ public:
   {
     LIBLTE_RRC_MIB_STRUCT mib;
     srslte_vec_fprint_byte(stdout, payload, nof_bytes);
-    srslte_bit_pack_vector(payload, bit_msg.msg, nof_bytes*8);
+    srslte_bit_unpack_vector(payload, bit_msg.msg, nof_bytes*8);
     bit_msg.N_bits = nof_bytes*8; 
     liblte_rrc_unpack_bcch_bch_msg(&bit_msg, &mib); 
     printf("MIB received %d bytes, BW=%s MHz\n", nof_bytes, liblte_rrc_dl_bandwidth_text[mib.dl_bw]);
@@ -471,7 +471,7 @@ public:
   void     write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes) 
   {
     LIBLTE_RRC_BCCH_DLSCH_MSG_STRUCT dlsch_msg;
-    srslte_bit_pack_vector(payload, bit_msg.msg, nof_bytes*8);
+    srslte_bit_unpack_vector(payload, bit_msg.msg, nof_bytes*8);
     bit_msg.N_bits = nof_bytes*8; 
     liblte_rrc_unpack_bcch_dlsch_msg(&bit_msg, &dlsch_msg);          
     if (dlsch_msg.N_sibs > 0) {

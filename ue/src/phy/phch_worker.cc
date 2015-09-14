@@ -447,8 +447,8 @@ void phch_worker::set_uci_periodic_cqi()
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
-        if (cqi_report.wideband.wideband_cqi > 14) {
-          cqi_report.wideband.wideband_cqi = 14; 
+        if (cqi_report.wideband.wideband_cqi > 12) {
+          cqi_report.wideband.wideband_cqi = 12; 
         } 
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);

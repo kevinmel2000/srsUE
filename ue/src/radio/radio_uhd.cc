@@ -165,6 +165,11 @@ double radio_uhd::set_rx_gain_th(float gain)
   return cuhd_set_rx_gain_th(uhd, gain);
 }
 
+void radio_uhd::set_master_clock_rate(float rate)
+{
+  cuhd_set_master_clock_rate(uhd, rate);
+}
+
 void radio_uhd::set_rx_srate(float srate)
 {
   cuhd_set_rx_srate(uhd, srate);

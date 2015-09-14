@@ -53,6 +53,7 @@ namespace srslte {
       virtual void set_tx_freq(float freq) = 0;
       virtual void set_rx_freq(float freq) = 0;
 
+      virtual void set_master_clock_rate(float rate) = 0; 
       virtual void set_tx_srate(float srate) = 0;
       virtual void set_rx_srate(float srate) = 0;
 

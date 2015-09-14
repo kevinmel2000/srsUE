@@ -132,20 +132,20 @@ int rar_unpack(uint8_t *buffer, rar_msg_t *msg)
       msg->hdr_type = (rar_header_t) *ptr++;
       if(msg->hdr_type == rar_header_type_bi) {
         ptr += 2; 
-        msg->BI = srslte_bit_unpack(&ptr, 4);
+        msg->BI = srslte_bit_pack(&ptr, 4);
         ret = SRSLTE_SUCCESS; 
       } else if (msg->hdr_type == rar_header_type_rapid) {
-        msg->RAPID = srslte_bit_unpack(&ptr, 6);
+        msg->RAPID = srslte_bit_pack(&ptr, 6);
         ptr++;
         
-        msg->timing_adv_cmd = srslte_bit_unpack(&ptr, 11);
+        msg->timing_adv_cmd = srslte_bit_pack(&ptr, 11);
         msg->hopping_flag   = *ptr++;
-        msg->rba            = srslte_bit_unpack(&ptr, 10); 
-        msg->mcs            = srslte_bit_unpack(&ptr, 4);
-        msg->tpc_command    = srslte_bit_unpack(&ptr, 3);
+        msg->rba            = srslte_bit_pack(&ptr, 10); 
+        msg->mcs            = srslte_bit_pack(&ptr, 4);
+        msg->tpc_command    = srslte_bit_pack(&ptr, 3);
         msg->ul_delay       = *ptr++;
         msg->csi_req        = *ptr++;
-        msg->temp_c_rnti    = srslte_bit_unpack(&ptr, 16);
+        msg->temp_c_rnti    = srslte_bit_pack(&ptr, 16);
         ret = SRSLTE_SUCCESS;
       } 
     }
@@ -283,7 +283,7 @@ public:
     if (ack) {
       if (rnti_type == SRSLTE_RNTI_RAR) {
         my_phy.pdcch_dl_search_reset();
-        srslte_bit_pack_vector(payload, payload_bits, last_grant.n_bytes*8);
+        srslte_bit_unpack_vector(payload, payload_bits, last_grant.n_bytes*8);
         rar_unpack(payload_bits, &rar_msg);
         if (rar_msg.RAPID == preamble_idx) {
 

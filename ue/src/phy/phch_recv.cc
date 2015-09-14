@@ -206,7 +206,7 @@ bool phch_recv::cell_search(int force_N_id_2)
     srslte_pbch_mib_unpack(bch_payload, &cell, NULL);
     srslte_cell_fprint(stdout, &cell, 0);
     //FIXME: this is temporal
-    srslte_bit_unpack_vector(bch_payload, bch_payload_bits, SRSLTE_BCH_PAYLOAD_LEN);
+    srslte_bit_pack_vector(bch_payload, bch_payload_bits, SRSLTE_BCH_PAYLOAD_LEN);
     mac->bch_decoded_ok(bch_payload_bits, SRSLTE_BCH_PAYLOAD_LEN/8);
     return true;     
   } else {
@@ -261,6 +261,10 @@ void phch_recv::run_thread()
       case CELL_SEARCH:
         if (cell_search()) {
           init_cell();
+          /* Modify master clock rate for 15 Mhz */
+          if (cell.nof_prb == 75) {
+            radio_h->set_master_clock_rate(23.04e6);
+          }
           radio_h->set_rx_srate((float) srslte_sampling_freq_hz(cell.nof_prb));
           radio_h->set_tx_srate((float) srslte_sampling_freq_hz(cell.nof_prb));
           Info("Cell found. Synchronizing...\n");

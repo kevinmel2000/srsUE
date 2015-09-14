@@ -49,6 +49,7 @@ namespace srsue {
     phy_params        *params_db; 
     srslte::log       *log_h;
     mac_interface_phy *mac;
+    srslte_ue_ul_t     ue_ul; 
 
     phch_common(uint32_t nof_workers);
     void init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac);

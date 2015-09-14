@@ -693,8 +693,8 @@ void rar_subh::write_payload(uint8_t** ptr)
   *(*ptr + 0) = (uint8_t)  (ta&0x7f0)>>4;
   *(*ptr + 1) = (uint8_t)  (ta&0xf)  <<4 | grant[0]<<3 | grant[1] << 2 | grant[2] << 1 | grant[3];
   uint8_t *x = &grant[4];
-  *(*ptr + 2) = (uint8_t) srslte_bit_unpack(&x, 8);
-  *(*ptr + 3) = (uint8_t) srslte_bit_unpack(&x, 8);
+  *(*ptr + 2) = (uint8_t) srslte_bit_pack(&x, 8);
+  *(*ptr + 3) = (uint8_t) srslte_bit_pack(&x, 8);
   *(*ptr + 4) = (uint8_t) ((temp_rnti&0xff00) >> 8);
   *(*ptr + 5) = (uint8_t)  (temp_rnti&0x00ff);
   *ptr += 6;
@@ -708,8 +708,8 @@ void rar_subh::read_payload(uint8_t** ptr)
   grant[2] = *(*ptr + 1)&0x2;
   grant[3] = *(*ptr + 1)&0x1;
   uint8_t *x = &grant[4];
-  srslte_bit_pack(*(*ptr+2), &x, 8);
-  srslte_bit_pack(*(*ptr+3), &x, 8);
+  srslte_bit_unpack(*(*ptr+2), &x, 8);
+  srslte_bit_unpack(*(*ptr+3), &x, 8);
   temp_rnti = ((uint16_t) *(*ptr + 4))<<8 | *(*ptr + 5);    
   *ptr += 6;
 }
