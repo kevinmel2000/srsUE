@@ -88,13 +88,13 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
       state = RRC_STATE_SIB2_SEARCH;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       //TODO: use SIB1 info or store it
-
+      sib1_received = true; 
     } else if (LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2 == dlsch_msg.sibs[0].sib_type && RRC_STATE_SIB2_SEARCH == state) {
       rrc_log->info("SIB2 received %d bytes\n", pdu->N_bytes);
       state = RRC_STATE_WAIT_FOR_CON_SETUP;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       //TODO: Use SIB2 info or store it
-
+      sib2_received = true; 
     }
   }
 }
@@ -111,6 +111,9 @@ void rrc::sib_search()
   uint32_t  tti ;
   uint32_t  si_win_start;
 
+  sib1_received = false; 
+  sib2_received = false; 
+
   while(searching)
   {
     switch(state)
@@ -121,22 +124,24 @@ void rrc::sib_search()
         usleep(50000);
       }
       usleep(10000);
-      tti          = mac->get_current_tti();
-      si_win_start = sib_start_tti(tti, 2, 5);
-      mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, si_win_start);
-      mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, 1);
-      rrc_log->debug("Instructed MAC to search for SIB1, win_start=%d, win_len=%d\n", si_win_start, 1);
-
+      if (!sib1_received) {
+        tti          = mac->get_current_tti();
+        si_win_start = sib_start_tti(tti, 2, 5);
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, si_win_start);
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, 1);
+        rrc_log->debug("Instructed MAC to search for SIB1, win_start=%d, win_len=%d\n", si_win_start, 1);
+      }
       break;
     case RRC_STATE_SIB2_SEARCH:
       // Instruct MAC to look for SIB2
       usleep(10000);
-      tti          = mac->get_current_tti();
-      si_win_start = sib_start_tti(tti, sib1.sched_info[0].si_periodicity, 0);
-      mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, si_win_start);
-      mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, sib1.si_window_length);
-      rrc_log->debug("Instructed MAC to search for SIB2, win_start=%d, win_len=%d\n", si_win_start, sib1.si_window_length);
-
+      if (!sib2_received) {
+        tti          = mac->get_current_tti();
+        si_win_start = sib_start_tti(tti, sib1.sched_info[0].si_periodicity, 0);
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, si_win_start);
+        mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_LEN, sib1.si_window_length);
+        rrc_log->debug("Instructed MAC to search for SIB2, win_start=%d, win_len=%d\n", si_win_start, sib1.si_window_length);
+      }
       break;
     default:
       searching = false;

@@ -87,6 +87,9 @@ private:
 
 
   pthread_t             sib_search_thread;
+  
+  bool sib1_received;
+  bool sib2_received;
 
   void write_pdu(srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
