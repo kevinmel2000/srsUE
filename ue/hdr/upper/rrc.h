@@ -87,18 +87,17 @@ private:
 
 
   pthread_t             sib_search_thread;
-  
-  bool sib1_received;
-  bool sib2_received;
 
   void write_pdu(srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu);
 
-  static void* start_sib_thread(void *rrc_);
-  void sib_search();
-  void send_con_request();
-  uint32_t sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
+  static void*  start_sib_thread(void *rrc_);
+
+  void      sib_search();
+  void      send_con_request();
+  uint32_t  sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
+  void      handle_sib2();
 };
 
 } // namespace srsue
