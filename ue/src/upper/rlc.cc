@@ -79,7 +79,7 @@ uint32_t rlc::get_buffer_state(uint32_t lcid)
 int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
-    rlc_array[lcid]->read_pdu(payload, nof_bytes);
+    return rlc_array[lcid]->read_pdu(payload, nof_bytes);
   }
 }
 

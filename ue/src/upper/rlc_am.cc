@@ -60,7 +60,7 @@ void rlc_am::write_sdu(srsue_byte_buffer_t *sdu){}
 
 // MAC interface
 uint32_t rlc_am::get_buffer_state(){return 0;}
-void     rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
+int      rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
 void     rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
 
 }

@@ -67,13 +67,16 @@ uint32_t rlc_tm::get_buffer_state()
   return ul_queue.size_bytes();
 }
 
-void    rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
+int rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  if(ul_queue.read(payload) != nof_bytes)
+  int read = ul_queue.read(payload);
+  if(read > nof_bytes)
   {
     log->error("MAC read size doesn't match SDU size on bearer %s", srsue_rb_id_text[lcid]);
+    return read;
   }else{
     log->info_hex(payload, nof_bytes, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
+    return read;
   }
 }
 void    rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
