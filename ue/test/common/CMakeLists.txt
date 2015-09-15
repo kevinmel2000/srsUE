@@ -22,8 +22,13 @@
 #######################################################################
 add_executable(logger_test logger_test.cc)
 target_link_libraries(logger_test srsue_common ${Boost_LIBRARIES})
+add_test(logger_test logger_test)
+
+add_executable(msg_queue_test msg_queue_test.cc)
+target_link_libraries(msg_queue_test srsue_common ${Boost_LIBRARIES})
+add_test(msg_queue_test msg_queue_test)
 
 add_executable(log_filter_test log_filter_test.cc)
 target_link_libraries(log_filter_test srsue_common ${Boost_LIBRARIES})
 
-add_test(logger_test logger_test)
+

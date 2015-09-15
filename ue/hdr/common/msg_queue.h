@@ -31,24 +31,33 @@
 #include "common/common.h"
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <boost/circular_buffer.hpp>
 
 namespace srsue {
 
 class msg_queue
 {
 public:
-  msg_queue(uint32_t size = 10)
-    :unread(0)
-    ,circ_buf(size)
-  {}
+  msg_queue(uint32_t capacity_ = 10)
+    :head(0)
+    ,tail(0)
+    ,unread(0)
+    ,capacity(capacity_)
+  {
+    buf = new srsue_byte_buffer_t[capacity];
+  }
+
+  ~msg_queue()
+  {
+    delete [] buf;
+  }
 
   void write(srsue_byte_buffer_t &msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_full()) not_full.wait(lock);
-    circ_buf.push_front(msg);
-    ++unread;
+    buf[head] = msg;
+    head = (head+1)%capacity;
+    unread++;
     lock.unlock();
     not_empty.notify_one();
   }
@@ -57,11 +66,10 @@ public:
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_full()) not_full.wait(lock);
-    srsue_byte_buffer_t msg;
-    memcpy(msg.msg, payload, nof_bytes);
-    msg.N_bytes = nof_bytes;
-    circ_buf.push_front(msg);
-    ++unread;
+    memcpy(buf[head].msg, payload, nof_bytes);
+    buf[head].N_bytes = nof_bytes;
+    head = (head+1)%capacity;
+    unread++;
     lock.unlock();
     not_empty.notify_one();
   }
@@ -70,7 +78,9 @@ public:
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_empty()) not_empty.wait(lock);
-    msg = circ_buf[--unread];
+    msg = buf[tail];
+    tail = (tail+1)%capacity;
+    unread--;
     lock.unlock();
     not_full.notify_one();
   }
@@ -82,22 +92,33 @@ public:
     {
       return false;
     }else{
-      msg = circ_buf[--unread];
+      msg = buf[tail];
+      tail = (tail+1)%capacity;
+      unread--;
       lock.unlock();
       not_full.notify_one();
       return true;
     }
   }
 
-private:
-  bool is_empty() const { return unread == 0; }
-  bool is_full() const { return unread == circ_buf.capacity(); }
+  uint32_t size()
+  {
+    boost::mutex::scoped_lock lock(mutex);
+    return unread;
+  }
 
-  boost::condition                             not_empty;
-  boost::condition                             not_full;
-  boost::mutex                                 mutex;
-  uint32_t                                     unread;
-  boost::circular_buffer<srsue_byte_buffer_t>  circ_buf;
+private:
+  bool     is_empty() const { return unread == 0; }
+  bool     is_full() const { return unread == capacity; }
+
+  boost::condition      not_empty;
+  boost::condition      not_full;
+  boost::mutex          mutex;
+  srsue_byte_buffer_t  *buf;
+  uint32_t              capacity;
+  uint32_t              unread;
+  uint32_t              head;
+  uint32_t              tail;
 };
 
 } // namespace srsue
