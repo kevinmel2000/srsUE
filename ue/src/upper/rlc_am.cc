@@ -25,40 +25,42 @@
  *
  */
 
-#include "upper/rlc_entity.h"
+#include "upper/rlc_am.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-rlc_entity::rlc_entity()
-  :active(false)
+rlc_am::rlc_am()
 {}
 
-void rlc_entity::init(srslte::log *rlc_entity_log_, RLC_MODE_ENUM mode_, uint32_t lcid_)
+void rlc_am::init(srslte::log *log_, uint32_t lcid_)
 {
-  rlc_entity_log = rlc_entity_log_;
-  mode    = mode_;
-  lcid    = lcid_;
-  active  = true;
+  log  = log_;
+  lcid = lcid_;
 }
 
-void rlc_entity::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
   //TODO
 }
 
-bool rlc_entity::is_active()
+RLC_MODE_ENUM rlc_am::get_mode()
 {
-  return active;
+  return RLC_MODE_AM;
+}
+
+uint32_t rlc_am::get_bearer()
+{
+  return lcid;
 }
 
 // PDCP interface
-void rlc_entity::write_sdu(srsue_byte_buffer_t *sdu){}
+void rlc_am::write_sdu(srsue_byte_buffer_t *sdu){}
 
 // MAC interface
-uint32_t rlc_entity::get_buffer_state(){return 0;}
-void     rlc_entity::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
-void    rlc_entity:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
+uint32_t rlc_am::get_buffer_state(){return 0;}
+void     rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
+void     rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
 
 }

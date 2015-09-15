@@ -25,23 +25,57 @@
  *
  */
 
-#include "upper/nas.h"
+#include "upper/rlc_tm.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-nas::nas()
-  :state(EMM_STATE_NULL)
+rlc_tm::rlc_tm()
 {}
 
-void nas::init(rrc_interface_nas *rrc_, srslte::log *nas_log_)
+void rlc_tm::init(srslte::log *log_, uint32_t lcid_)
 {
-  rrc     = rrc_;
-  nas_log = nas_log_;
+  log  = log_;
+  lcid = lcid_;
 }
 
-void nas::stop()
-{}
+void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+{
+  //TODO
+}
 
-} // namespace srsue
+RLC_MODE_ENUM rlc_tm::get_mode()
+{
+  return RLC_MODE_TM;
+}
+
+uint32_t rlc_tm::get_bearer()
+{
+  return lcid;
+}
+
+// PDCP interface
+void rlc_tm::write_sdu(srsue_byte_buffer_t *sdu)
+{
+  ul_queue.write(sdu);
+}
+
+// MAC interface
+uint32_t rlc_tm::get_buffer_state()
+{
+  return ul_queue.size_bytes();
+}
+
+void    rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
+{
+  if(ul_queue.read(payload) != nof_bytes)
+  {
+    log->error("MAC read size doesn't match SDU size on bearer %s", srsue_rb_id_text[lcid]);
+  }else{
+    log->info_hex(payload, nof_bytes, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
+  }
+}
+void    rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
+
+}

@@ -42,7 +42,7 @@ void* write_thread(void *a) {
   {
     memcpy(b.msg, &i, 4);
     b.N_bytes = 4;
-    args->q->write(b);
+    args->q->write(&b);
   }
 }
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 
   for(uint32_t i=0;i<NMSGS;i++)
   {
-    q.read(b);
+    q.read(&b);
     memcpy(&r, b.msg, 4);
     if(r != i)
       result = false;

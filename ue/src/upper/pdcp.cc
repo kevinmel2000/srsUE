@@ -40,7 +40,12 @@ void pdcp::init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface
   rrc       = rrc_;
   gw        = gw_;
   pdcp_log  = pdcp_log_;
+
+  pdcp_array[0].init(rlc, rrc, gw, pdcp_log, SRSUE_RB_ID_SRB0); // SRB0
 }
+
+void pdcp::stop()
+{}
 
 void pdcp::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 {

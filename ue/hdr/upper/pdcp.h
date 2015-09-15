@@ -43,6 +43,7 @@ class pdcp
 public:
   pdcp();
   void init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface_pdcp *gw_, srslte::log *pdcp_log_);
+  void stop();
 
   void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
 

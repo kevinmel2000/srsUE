@@ -26,6 +26,9 @@
  */
 
 #include "upper/rlc.h"
+#include "upper/rlc_tm.h"
+#include "upper/rlc_um.h"
+#include "upper/rlc_am.h"
 
 using namespace srslte;
 
@@ -44,8 +47,12 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
   ue      = ue_;
   rlc_log = rlc_log_;
 
-  rlc_array[0].init(rlc_log, RLC_MODE_TM, 0); // SRB0
+  rlc_array[0] = new rlc_tm;
+  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0); // SRB0
 }
+
+void rlc::stop()
+{}
 
 /*******************************************************************************
   PDCP interface
@@ -53,7 +60,7 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
 void rlc::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 {
   if(valid_lcid(lcid)) {
-    rlc_array[lcid].write_sdu(sdu);
+    rlc_array[lcid]->write_sdu(sdu);
   }
 }
 
@@ -63,7 +70,7 @@ void rlc::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 uint32_t rlc::get_buffer_state(uint32_t lcid)
 {
   if(valid_lcid(lcid)) {
-    return rlc_array[lcid].get_buffer_state();
+    return rlc_array[lcid]->get_buffer_state();
   } else {
     return 0;
   }
@@ -72,14 +79,14 @@ uint32_t rlc::get_buffer_state(uint32_t lcid)
 int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
-    rlc_array[lcid].read_pdu(payload, nof_bytes);
+    rlc_array[lcid]->read_pdu(payload, nof_bytes);
   }
 }
 
 void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
-    rlc_array[lcid].write_pdu(payload, nof_bytes);
+    rlc_array[lcid]->write_pdu(payload, nof_bytes);
   }
 }
 
@@ -106,9 +113,23 @@ void rlc::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUC
     rlc_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
     return;
   }
-  rlc_array[lcid].init(rlc_log, mode, lcid);
+  switch(mode)
+  {
+  case RLC_MODE_TM:
+    rlc_array[lcid] = new rlc_tm;
+    break;
+  case RLC_MODE_UM:
+    rlc_array[lcid] = new rlc_um;
+    break;
+  case RLC_MODE_AM:
+    rlc_array[lcid] = new rlc_am;
+    break;
+  default:
+    rlc_log->error("Cannot add RLC entity - invalid mode");
+  }
+  rlc_array[lcid]->init(rlc_log, lcid);
   if(cnfg)
-    rlc_array[lcid].configure(cnfg);
+    rlc_array[lcid]->configure(cnfg);
 }
 
 /*******************************************************************************
@@ -123,12 +144,12 @@ bool rlc::check_dl_buffers()
 {
   bool ret = false;
 
-  if(bcch_bch_queue.try_read(mac_buf))
+  if(bcch_bch_queue.try_read(&mac_buf))
   {
     pdcp->write_pdu_bcch_bch(&mac_buf);
     ret = true;
   }
-  if(bcch_dlsch_queue.try_read(mac_buf))
+  if(bcch_dlsch_queue.try_read(&mac_buf))
   {
     pdcp->write_pdu_bcch_dlsch(&mac_buf);
     ret = true;
@@ -146,7 +167,7 @@ bool rlc::valid_lcid(uint32_t lcid)
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     return false;
   }
-  if(!rlc_array[lcid].is_active()) {
+  if(!rlc_array[lcid]) {
     return false;
   }
   return true;

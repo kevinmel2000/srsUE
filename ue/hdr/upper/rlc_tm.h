@@ -25,52 +25,46 @@
  *
  */
 
-#ifndef PDCP_ENTITY_H
-#define PDCP_ENTITY_H
+#ifndef RLC_TM_H
+#define RLC_TM_H
 
 #include "common/log.h"
 #include "common/common.h"
-#include "common/interfaces.h"
+#include "common/msg_queue.h"
+#include "upper/rlc_entity.h"
 
 namespace srsue {
 
-class pdcp_entity
+class rlc_tm
+    :public rlc_entity
 {
 public:
-  pdcp_entity();
-  void init(rlc_interface_pdcp *rlc_,
-            rrc_interface_pdcp *rrc_,
-            gw_interface_pdcp  *gw_,
-            srslte::log        *log_,
-            uint32_t            lcid_);
-  bool is_active();
+  rlc_tm();
+  void init(srslte::log *rlc_entity_log_, uint32_t lcid_);
+  void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
+  RLC_MODE_ENUM get_mode();
+  uint32_t      get_bearer();
+
+  // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  void write_pdu(srsue_byte_buffer_t *pdu);
+
+  // MAC interface
+  uint32_t get_buffer_state();
+  void     read_pdu(uint8_t *payload, uint32_t nof_bytes);
+  void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
 private:
-  srslte::log        *log;
-  rlc_interface_pdcp *rlc;
-  rrc_interface_pdcp *rrc;
-  gw_interface_pdcp  *gw;
 
-  bool                active;
-  uint32_t            lcid;
+  srslte::log *log;
+  uint32_t     lcid;
 
-  // TODO: Support the following configurations
-  // LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_ENUM cipher_alg;
-  // LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_ENUM integrity_alg;
-  // bool do_rohc;
-  // PDCP_SN_LENGTH sn_len;
-
-  uint32              rx_sn;
-  uint32              tx_sn;
-
-  void handle_srb0_sdu(srsue_byte_buffer_t *sdu);
-  void handle_srb0_pdu(srsue_byte_buffer_t *pdu);
+  // Thread-safe queues for MAC messages
+  msg_queue    ul_queue;
+  msg_queue    dl_queue;
 };
 
 } // namespace srsue
 
 
-#endif // PDCP_ENTITY_H
+#endif // RLC_TM_H

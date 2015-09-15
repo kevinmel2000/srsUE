@@ -53,6 +53,9 @@ void rrc::init(phy_interface_rrc     *phy_,
   rrc_log = rrc_log_;
 }
 
+void rrc::stop()
+{}
+
 void rrc::write_pdu(srsue_byte_buffer_t *pdu)
 {}
 
@@ -98,7 +101,7 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
       state = RRC_STATE_WAIT_FOR_CON_SETUP;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       handle_sib2();
-
+      send_con_request();
     }
   }
 }
@@ -158,19 +161,30 @@ void rrc::sib_search()
 
 void rrc::send_con_request()
 {
-  LIBLTE_RRC_CONNECTION_REQUEST_STRUCT msg;
+  LIBLTE_RRC_UL_CCCH_MSG_STRUCT ul_ccch_msg;
+  // Prepare ConnectionRequest packet
+  ul_ccch_msg.msg_type = LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ;
+  ul_ccch_msg.msg.rrc_con_req.ue_id_type = LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE;
+  ul_ccch_msg.msg.rrc_con_req.ue_id.random = 1000;
+  ul_ccch_msg.msg.rrc_con_req.cause = LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_SIGNALLING;
+  liblte_rrc_pack_ul_ccch_msg(&ul_ccch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
 
-  msg.cause         = LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_SIGNALLING;
-  msg.ue_id_type    = LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE;
-  msg.ue_id.random  = rand();
-  liblte_rrc_pack_rrc_connection_request_msg(&msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
-
-  rrc_log->info("Sending RRC Connection Request on SRB0");
-  state = RRC_STATE_WAIT_FOR_CON_SETUP;
-
-  // Pack the message bits for PDCP and pass on
+  // Pack the message bits for PDCP
   srslte_bit_pack_vector(bit_buf.msg, pdcp_buf.msg, bit_buf.N_bits);
   pdcp_buf.N_bytes = bit_buf.N_bits/8;
+
+  // Set UE contention resolution ID in MAC
+  uint64_t uecri=0;
+  uint8_t *ue_cri_ptr = (uint8_t*) &uecri;
+  uint32_t nbytes = 6;
+  for (int i=0;i<nbytes;i++) {
+    ue_cri_ptr[nbytes-i-1] = pdcp_buf.msg[i];
+  }
+  rrc_log->debug("Setting UE contention resolution ID: %d\n", uecri);
+  mac->set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
+
+  rrc_log->info("Sending RRC Connection Request on SRB0\n");
+  state = RRC_STATE_WAIT_FOR_CON_SETUP;
   pdcp->write_sdu(SRSUE_RB_ID_SRB0, &pdcp_buf);
 }
 
@@ -182,7 +196,7 @@ uint32_t rrc::sib_start_tti(uint32_t tti, uint32_t period, uint32_t x) {
 void rrc::handle_sib2()
 {
   if(RRC_STATE_WAIT_FOR_CON_SETUP != state){
-    rrc_log->error("State must be RRC_STATE_WAIT_FOR_CON_SETUP to handle SIB2. Actual state: %s",
+    rrc_log->error("State must be RRC_STATE_WAIT_FOR_CON_SETUP to handle SIB2. Actual state: %s\n",
                    rrc_state_text[state]);
     return;
   }

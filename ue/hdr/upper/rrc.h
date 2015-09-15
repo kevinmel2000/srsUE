@@ -66,6 +66,7 @@ public:
             pdcp_interface_rrc    *pdcp_,
             nas_interface_rrc     *nas_,
             srslte::log           *rrc_log_);
+  void stop();
 
 private:
   srslte::log           *rrc_log;

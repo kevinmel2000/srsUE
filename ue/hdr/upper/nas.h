@@ -59,6 +59,7 @@ class nas
 public:
   nas();
   void init(rrc_interface_nas *rrc_, srslte::log *nas_log_);
+  void stop();
 
 private:
   srslte::log       *nas_log;

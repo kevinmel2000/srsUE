@@ -140,6 +140,11 @@ void ue::stop()
   {
     phy->stop();
     mac->stop();
+    rlc->stop();
+    pdcp->stop();
+    rrc->stop();
+    nas->stop();
+    gw->stop();
 
     sleep(1);
     if(args->pcap.enable)
