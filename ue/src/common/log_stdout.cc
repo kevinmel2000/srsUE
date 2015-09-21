@@ -61,10 +61,12 @@ void log_stdout::printlog(level_t type, uint32_t tti, string file, int line, str
 
 void log_stdout::error(string msg, ...)
 {
-  va_list args;
-  va_start(args, msg);
-  printlog(ERROR, tti, msg, args);
-  va_end(args);
+  if (level >= LOG_LEVEL_ERROR) {
+    va_list args;
+    va_start(args, msg);
+    printlog(ERROR, tti, msg, args);
+    va_end(args);
+  }
 }
 
 void log_stdout::info(string msg, ...)
@@ -89,19 +91,23 @@ void log_stdout::debug(string msg, ...)
 
 void log_stdout::warning(string msg, ...)
 {
-  va_list args;
-  va_start(args, msg);
-  printlog(WARNING, tti, msg, args);
-  va_end(args);
+  if (level >= LOG_LEVEL_WARNING) {
+    va_list args;
+    va_start(args, msg);
+    printlog(WARNING, tti, msg, args);
+    va_end(args);
+  }
 }
 
 
 void log_stdout::error_line(string file, int line, string msg, ...)
 {
-  va_list args;
-  va_start(args, msg);
-  printlog(ERROR, tti, file, line, msg, args);
-  va_end(args);
+  if (level >= LOG_LEVEL_ERROR) {
+    va_list args;
+    va_start(args, msg);
+    printlog(ERROR, tti, file, line, msg, args);
+    va_end(args);
+  }
 }
 
 void log_stdout::info_line(string file, int line, string msg, ...)
@@ -126,10 +132,12 @@ void log_stdout::debug_line(string file, int line, string msg, ...)
 
 void log_stdout::warning_line(string file, int line, string msg, ...)
 {
-  va_list args;
-  va_start(args, msg);
-  printlog(WARNING, tti, file, line, msg, args);
-  va_end(args);
+  if (level >= LOG_LEVEL_WARNING) {
+    va_list args;
+    va_start(args, msg);
+    printlog(WARNING, tti, file, line, msg, args);
+    va_end(args);
+  }
 }
 
 }

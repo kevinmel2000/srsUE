@@ -25,15 +25,15 @@
  *
  */
 
-#define Error(fmt, ...)   phy->log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-#define Warning(fmt, ...) phy->log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-#define Info(fmt, ...)    phy->log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-#define Debug(fmt, ...)   phy->log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
 #include <string.h>
 #include "phy/phch_worker.h"
 #include "common/mac_interface.h"
 #include "common/phy_interface.h"
+
+#define Error(fmt, ...)   if (SRSLTE_DEBUG_ENABLED) phy->log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Warning(fmt, ...) if (SRSLTE_DEBUG_ENABLED) phy->log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Info(fmt, ...)    if (SRSLTE_DEBUG_ENABLED) phy->log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define Debug(fmt, ...)   if (SRSLTE_DEBUG_ENABLED) phy->log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 
 namespace srsue {
@@ -384,6 +384,9 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
       {
         Error("Converting DCI message to UL grant\n");
         return false;   
+      }
+      if (grant->phy_grant.ul.Qm == 1) {
+        printf("Qm=1, MCS=%d, TBS=%d\n", dci_unpacked.mcs_idx, grant->phy_grant.ul.mcs.tbs);
       }
       grant->rnti_type = type; 
       grant->is_from_rar = false; 

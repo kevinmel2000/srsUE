@@ -154,9 +154,6 @@ void ul_harq_entity::ul_harq_process::reset() {
   current_irv = 0; 
   tti_last_tx = 0; 
   is_grant_configured = false; 
-  if (is_initiated) {
-    srslte_softbuffer_tx_reset(&softbuffer);
-  }
   bzero(&cur_grant, sizeof(mac_interface_phy::mac_grant_t));
 }
 
