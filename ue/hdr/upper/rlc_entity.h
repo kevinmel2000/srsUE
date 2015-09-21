@@ -48,33 +48,19 @@ static const char rlc_mode_text[RLC_MODE_N_ITEMS][20] = {"Transparent Mode",
 class rlc_entity
 {
 public:
-  rlc_entity();
-  void init(srslte::log *rlc_entity_log_, RLC_MODE_ENUM mode_, uint32_t lcid_);
-  void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
-  bool is_active();
+  virtual void init(srslte::log *rlc_entity_log_, uint32_t lcid_) = 0;
+  virtual void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
+
+  virtual RLC_MODE_ENUM get_mode() = 0;
+  virtual uint32_t      get_bearer() = 0;
 
   // PDCP interface
-  void write_sdu(srsue_byte_buffer_t *sdu);
+  virtual void write_sdu(srsue_byte_buffer_t *sdu) = 0;
 
   // MAC interface
-  uint32_t get_buffer_state();
-  void     read_pdu(uint8_t *payload, uint32_t nof_bytes);
-  void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
-
-private:
-  void handle_tm_sdu(LIBLTE_BYTE_MSG_STRUCT *sdu);
-  void handle_tm_pdu(LIBLTE_BYTE_MSG_STRUCT *pdu);
-
-  void handle_um_sdu(LIBLTE_BYTE_MSG_STRUCT *sdu);
-  void handle_um_pdu(LIBLTE_BYTE_MSG_STRUCT *pdu);
-
-  void handle_am_sdu(LIBLTE_BYTE_MSG_STRUCT *sdu);
-  void handle_am_pdu(LIBLTE_BYTE_MSG_STRUCT *pdu);
-
-  srslte::log   *rlc_entity_log;
-  bool           active;
-  RLC_MODE_ENUM  mode;
-  uint32_t       lcid;
+  virtual uint32_t get_buffer_state() = 0;
+  virtual int      read_pdu(uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void     write_pdu(uint8_t *payload, uint32_t nof_bytes) = 0;
 };
 
 } // namespace srsue

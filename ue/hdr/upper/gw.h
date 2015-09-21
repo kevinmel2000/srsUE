@@ -40,6 +40,7 @@ class gw
 public:
   gw();
   void init(pdcp_interface_gw *pdcp_, ue_interface *ue_, srslte::log *gw_log_);
+  void stop();
 
   // UE interface
   bool check_ul_buffers();

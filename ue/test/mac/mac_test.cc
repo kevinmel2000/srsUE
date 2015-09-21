@@ -395,6 +395,7 @@ public:
       for (int i=0;i<nbytes;i++) {
         ue_cri_ptr[nbytes-i-1] = (uint8_t) srslte_bit_pack(&ptr, 8);
       }
+      printf("Setting UE contention resolution ID: %d\n", uecri);
       mac.set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
 
       // Send ConnectionRequest Packet

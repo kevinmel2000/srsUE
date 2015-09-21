@@ -24,24 +24,56 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+#define NMSGS    1000000
 
-#include "upper/nas.h"
+#include <stdio.h>
+#include "common/msg_queue.h"
 
-using namespace srslte;
+using namespace srsue;
 
-namespace srsue{
+typedef struct {
+  msg_queue *q;
+}args_t;
 
-nas::nas()
-  :state(EMM_STATE_NULL)
-{}
-
-void nas::init(rrc_interface_nas *rrc_, srslte::log *nas_log_)
-{
-  rrc     = rrc_;
-  nas_log = nas_log_;
+void* write_thread(void *a) {
+  args_t *args = (args_t*)a;
+  srsue_byte_buffer_t b;
+  for(uint32_t i=0;i<NMSGS;i++)
+  {
+    memcpy(b.msg, &i, 4);
+    b.N_bytes = 4;
+    args->q->write(&b);
+  }
 }
 
-void nas::stop()
-{}
+int main(int argc, char **argv) {
+  bool                result;
+  msg_queue           q;
+  srsue_byte_buffer_t b;
+  pthread_t           thread;
+  args_t              args;
+  u_int32_t           r;
 
-} // namespace srsue
+  result = true;
+  args.q = &q;
+
+  pthread_create(&thread, NULL, &write_thread, &args);
+
+  for(uint32_t i=0;i<NMSGS;i++)
+  {
+    q.read(&b);
+    memcpy(&r, b.msg, 4);
+    if(r != i)
+      result = false;
+  }
+
+  pthread_join(thread, NULL);
+
+  if(result) {
+    printf("Passed\n");
+    exit(0);
+  }else{
+    printf("Failed\n;");
+    exit(1);
+  }
+}

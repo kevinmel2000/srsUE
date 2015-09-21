@@ -53,6 +53,8 @@
                               TYPEDEFS
 *******************************************************************************/
 
+namespace srsue {
+
 typedef enum{
     SRSUE_RB_ID_SRB0 = 0,
     SRSUE_RB_ID_SRB1,
@@ -108,5 +110,7 @@ struct srsue_bit_buffer_t{
       memcpy(msg, buf.msg, N_bits);
     }
 };
+
+} // namespace srsue
 
 #endif // COMMON_H

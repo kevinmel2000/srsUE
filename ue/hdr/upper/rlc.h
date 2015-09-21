@@ -46,6 +46,7 @@ public:
   void init(pdcp_interface_rlc *pdcp_,
             ue_interface *ue_,
             srslte::log *rlc_log_);
+  void stop();
 
   // PDCP interface
   void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
@@ -68,7 +69,7 @@ private:
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
   ue_interface       *ue;
-  rlc_entity          rlc_array[SRSUE_N_RADIO_BEARERS];
+  rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
 
   srsue_byte_buffer_t mac_buf;
 

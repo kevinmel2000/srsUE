@@ -25,23 +25,42 @@
  *
  */
 
-#include "upper/nas.h"
+#include "upper/rlc_am.h"
 
 using namespace srslte;
 
 namespace srsue{
 
-nas::nas()
-  :state(EMM_STATE_NULL)
+rlc_am::rlc_am()
 {}
 
-void nas::init(rrc_interface_nas *rrc_, srslte::log *nas_log_)
+void rlc_am::init(srslte::log *log_, uint32_t lcid_)
 {
-  rrc     = rrc_;
-  nas_log = nas_log_;
+  log  = log_;
+  lcid = lcid_;
 }
 
-void nas::stop()
-{}
+void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+{
+  //TODO
+}
 
-} // namespace srsue
+RLC_MODE_ENUM rlc_am::get_mode()
+{
+  return RLC_MODE_AM;
+}
+
+uint32_t rlc_am::get_bearer()
+{
+  return lcid;
+}
+
+// PDCP interface
+void rlc_am::write_sdu(srsue_byte_buffer_t *sdu){}
+
+// MAC interface
+uint32_t rlc_am::get_buffer_state(){return 0;}
+int      rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
+void     rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
+
+}

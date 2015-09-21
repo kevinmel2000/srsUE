@@ -122,12 +122,8 @@ public:
 class phy_interface
 {
 public:
-  
-  /* Instructs the PHY to configure using the parameters written with set_param() 
-   * These two functions may take a while to return. 
-   */
+  /* Configure PRACH using parameters written with set_param() */
   virtual void configure_prach_params() = 0;
-  virtual void configure_ul_params() = 0;
   
   /* Start synchronization with strongest cell in the current carrier frequency */
   virtual void sync_start() = 0; 
@@ -163,7 +159,11 @@ class phy_interface_rrc
     :public phy_interface_params
 {
 public:
+  /* Is the PHY downlink synchronized? */
   virtual bool status_is_sync() = 0;
+
+  /* Configure UL using parameters written with set_param() */
+  virtual void configure_ul_params() = 0;
 };
   
 }

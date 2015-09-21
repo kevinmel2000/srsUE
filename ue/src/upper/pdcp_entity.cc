@@ -35,9 +35,16 @@ pdcp_entity::pdcp_entity()
   :active(false)
 {}
 
-void pdcp_entity::init(srslte::log *pdcp_entity_log_, uint32_t lcid_)
+void pdcp_entity::init(rlc_interface_pdcp *rlc_,
+                       rrc_interface_pdcp *rrc_,
+                       gw_interface_pdcp  *gw_,
+                       srslte::log        *log_,
+                       uint32_t            lcid_)
 {
-  pdcp_entity_log = pdcp_entity_log_;
+  rlc     = rlc_;
+  rrc     = rrc_;
+  gw      = gw_;
+  log     = log_;
   lcid    = lcid_;
   active  = true;
 }
@@ -47,7 +54,56 @@ bool pdcp_entity::is_active()
   return active;
 }
 
-void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu){}
-void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu){}
+void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
+{
+  // Handle SRB messages
+  switch(lcid)
+  {
+  case SRSUE_RB_ID_SRB0:
+    handle_srb0_sdu(sdu);
+    break;
+  case SRSUE_RB_ID_SRB1:
+  case SRSUE_RB_ID_SRB2:
+    break;
+  }
+
+  // Handle DRB messages
+  if(lcid >= SRSUE_RB_ID_DRB1)
+  {
+
+  }
+}
+void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
+{
+  // Handle SRB messages
+  switch(lcid)
+  {
+  case SRSUE_RB_ID_SRB0:
+    handle_srb0_pdu(pdu);
+    break;
+  case SRSUE_RB_ID_SRB1:
+  case SRSUE_RB_ID_SRB2:
+    break;
+  }
+
+  // Handle DRB messages
+  if(lcid >= SRSUE_RB_ID_DRB1)
+  {
+
+  }
+}
+
+void pdcp_entity::handle_srb0_sdu(srsue_byte_buffer_t *sdu)
+{
+  // Simply pass on to RLC
+  log->info_hex(sdu->msg, sdu->N_bytes, "UL Bearer %s PDU", srsue_rb_id_text[lcid]);
+  rlc->write_sdu(lcid, sdu);
+}
+
+void pdcp_entity::handle_srb0_pdu(srsue_byte_buffer_t *pdu)
+{
+  // Simply pass on to RRC
+  rrc->write_pdu(pdu);
+}
 
 }

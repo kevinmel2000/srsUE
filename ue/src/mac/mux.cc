@@ -293,7 +293,10 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t
           */
           return true;               
         } else {
-          Info("Could not add SDU rem_size=%d, sdu_len=%d\n", pdu_msg->rem_size(), sdu_len2);
+          Info("Could not add SDU rem_size=%d, sdu_len_available=%d, sdu_len_read=%d\n",
+               pdu_msg->rem_size(),
+               sdu_len2,
+               sdu_len);
           pdu_msg->del_subh();
         }
       } 

@@ -68,9 +68,9 @@ public:
 class rrc_interface_pdcp
 {
 public:
-  virtual void write_pdu(srsue_byte_buffer_t *sdu) = 0;
-  virtual void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu) = 0;
-  virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_pdu(srsue_byte_buffer_t *pdu) = 0;
+  virtual void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu) = 0;
+  virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu) = 0;
 };
 
 // PDCP interface for GW
