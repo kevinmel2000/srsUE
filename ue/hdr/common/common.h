@@ -81,12 +81,22 @@ static const char srsue_rb_id_text[SRSUE_RB_ID_N_ITEMS][20] = { "SRB0",
                                                                 "DRB6",
                                                                 "DRB7",
                                                                 "DRB8"};
+
+/******************************************************************************
+ * Byte and Bit buffers
+ *
+ * Generic buffers with headroom to accommodate packet headers and custom
+ * copy constructors & assignment operators for quick copying.
+ *****************************************************************************/
 struct srsue_byte_buffer_t{
     uint32_t  N_bytes;
-    uint8_t   msg[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t  *msg;
 
     srsue_byte_buffer_t():N_bytes(0)
-    {}
+    {
+      msg = &buffer[SRSUE_BUFFER_HEADER_OFFSET];
+    }
     srsue_byte_buffer_t(const srsue_byte_buffer_t& buf)
     {
       N_bytes = buf.N_bytes;
@@ -97,14 +107,21 @@ struct srsue_byte_buffer_t{
       N_bytes = buf.N_bytes;
       memcpy(msg, buf.msg, N_bytes);
     }
+    uint32_t get_headroom()
+    {
+      return msg-buffer;
+    }
 };
 
 struct srsue_bit_buffer_t{
     uint32_t  N_bits;
-    uint8_t   msg[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t  *msg;
 
     srsue_bit_buffer_t():N_bits(0)
-    {}
+    {
+      msg = &buffer[SRSUE_BUFFER_HEADER_OFFSET];
+    }
     srsue_bit_buffer_t(const srsue_bit_buffer_t& buf){
       N_bits = buf.N_bits;
       memcpy(msg, buf.msg, N_bits);
@@ -112,6 +129,10 @@ struct srsue_bit_buffer_t{
     srsue_bit_buffer_t & operator= (const srsue_bit_buffer_t & buf){
       N_bits = buf.N_bits;
       memcpy(msg, buf.msg, N_bits);
+    }
+    uint32_t get_headroom()
+    {
+      return msg-buffer;
     }
 };
 
