@@ -25,8 +25,8 @@
  *
  */
 
-
-
+#ifndef UEPHY_H
+#define UEPHY_H
 
 #include "srslte/srslte.h"
 #include "common/phy_interface.h"
@@ -40,10 +40,6 @@
 #include "common/task_dispatcher.h"
 #include "common/trace.h"
 #include "common/mac_interface.h"
-
-#ifndef UEPHY_H
-#define UEPHY_H
-
 
 namespace srsue {
     
@@ -135,6 +131,6 @@ private:
 
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // UEPHY_H

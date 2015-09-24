@@ -69,10 +69,10 @@ LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *c
     return(liblte_pdcp_pack_control_pdu(contents, &contents->data, pdu));
 }
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
-                                               LIBLTE_BIT_MSG_STRUCT          *data,
+                                               LIBLTE_BYTE_MSG_STRUCT         *sdu,
                                                LIBLTE_BYTE_MSG_STRUCT         *pdu)
 {
-    return(liblte_pdcp_pack_control_pdu(contents, data, NULL, 0, 0, pdu));
+    return(liblte_pdcp_pack_control_pdu(contents, sdu, NULL, 0, 0, pdu));
 }
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
                                                uint8                          *key_256,
@@ -83,7 +83,7 @@ LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *c
     return(liblte_pdcp_pack_control_pdu(contents, &contents->data, key_256, direction, rb_id, pdu));
 }
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
-                                               LIBLTE_BIT_MSG_STRUCT          *data,
+                                               LIBLTE_BYTE_MSG_STRUCT         *sdu,
                                                uint8                          *key_256,
                                                uint8                           direction,
                                                uint8                           rb_id,
@@ -95,30 +95,16 @@ LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *c
     uint32             i;
 
     if(contents != NULL &&
-       data     != NULL &&
+       sdu      != NULL &&
        pdu      != NULL)
     {
         // Header
         *pdu_ptr = contents->count & 0x1F;
         pdu_ptr++;
 
-        // Byte align data
-        if((data->N_bits % 8) != 0)
-        {
-            for(i=0; i<8-(data->N_bits % 8); i++)
-            {
-                data->msg[data->N_bits + i] = 0;
-            }
-            data->N_bits += 8 - (data->N_bits % 8);
-        }
-
         // Data
-        data_ptr = data->msg;
-        for(i=0; i<data->N_bits/8; i++)
-        {
-            *pdu_ptr = liblte_bits_2_value(&data_ptr, 8);
-            pdu_ptr++;
-        }
+        memcpy(pdu_ptr, sdu, sdu->N_bytes);
+        pdu_ptr += sdu->N_bytes;
 
         // MAC
         if(NULL == key_256)
@@ -167,13 +153,10 @@ LIBLTE_ERROR_ENUM liblte_pdcp_unpack_control_pdu(LIBLTE_BYTE_MSG_STRUCT         
         pdu_ptr++;
 
         // Data
+        memcpy(contents->data.msg, pdu_ptr, pdu->N_bytes-5);
         data_ptr = contents->data.msg;
-        for(i=0; i<pdu->N_bytes-5; i++)
-        {
-            liblte_value_2_bits(*pdu_ptr, &data_ptr, 8);
-            pdu_ptr++;
-        }
-        contents->data.N_bits = data_ptr - contents->data.msg;
+
+        contents->data.N_bytes = pdu->N_bytes-5;
 
         err = LIBLTE_SUCCESS;
     }

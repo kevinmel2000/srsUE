@@ -31,4 +31,7 @@ add_test(msg_queue_test msg_queue_test)
 add_executable(log_filter_test log_filter_test.cc)
 target_link_libraries(log_filter_test srsue_common ${Boost_LIBRARIES})
 
+add_executable(timeout_test timeout_test.cc)
+target_link_libraries(timeout_test srsue_common ${Boost_LIBRARIES})
+
 

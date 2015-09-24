@@ -25,6 +25,15 @@
  *
  */
 
+/******************************************************************************
+ *  File:         thread_pool.h
+ *  Description:  Implements a pool of threads. Pending tasks to execute are 
+ *                identified by a pointer. 
+ *  Reference:
+ *****************************************************************************/
+
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
 
 #include <stdint.h>
 #include <string>
@@ -32,18 +41,6 @@
 #include <stack>
 
 #include "common/threads.h"
-
-/******************************************************************************
- *  File:         thread_pool.h
- *
- *  Description:  Implements a pool of threads. Pending tasks to execute are 
- *                identified by a pointer. 
- *
- *  Reference:
- *****************************************************************************/
-
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
 
 namespace srslte {
 

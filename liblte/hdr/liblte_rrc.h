@@ -4396,6 +4396,22 @@ static const char liblte_rrc_t_poll_retransmit_text[LIBLTE_RRC_T_POLL_RETRANSMIT
                                                                                                  "400ms", "450ms", "500ms", "SPARE",
                                                                                                  "SPARE", "SPARE", "SPARE", "SPARE",
                                                                                                  "SPARE", "SPARE", "SPARE", "SPARE"};
+static const int32 liblte_rrc_t_poll_retransmit_num[LIBLTE_RRC_T_POLL_RETRANSMIT_N_ITEMS] = {    5,  10,  15,  20,
+                                                                                                25,  30,  35,  40,
+                                                                                                45,  50,  55,  60,
+                                                                                                65,  70,  75,  80,
+                                                                                                85,  90,  95, 100,
+                                                                                               105, 110, 115, 120,
+                                                                                               125, 130, 135, 140,
+                                                                                               145, 150, 155, 160,
+                                                                                               165, 170, 175, 180,
+                                                                                               185, 190, 195, 200,
+                                                                                               205, 210, 215, 220,
+                                                                                               225, 230, 235, 240,
+                                                                                               245, 250, 300, 350,
+                                                                                               400, 450, 500, -1,
+                                                                                               -1, -1, -1, -1,
+                                                                                               -1, -1, -1, -1};
 typedef enum{
     LIBLTE_RRC_POLL_PDU_P4 = 0,
     LIBLTE_RRC_POLL_PDU_P8,
@@ -4409,6 +4425,8 @@ typedef enum{
 }LIBLTE_RRC_POLL_PDU_ENUM;
 static const char liblte_rrc_poll_pdu_text[LIBLTE_RRC_POLL_PDU_N_ITEMS][20] = {      "p4",       "p8",      "p16",      "p32",
                                                                                     "p64",     "p128",     "p256", "INFINITY"};
+static const int32 liblte_rrc_poll_pdu_num[LIBLTE_RRC_POLL_PDU_N_ITEMS]     = {      4,       8,      16,      32,
+                                                                                    64,     128,     256,      -1};
 typedef enum{
     LIBLTE_RRC_POLL_BYTE_KB25 = 0,
     LIBLTE_RRC_POLL_BYTE_KB50,
@@ -4432,6 +4450,10 @@ static const char liblte_rrc_poll_byte_text[LIBLTE_RRC_POLL_BYTE_N_ITEMS][20] = 
                                                                                     "125kB",    "250kB",    "375kB",    "500kB",
                                                                                     "750kB",   "1000kB",   "1250kB",   "1500kB",
                                                                                    "2000kB",   "3000kB", "INFINITY",    "SPARE"};
+static const int32 liblte_rrc_poll_byte_num[LIBLTE_RRC_POLL_BYTE_N_ITEMS]     = {    25,     50,     75,    100,
+                                                                                    125,    250,    375,    500,
+                                                                                    750,   1000,   1250,   1500,
+                                                                                   2000,   3000,     -1,     -1};
 typedef enum{
     LIBLTE_RRC_MAX_RETX_THRESHOLD_T1 = 0,
     LIBLTE_RRC_MAX_RETX_THRESHOLD_T2,
@@ -4445,6 +4467,8 @@ typedef enum{
 }LIBLTE_RRC_MAX_RETX_THRESHOLD_ENUM;
 static const char liblte_rrc_max_retx_threshold_text[LIBLTE_RRC_MAX_RETX_THRESHOLD_N_ITEMS][20] = { "t1",  "t2",  "t3",  "t4",
                                                                                                     "t6",  "t8", "t16", "t32"};
+static const int32 liblte_rrc_max_retx_threshold_num[LIBLTE_RRC_MAX_RETX_THRESHOLD_N_ITEMS]     = { 1,  2,  3,  4,
+                                                                                                    6,  8, 16, 32};
 typedef enum{
     LIBLTE_RRC_T_REORDERING_MS0 = 0,
     LIBLTE_RRC_T_REORDERING_MS5,
@@ -4488,6 +4512,14 @@ static const char liblte_rrc_t_reordering_text[LIBLTE_RRC_T_REORDERING_N_ITEMS][
                                                                                        "ms100", "ms110", "ms120", "ms130",
                                                                                        "ms140", "ms150", "ms160", "ms170",
                                                                                        "ms180", "ms190", "ms200", "SPARE"};
+static const int32 liblte_rrc_t_reordering_num[LIBLTE_RRC_T_REORDERING_N_ITEMS]     = {  0,   5,  10,  15,
+                                                                                        20,  25,  30,  35,
+                                                                                        40,  45,  50,  55,
+                                                                                        60,  65,  70,  75,
+                                                                                        80,  85,  90,  95,
+                                                                                       100, 110, 120, 130,
+                                                                                       140, 150, 160, 170,
+                                                                                       180, 190, 200,  -1};
 typedef enum{
     LIBLTE_RRC_RLC_MODE_AM = 0,
     LIBLTE_RRC_RLC_MODE_UM_BI,
@@ -4582,6 +4614,22 @@ static const char liblte_rrc_t_status_prohibit_text[LIBLTE_RRC_T_STATUS_PROHIBIT
                                                                                                  "ms350", "ms400", "ms450", "ms500",
                                                                                                  "SPARE", "SPARE", "SPARE", "SPARE",
                                                                                                  "SPARE", "SPARE", "SPARE", "SPARE"};
+static const int32 liblte_rrc_t_status_prohibit_num[LIBLTE_RRC_T_STATUS_PROHIBIT_N_ITEMS]     = {  0,   5,  10,  15,
+                                                                                                  20,  25,  30,  35,
+                                                                                                  40,  45,  50,  55,
+                                                                                                  60,  65,  70,  75,
+                                                                                                  80,  85,  90,  95,
+                                                                                                 100, 105, 110, 115,
+                                                                                                 120, 125, 130, 135,
+                                                                                                 140, 145, 150, 155,
+                                                                                                 160, 165, 170, 175,
+                                                                                                 180, 185, 190, 195,
+                                                                                                 200, 205, 210, 215,
+                                                                                                 220, 225, 230, 235,
+                                                                                                 240, 245, 250, 300,
+                                                                                                 350, 400, 450, 500,
+                                                                                                 -1,   -1,  -1,  -1,
+                                                                                                 -1,   -1,  -1,  -1};
 typedef enum{
     LIBLTE_RRC_SN_FIELD_LENGTH_SIZE5 = 0,
     LIBLTE_RRC_SN_FIELD_LENGTH_SIZE10,

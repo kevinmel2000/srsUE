@@ -25,6 +25,8 @@
  *
  */
 
+#ifndef MUX_H
+#define MUX_H
 
 #include <pthread.h>
 
@@ -34,9 +36,6 @@
 #include "mac/mac_params.h"
 #include "mac/pdu.h"
 #include "mac/proc_bsr.h"
-
-#ifndef MUX_H
-#define MUX_H
 
 /* Logical Channel Multiplexing and Prioritization + Msg3 Buffer */   
 
@@ -99,8 +98,8 @@ private:
   bool phr_included;
   
 };
-}
 
+} // namespace srsue
 
-#endif
+#endif // MUX_H
 

@@ -25,8 +25,8 @@
  *
  */
 
-
-
+#ifndef DL_HARQ_H
+#define DL_HARQ_H
 
 #include "common/log.h"
 #include "phy/phy.h"
@@ -35,9 +35,6 @@
 #include "mac/demux.h"
 #include "mac/dl_sps.h"
 #include "mac/mac_pcap.h"
-
-#ifndef DLHARQ_H
-#define DLHARQ_H
 
 /* Downlink HARQ entity as defined in 5.3.2 of 36.321 */
 
@@ -105,6 +102,6 @@ private:
   uint16_t         last_temporal_crnti;
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // DL_HARQ_H

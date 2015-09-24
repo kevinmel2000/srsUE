@@ -127,14 +127,14 @@ static const char liblte_pdcp_d_c_text[LIBLTE_PDCP_D_C_N_ITEMS][20] = {"Control 
 // Enums
 // Structs
 typedef struct{
-    LIBLTE_BIT_MSG_STRUCT data;
-    uint32                count;
+    LIBLTE_BYTE_MSG_STRUCT data;
+    uint32                 count;
 }LIBLTE_PDCP_CONTROL_PDU_STRUCT;
 // Functions
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
                                                LIBLTE_BYTE_MSG_STRUCT         *pdu);
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
-                                               LIBLTE_BIT_MSG_STRUCT          *data,
+                                               LIBLTE_BYTE_MSG_STRUCT         *sdu,
                                                LIBLTE_BYTE_MSG_STRUCT         *pdu);
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
                                                uint8                          *key_256,
@@ -142,7 +142,7 @@ LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *c
                                                uint8                           rb_id,
                                                LIBLTE_BYTE_MSG_STRUCT         *pdu);
 LIBLTE_ERROR_ENUM liblte_pdcp_pack_control_pdu(LIBLTE_PDCP_CONTROL_PDU_STRUCT *contents,
-                                               LIBLTE_BIT_MSG_STRUCT          *data,
+                                               LIBLTE_BYTE_MSG_STRUCT         *sdu,
                                                uint8                          *key_256,
                                                uint8                           direction,
                                                uint8                           rb_id,

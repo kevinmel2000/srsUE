@@ -25,17 +25,14 @@
  *
  */
 
-
+#ifndef UEPRACH_H
+#define UEPRACH_H
 
 #include "srslte/srslte.h"
 #include "radio/radio.h"
 #include "common/log.h"
 #include "common/phy_interface.h"
 #include "phy/phy_params.h"
-
-#ifndef UEPRACH_H
-#define UEPRACH_H
-
 
 namespace srsue {
 
@@ -72,6 +69,6 @@ namespace srsue {
     
   };
 
-}
+} // namespace srsue
 
-#endif
+#endif // UEPRACH_H

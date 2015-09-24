@@ -45,7 +45,10 @@ public:
             uint32_t            lcid_);
   bool is_active();
 
+  // RRC interface
   void write_sdu(srsue_byte_buffer_t *sdu);
+
+  // RLC interface
   void write_pdu(srsue_byte_buffer_t *pdu);
 
 private:
@@ -56,6 +59,7 @@ private:
 
   bool                active;
   uint32_t            lcid;
+  bool                do_security;
 
   // TODO: Support the following configurations
   // LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_ENUM cipher_alg;
@@ -66,8 +70,6 @@ private:
   uint32              rx_sn;
   uint32              tx_sn;
 
-  void handle_srb0_sdu(srsue_byte_buffer_t *sdu);
-  void handle_srb0_pdu(srsue_byte_buffer_t *pdu);
 };
 
 } // namespace srsue

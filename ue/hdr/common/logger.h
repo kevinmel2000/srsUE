@@ -25,13 +25,13 @@
  *
  */
 
-/**
+/******************************************************************************
  * File:        logger.h
  * Description: Common log object. Maintains a queue of log messages
  *              and runs a thread to read messages and write to file.
  *              Multiple producers, single consumer. If full, producers
  *              increase queue size. If empty, consumer blocks.
- */
+ *****************************************************************************/
 
 #ifndef LOGGER_H
 #define LOGGER_H

@@ -5,7 +5,7 @@ rx_gain = 10
 tx_gain = 10
 
 [pcap]
-enable = false
+enable = true
 filename = /tmp/ue.pcap
 
 [trace]

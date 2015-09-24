@@ -37,13 +37,13 @@ ue::ue(all_args_t *args_)
     ,have_data(false)
 {
   logger    = new srsue::logger(args_->log.filename);
-  phy_log   = new srsue::log_filter("PHY",   logger);
-  mac_log   = new srsue::log_filter("MAC",   logger);
-  rlc_log   = new srsue::log_filter("RLC",   logger);
+  phy_log   = new srsue::log_filter("PHY ", logger);
+  mac_log   = new srsue::log_filter("MAC ", logger);
+  rlc_log   = new srsue::log_filter("RLC ", logger);
   pdcp_log  = new srsue::log_filter("PDCP", logger);
-  rrc_log   = new srsue::log_filter("RRC",   logger);
-  nas_log   = new srsue::log_filter("NAS",   logger);
-  gw_log    = new srsue::log_filter("GW",     logger);
+  rrc_log   = new srsue::log_filter("RRC ", logger);
+  nas_log   = new srsue::log_filter("NAS ", logger);
+  gw_log    = new srsue::log_filter("GW  ", logger);
   user_log  = new srsue::log_filter("USER", logger);
 
   radio_uhd = new srslte::radio_uhd;

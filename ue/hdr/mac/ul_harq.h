@@ -25,6 +25,9 @@
  *
  */
 
+#ifndef ULHARQ_H
+#define ULHARQ_H
+
 #include "common/mac_interface.h"
 #include "common/log.h"
 #include "mac/mac_params.h"
@@ -32,9 +35,6 @@
 #include "mac/ul_sps.h"
 #include "mac/mac_pcap.h"
 #include "common/timers.h"
-
-#ifndef ULHARQ_H
-#define ULHARQ_H
 
 /* Uplink HARQ entity as defined in 5.4.2 of 36.321 */
 
@@ -124,6 +124,6 @@ private:
   mac_pcap        *pcap; 
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // ULHARQ_H

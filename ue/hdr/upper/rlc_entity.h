@@ -30,8 +30,8 @@
 
 #include "common/log.h"
 #include "common/common.h"
-#include "liblte_rrc.h"
-#include "liblte_rlc.h"
+#include "liblte/hdr/liblte_rrc.h"
+#include "liblte/hdr/liblte_rlc.h"
 
 namespace srsue {
 
@@ -56,6 +56,7 @@ public:
 
   // PDCP interface
   virtual void write_sdu(srsue_byte_buffer_t *sdu) = 0;
+  virtual bool try_read_sdu(srsue_byte_buffer_t *sdu) = 0;
 
   // MAC interface
   virtual uint32_t get_buffer_state() = 0;

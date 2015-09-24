@@ -25,23 +25,22 @@
  *
  */
 
-
-
-
-#include <stdint.h>
-
+/******************************************************************************
+ *  File:         tti_synch.h
+ *  Description:  Interface used for PHY-MAC synchronization
+ *                (producer-consumer model). The consumer waits while its
+ *                counter is lower than the producer counter.
+ *                The PHY is the consumer. The MAC is the producer.
+ *  Reference:
+ *****************************************************************************/
 
 #ifndef TTISYNC_H
 #define TTISYNC_H
 
-
+#include <stdint.h>
 
 namespace srsue {
   
-  /* Interface used for PHY-MAC synchronization (producer-consumer model). 
-   * The consumer waits while its counter is lower than the producer counter. 
-   * The PHY is the consumer. The MAC is the producer. 
-   */
 class tti_sync
 {
   public: 
@@ -74,6 +73,7 @@ class tti_sync
     uint32_t producer_cntr;
     uint32_t consumer_cntr;
 }; 
-}
 
-#endif
+} // namespace srsue
+
+#endif // TTISYNC_H

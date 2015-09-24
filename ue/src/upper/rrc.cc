@@ -56,8 +56,29 @@ void rrc::init(phy_interface_rrc     *phy_,
 void rrc::stop()
 {}
 
-void rrc::write_pdu(srsue_byte_buffer_t *pdu)
-{}
+/*******************************************************************************
+  PDCP interface
+*******************************************************************************/
+
+void rrc::write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu)
+{
+  rrc_log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
+
+  switch(lcid)
+  {
+  case SRSUE_RB_ID_SRB0:
+    parse_dl_ccch(pdu);
+    break;
+  case SRSUE_RB_ID_SRB1:
+  case SRSUE_RB_ID_SRB2:
+    parse_dl_dcch(pdu);
+    break;
+  default:
+    rrc_log->error("DL PDU with invalid bearer id: %s", lcid);
+    break;
+  }
+
+}
 
 void rrc::write_pdu_bcch_bch(srsue_byte_buffer_t *pdu)
 {
@@ -100,11 +121,89 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
       rrc_log->info("SIB2 received, \n", pdu->N_bytes);
       state = RRC_STATE_WAIT_FOR_CON_SETUP;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
-      handle_sib2();
+      apply_sib2_configs();
       send_con_request();
     }
   }
 }
+
+/*******************************************************************************
+  Senders
+*******************************************************************************/
+
+void rrc::send_con_request()
+{
+  LIBLTE_RRC_UL_CCCH_MSG_STRUCT ul_ccch_msg;
+  // Prepare ConnectionRequest packet
+  ul_ccch_msg.msg_type = LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ;
+  ul_ccch_msg.msg.rrc_con_req.ue_id_type = LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE;
+  ul_ccch_msg.msg.rrc_con_req.ue_id.random = 1000;
+  ul_ccch_msg.msg.rrc_con_req.cause = LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_SIGNALLING;
+  liblte_rrc_pack_ul_ccch_msg(&ul_ccch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf.msg, bit_buf.N_bits);
+  pdcp_buf.N_bytes = bit_buf.N_bits/8;
+
+  // Set UE contention resolution ID in MAC
+  uint64_t uecri=0;
+  uint8_t *ue_cri_ptr = (uint8_t*) &uecri;
+  uint32_t nbytes = 6;
+  for (int i=0;i<nbytes;i++) {
+    ue_cri_ptr[nbytes-i-1] = pdcp_buf.msg[i];
+  }
+  rrc_log->debug("Setting UE contention resolution ID: %d\n", uecri);
+  mac->set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
+
+  rrc_log->info("Sending RRC Connection Request on SRB0\n");
+  state = RRC_STATE_WAIT_FOR_CON_SETUP;
+  pdcp->write_sdu(SRSUE_RB_ID_SRB0, &pdcp_buf);
+}
+
+/*******************************************************************************
+  Parsers
+*******************************************************************************/
+
+void rrc::parse_dl_ccch(srsue_byte_buffer_t *pdu)
+{
+  LIBLTE_RRC_DL_CCCH_MSG_STRUCT dl_ccch_msg;
+  srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
+  bit_buf.N_bits = pdu->N_bytes*8;
+  liblte_rrc_unpack_dl_ccch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dl_ccch_msg);
+
+  switch(dl_ccch_msg.msg_type)
+  {
+  case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_REJ:
+    rrc_log->info("Connection Reject received. Wait time: %d\n",
+                  dl_ccch_msg.msg.rrc_con_rej.wait_time);
+    state = RRC_STATE_IDLE;
+    break;
+  case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_SETUP:
+    rrc_log->info("Connection Setup received\n");
+    handle_con_setup(&dl_ccch_msg.msg.rrc_con_setup);
+    break;
+  case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_REEST:
+    rrc_log->error("Not handling Connection Reestablishment message");
+    break;
+  case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_REEST_REJ:
+    rrc_log->error("Not handling Connection Reestablishment Reject message");
+    break;
+  default:
+    break;
+  }
+}
+
+void rrc::parse_dl_dcch(srsue_byte_buffer_t *pdu){}
+
+/*******************************************************************************
+  Helpers
+*******************************************************************************/
 
 void* rrc::start_sib_thread(void *rrc_)
 {
@@ -159,41 +258,12 @@ void rrc::sib_search()
   }
 }
 
-void rrc::send_con_request()
-{
-  LIBLTE_RRC_UL_CCCH_MSG_STRUCT ul_ccch_msg;
-  // Prepare ConnectionRequest packet
-  ul_ccch_msg.msg_type = LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ;
-  ul_ccch_msg.msg.rrc_con_req.ue_id_type = LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE;
-  ul_ccch_msg.msg.rrc_con_req.ue_id.random = 1000;
-  ul_ccch_msg.msg.rrc_con_req.cause = LIBLTE_RRC_CON_REQ_EST_CAUSE_MO_SIGNALLING;
-  liblte_rrc_pack_ul_ccch_msg(&ul_ccch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
-
-  // Pack the message bits for PDCP
-  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf.msg, bit_buf.N_bits);
-  pdcp_buf.N_bytes = bit_buf.N_bits/8;
-
-  // Set UE contention resolution ID in MAC
-  uint64_t uecri=0;
-  uint8_t *ue_cri_ptr = (uint8_t*) &uecri;
-  uint32_t nbytes = 6;
-  for (int i=0;i<nbytes;i++) {
-    ue_cri_ptr[nbytes-i-1] = pdcp_buf.msg[i];
-  }
-  rrc_log->debug("Setting UE contention resolution ID: %d\n", uecri);
-  mac->set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
-
-  rrc_log->info("Sending RRC Connection Request on SRB0\n");
-  state = RRC_STATE_WAIT_FOR_CON_SETUP;
-  pdcp->write_sdu(SRSUE_RB_ID_SRB0, &pdcp_buf);
-}
-
 // Determine SI messages scheduling as in 36.331 5.2.3 Acquisition of an SI message
 uint32_t rrc::sib_start_tti(uint32_t tti, uint32_t period, uint32_t x) {
   return (period*10*(1+tti/(period*10))+x)%10240; // the 1 means next opportunity
 }
 
-void rrc::handle_sib2()
+void rrc::apply_sib2_configs()
 {
   if(RRC_STATE_WAIT_FOR_CON_SETUP != state){
     rrc_log->error("State must be RRC_STATE_WAIT_FOR_CON_SETUP to handle SIB2. Actual state: %s\n",
@@ -289,11 +359,11 @@ void rrc::handle_sib2()
                  sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_config_index);
 
   rrc_log->info("Set PRACH ConfigCommon: SeqIdx=%d, HS=%d, FreqOffset=%d, ZC=%d, ConfigIndex=%d\n",
-     sib2.rr_config_common_sib.prach_cnfg.root_sequence_index,
-     sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.high_speed_flag?1:0,
-     sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_freq_offset,
-     sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.zero_correlation_zone_config,
-     sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_config_index);
+                 sib2.rr_config_common_sib.prach_cnfg.root_sequence_index,
+                 sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.high_speed_flag?1:0,
+                 sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_freq_offset,
+                 sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.zero_correlation_zone_config,
+                 sib2.rr_config_common_sib.prach_cnfg.prach_cnfg_info.prach_config_index);
 
   // SRS ConfigCommon
   if (sib2.rr_config_common_sib.srs_ul_cnfg.present) {
@@ -303,11 +373,207 @@ void rrc::handle_sib2()
   }
 
   rrc_log->info("Set SRS ConfigCommon: BW-Configuration=%d, SF-Configuration=%d, ACKNACK=%d\n",
-    sib2.rr_config_common_sib.srs_ul_cnfg.bw_cnfg,
-    sib2.rr_config_common_sib.srs_ul_cnfg.subfr_cnfg,
-    sib2.rr_config_common_sib.srs_ul_cnfg.ack_nack_simul_tx);
+                sib2.rr_config_common_sib.srs_ul_cnfg.bw_cnfg,
+                sib2.rr_config_common_sib.srs_ul_cnfg.subfr_cnfg,
+                sib2.rr_config_common_sib.srs_ul_cnfg.ack_nack_simul_tx);
 
   phy->configure_ul_params();
 }
+
+void rrc::handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup)
+{
+  LIBLTE_RRC_RR_CONFIG_DEDICATED_STRUCT *cnfg = &setup->rr_cnfg;
+  if(cnfg->phy_cnfg_ded_present)
+  {
+      // PHY CONFIG DEDICATED
+      LIBLTE_RRC_PHYSICAL_CONFIG_DEDICATED_STRUCT *phy_cnfg = &cnfg->phy_cnfg_ded;
+      if(phy_cnfg->pucch_cnfg_ded_present)
+      {
+          //TODO
+      }
+      if(phy_cnfg->pusch_cnfg_ded_present)
+      {
+          phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_ACK,
+                         phy_cnfg->pusch_cnfg_ded.beta_offset_ack_idx);
+          phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_CQI,
+                         phy_cnfg->pusch_cnfg_ded.beta_offset_cqi_idx);
+          phy->set_param(srsue::phy_interface_params::UCI_I_OFFSET_RI,
+                         phy_cnfg->pusch_cnfg_ded.beta_offset_ri_idx);
+      }
+      if(phy_cnfg->ul_pwr_ctrl_ded_present)
+      {
+          //TODO
+      }
+      if(phy_cnfg->tpc_pdcch_cnfg_pucch_present)
+      {
+          //TODO
+      }
+      if(phy_cnfg->tpc_pdcch_cnfg_pusch_present)
+      {
+          //TODO
+      }
+      if(phy_cnfg->cqi_report_cnfg_present)
+      {
+        if (phy_cnfg->cqi_report_cnfg.report_periodic_present) {
+          phy->set_param(srsue::phy_interface_params::PUCCH_N_PUCCH_2,
+                        phy_cnfg->cqi_report_cnfg.report_periodic.pucch_resource_idx);
+          phy->set_param(srsue::phy_interface_params::CQI_PERIODIC_PMI_IDX,
+                        phy_cnfg->cqi_report_cnfg.report_periodic.pmi_cnfg_idx);
+          phy->set_param(srsue::phy_interface_params::CQI_PERIODIC_SIMULT_ACK,
+                        phy_cnfg->cqi_report_cnfg.report_periodic.simult_ack_nack_and_cqi?1:0);
+          phy->set_param(srsue::phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND,
+                        phy_cnfg->cqi_report_cnfg.report_periodic.format_ind_periodic ==
+                        LIBLTE_RRC_CQI_FORMAT_INDICATOR_PERIODIC_SUBBAND_CQI);
+          phy->set_param(srsue::phy_interface_params::CQI_PERIODIC_FORMAT_SUBBAND_K,
+                        phy_cnfg->cqi_report_cnfg.report_periodic.format_ind_periodic_subband_k);
+
+          phy->set_param(srsue::phy_interface_params::CQI_PERIODIC_CONFIGURED, 1);
+        }
+      }
+      if(phy_cnfg->srs_ul_cnfg_ded_present && phy_cnfg->srs_ul_cnfg_ded.setup_present)
+      {
+          phy->set_param(srsue::phy_interface_params::SRS_UE_CS,
+                         phy_cnfg->srs_ul_cnfg_ded.cyclic_shift);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_DURATION,
+                         phy_cnfg->srs_ul_cnfg_ded.duration);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_NRRC,
+                         phy_cnfg->srs_ul_cnfg_ded.freq_domain_pos);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_BW,
+                         phy_cnfg->srs_ul_cnfg_ded.srs_bandwidth);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_CONFIGINDEX,
+                         phy_cnfg->srs_ul_cnfg_ded.srs_cnfg_idx);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_HOP,
+                         phy_cnfg->srs_ul_cnfg_ded.srs_hopping_bandwidth);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_CYCLICSHIFT,
+                         phy_cnfg->srs_ul_cnfg_ded.cyclic_shift);
+          phy->set_param(srsue::phy_interface_params::SRS_UE_TXCOMB,
+                         phy_cnfg->srs_ul_cnfg_ded.tx_comb);
+          phy->set_param(srsue::phy_interface_params::SRS_IS_CONFIGURED, 1);
+      }
+      if(phy_cnfg->antenna_info_present)
+      {
+          //TODO
+      }
+      if(phy_cnfg->sched_request_cnfg_present)
+      {
+          if(phy_cnfg->sched_request_cnfg.setup_present)
+          {
+              phy->set_param(srsue::phy_interface_params::PUCCH_N_PUCCH_SR,
+                             phy_cnfg->sched_request_cnfg.sr_pucch_resource_idx);
+              phy->set_param(srsue::phy_interface_params::SR_CONFIG_INDEX,
+                             phy_cnfg->sched_request_cnfg.sr_cnfg_idx);
+              mac->set_param(srsue::mac_interface_params::SR_TRANS_MAX,
+                            liblte_rrc_dsr_trans_max_num[phy_cnfg->sched_request_cnfg.dsr_trans_max]);
+              mac->set_param(srsue::mac_interface_params::SR_PUCCH_CONFIGURED, 1);
+          }
+      }
+      if(phy_cnfg->pdsch_cnfg_ded_present)
+      {
+          //TODO
+      }
+
+      phy->configure_ul_params();
+
+      rrc_log->info("Set PHY config ded: SR-n_pucch=%d, SR-ConfigIndex=%d, SR-TransMax=%d, SRS-ConfigIndex=%d, SRS-bw=%d, SRS-Nrcc=%d, SRS-hop=%d, SRS-Ncs=%d\n",
+                   phy_cnfg->sched_request_cnfg.sr_pucch_resource_idx,
+                   phy_cnfg->sched_request_cnfg.sr_cnfg_idx,
+                   liblte_rrc_dsr_trans_max_num[phy_cnfg->sched_request_cnfg.dsr_trans_max],
+                   phy_cnfg->srs_ul_cnfg_ded.srs_cnfg_idx,
+                   phy_cnfg->srs_ul_cnfg_ded.srs_bandwidth,
+                   phy_cnfg->srs_ul_cnfg_ded.freq_domain_pos,
+                   phy_cnfg->srs_ul_cnfg_ded.srs_hopping_bandwidth,
+                   phy_cnfg->srs_ul_cnfg_ded.cyclic_shift);
+  }
+
+
+  if(cnfg->mac_main_cnfg_present && !cnfg->mac_main_cnfg.default_value)
+  {
+    // MAC MAIN CONFIG
+    LIBLTE_RRC_MAC_MAIN_CONFIG_STRUCT *mac_cnfg = &cnfg->mac_main_cnfg.explicit_value;
+    if(mac_cnfg->ulsch_cnfg_present)
+    {
+      if(mac_cnfg->ulsch_cnfg.max_harq_tx_present)
+      {
+        mac->set_param(srsue::mac_interface_params::HARQ_MAXTX,
+                       liblte_rrc_max_harq_tx_num[mac_cnfg->ulsch_cnfg.max_harq_tx]);
+      }
+      if(mac_cnfg->ulsch_cnfg.periodic_bsr_timer_present)
+      {
+        mac->set_param(srsue::mac_interface_params::BSR_TIMER_PERIODIC,
+                       liblte_rrc_periodic_bsr_timer_num[mac_cnfg->ulsch_cnfg.periodic_bsr_timer]);
+      }
+      mac->set_param(srsue::mac_interface_params::BSR_TIMER_RETX,
+                     liblte_rrc_retransmission_bsr_timer_num[mac_cnfg->ulsch_cnfg.retx_bsr_timer]);
+      //TODO: tti_bundling?
+    }
+    if(mac_cnfg->drx_cnfg_present)
+    {
+      //TODO
+    }
+    if(mac_cnfg->phr_cnfg_present)
+    {
+      //TODO
+    }
+    //TODO: time_alignment_timer?
+
+    rrc_log->info("Set MAC main config: harq-MaxReTX=%d, bsr-TimerReTX=%d, bsr-TimerPeriodic=%d\n",
+                 liblte_rrc_max_harq_tx_num[mac_cnfg->ulsch_cnfg.max_harq_tx],
+                 liblte_rrc_retransmission_bsr_timer_num[mac_cnfg->ulsch_cnfg.retx_bsr_timer],
+                 liblte_rrc_periodic_bsr_timer_num[mac_cnfg->ulsch_cnfg.periodic_bsr_timer]);
+  }
+
+  if(setup->rr_cnfg.sps_cnfg_present)
+  {
+    //TODO
+  }
+  if(setup->rr_cnfg.rlf_timers_and_constants_present)
+  {
+    //TODO
+  }
+  for(int i=0; i<setup->rr_cnfg.srb_to_add_mod_list_size; i++)
+  {
+    add_srb(&setup->rr_cnfg.srb_to_add_mod_list[i]);
+  }
+  for(int i=0; i<setup->rr_cnfg.drb_to_add_mod_list_size; i++)
+  {
+    add_drb(&setup->rr_cnfg.drb_to_add_mod_list[i]);
+  }
+}
+
+void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
+{
+  // Setup PDCP
+  pdcp->add_bearer(srb_cnfg->srb_id);
+
+  // Setup RLC
+  LIBLTE_RRC_RLC_CONFIG_STRUCT *rlc_cnfg = NULL;
+  if(srb_cnfg->rlc_cnfg_present)
+  {
+    rlc_cnfg = &srb_cnfg->rlc_explicit_cnfg;
+  }
+  rlc->add_bearer(srb_cnfg->srb_id, rlc_cnfg);
+
+  // Setup MAC
+  uint8_t log_chan_group = 0;
+  uint8_t priority       = 1;
+  if(srb_cnfg->lc_default_cnfg_present)
+  {
+    if(srb_cnfg->lc_explicit_cnfg.log_chan_sr_mask_present)
+    {
+      //TODO
+    }
+    if(srb_cnfg->lc_explicit_cnfg.ul_specific_params_present)
+    {
+      //TODO
+    }
+  }else{
+    if(2 == srb_cnfg->srb_id)
+      priority = 3;
+  }
+  mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, -1, -1);
+}
+
+void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)
+{}
 
 } // namespace srsue

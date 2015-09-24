@@ -25,13 +25,13 @@
  *
  */
 
-/**
+/******************************************************************************
  * File:        log_filter.h
  * Description: Log filter for a specific layer or element.
  *              Performs filtering based on log level, generates
  *              timestamped log strings and passes them to the
  *              common logger object.
- */
+ *****************************************************************************/
 
 #ifndef LOG_FILTER_H
 #define LOG_FILTER_H

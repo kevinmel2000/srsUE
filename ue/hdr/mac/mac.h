@@ -25,6 +25,9 @@
  *
  */
 
+#ifndef MAC_H
+#define MAC_H
+
 #include "common/log.h"
 #include "phy/phy.h"
 #include "mac/mac_params.h"
@@ -41,11 +44,6 @@
 #include "common/mac_interface.h"
 #include "common/tti_sync_cv.h"
 #include "common/threads.h"
-
-
-#ifndef UEMAC_H
-#define UEMAC_H
-
 
 namespace srsue {
   
@@ -144,6 +142,6 @@ private:
   
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // MAC_H

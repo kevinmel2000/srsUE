@@ -26,12 +26,18 @@
  */
 
 
-#include <stdint.h>
-#include <vector>
-
+/******************************************************************************
+ *  File:         timers.h
+ *  Description:  Manually incremented timers. Call a callback function upon
+ *                expiry.
+ *  Reference:
+ *****************************************************************************/
 
 #ifndef TIMERS_H
 #define TIMERS_H
+
+#include <stdint.h>
+#include <vector>
 
 namespace srslte {
   
@@ -122,6 +128,7 @@ private:
   uint32_t nof_timers; 
   std::vector<timer>   timer_list;   
 };
-}
+
+} // namespace srslte
   
-#endif
+#endif // TIMERS_H

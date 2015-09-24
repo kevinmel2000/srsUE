@@ -25,12 +25,10 @@
  *
  */
 
-
-
-#include <stdint.h>
-
 #ifndef PROC_H
 #define PROC_H
+
+#include <stdint.h>
 
 /* Interface for a MAC procedure */
 
@@ -56,6 +54,7 @@ public:
 private:
   bool running; 
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // PROC_H

@@ -25,16 +25,13 @@
  *
  */
 
-
-
+#ifndef ULSPS_H
+#define ULSPS_H
 
 #include "common/log.h"
 #include "phy/phy.h"
 #include "mac/mac_params.h"
 #include "common/timers.h"
-
-#ifndef ULSPS_H
-#define ULSPS_H
 
 /* Uplink Semi-Persistent schedulign (Section 5.10.2) */
 
@@ -54,6 +51,6 @@ private:
   
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // ULSPS_H

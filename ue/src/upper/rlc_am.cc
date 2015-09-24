@@ -42,7 +42,13 @@ void rlc_am::init(srslte::log *log_, uint32_t lcid_)
 
 void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
-  //TODO
+  t_poll_retx       = liblte_rrc_t_poll_retransmit_num[cnfg->ul_am_rlc.t_poll_retx];
+  poll_pdu          = liblte_rrc_poll_pdu_num[cnfg->ul_am_rlc.poll_pdu];
+  poll_byte         = liblte_rrc_poll_byte_num[cnfg->ul_am_rlc.poll_byte];
+  max_retx_thresh   = liblte_rrc_max_retx_threshold_num[cnfg->ul_am_rlc.max_retx_thresh];
+
+  t_reordering      = liblte_rrc_t_reordering_num[cnfg->dl_am_rlc.t_reordering];
+  t_status_prohibit = liblte_rrc_t_status_prohibit_num[cnfg->dl_am_rlc.t_status_prohibit];
 }
 
 RLC_MODE_ENUM rlc_am::get_mode()
@@ -56,7 +62,15 @@ uint32_t rlc_am::get_bearer()
 }
 
 // PDCP interface
-void rlc_am::write_sdu(srsue_byte_buffer_t *sdu){}
+void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
+{
+  ul_queue.write(sdu);
+}
+
+bool rlc_am::try_read_sdu(srsue_byte_buffer_t *sdu)
+{
+  return dl_queue.try_read(sdu);
+}
 
 // MAC interface
 uint32_t rlc_am::get_buffer_state(){return 0;}

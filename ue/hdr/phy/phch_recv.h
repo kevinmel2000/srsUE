@@ -25,8 +25,8 @@
  *
  */
 
-
-
+#ifndef UEPHYRECV_H
+#define UEPHYRECV_H
 
 #include "srslte/srslte.h"
 #include "common/log.h"
@@ -36,10 +36,6 @@
 #include "phy/prach.h"
 #include "phy/phch_worker.h"
 #include "phy/phch_common.h"
-
-#ifndef UEPHYRECV_H
-#define UEPHYRECV_H
-
 
 namespace srsue {
     
@@ -99,6 +95,6 @@ private:
   void          free_cell();
 };
 
-}
+} // namespace srsue
 
-#endif
+#endif // UEPHYRECV_H

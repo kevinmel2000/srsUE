@@ -26,6 +26,8 @@
  */
 
 #include "upper/pdcp_entity.h"
+#include "liblte/hdr/liblte_pdcp.h"
+#include "liblte/hdr/liblte_security.h"
 
 using namespace srslte;
 
@@ -33,6 +35,9 @@ namespace srsue{
 
 pdcp_entity::pdcp_entity()
   :active(false)
+  ,tx_sn(0)
+  ,rx_sn(0)
+  ,do_security(false)
 {}
 
 void pdcp_entity::init(rlc_interface_pdcp *rlc_,
@@ -54,16 +59,41 @@ bool pdcp_entity::is_active()
   return active;
 }
 
+// RRC interface
 void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
 {
+  LIBLTE_PDCP_CONTROL_PDU_STRUCT  control;
+  srsue_byte_buffer_t             pdu;
+
+  log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", srsue_rb_id_text[lcid]);
+
   // Handle SRB messages
   switch(lcid)
   {
   case SRSUE_RB_ID_SRB0:
-    handle_srb0_sdu(sdu);
+    // Simply pass on to RLC
+    rlc->write_sdu(lcid, sdu);
     break;
-  case SRSUE_RB_ID_SRB1:
+  case SRSUE_RB_ID_SRB1:  // Intentional fall-through
   case SRSUE_RB_ID_SRB2:
+    // Pack SDU into a control PDU
+    control.count = tx_sn;
+    if(do_security)
+    {
+      /*liblte_pdcp_pack_control_pdu(&control,
+                                   (LIBLTE_BYTE_MSG_STRUCT*)sdu,
+                                   user->get_k_rrc_int(),
+                                   LIBLTE_SECURITY_DIRECTION_UPLINK,
+                                   lcid-1,
+                                   (LIBLTE_BYTE_MSG_STRUCT*)&pdu);*/
+    }else{
+      liblte_pdcp_pack_control_pdu(&control,
+                                   (LIBLTE_BYTE_MSG_STRUCT*)sdu,
+                                   (LIBLTE_BYTE_MSG_STRUCT*)&pdu);
+    }
+    tx_sn++;
+    rlc->write_sdu(lcid, &pdu);
+
     break;
   }
 
@@ -73,13 +103,17 @@ void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
 
   }
 }
+
+// RLC interface
 void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
 {
   // Handle SRB messages
   switch(lcid)
   {
   case SRSUE_RB_ID_SRB0:
-    handle_srb0_pdu(pdu);
+    // Simply pass on to RRC
+    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
+    rrc->write_pdu(SRSUE_RB_ID_SRB0, pdu);
     break;
   case SRSUE_RB_ID_SRB1:
   case SRSUE_RB_ID_SRB2:
@@ -91,19 +125,6 @@ void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
   {
 
   }
-}
-
-void pdcp_entity::handle_srb0_sdu(srsue_byte_buffer_t *sdu)
-{
-  // Simply pass on to RLC
-  log->info_hex(sdu->msg, sdu->N_bytes, "UL Bearer %s PDU", srsue_rb_id_text[lcid]);
-  rlc->write_sdu(lcid, sdu);
-}
-
-void pdcp_entity::handle_srb0_pdu(srsue_byte_buffer_t *pdu)
-{
-  // Simply pass on to RRC
-  rrc->write_pdu(pdu);
 }
 
 }

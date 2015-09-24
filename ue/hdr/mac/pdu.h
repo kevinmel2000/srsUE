@@ -25,6 +25,8 @@
  *
  */
 
+#ifndef MACPDU_H
+#define MACPDU_H
 
 #include <stdint.h>
 #include "common/log.h"
@@ -32,10 +34,6 @@
 #include "common/interfaces.h"
 #include <vector>
 #include <stdio.h>
-
-
-#ifndef MACPDU_H
-#define MACPDU_H
 
 /* MAC PDU Packing/Unpacking functions. Section 6 of 36.321 */   
 
@@ -325,7 +323,6 @@ private:
   uint8_t    backoff_indicator; 
 };
 
-}
+} // namespace srsue
 
-#endif
-
+#endif // MACPDU_H

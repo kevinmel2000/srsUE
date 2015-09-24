@@ -25,13 +25,18 @@
  *
  */
 
+/******************************************************************************
+ *  File:         trace.h
+ *  Description:
+ *  Reference:
+ *****************************************************************************/
+
+#ifndef TRACE_H
+#define TRACE_H
 
 #include <stdio.h>
 #include <string>
 #include <vector>
-
-#ifndef TRACE_H
-#define TRACE_H
 
 namespace srslte {
   
@@ -92,7 +97,6 @@ private:
 
 };
 
+} // namespace srslte
   
-}
-  
-#endif
+#endif // TRACE_H

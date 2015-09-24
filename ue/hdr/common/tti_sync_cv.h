@@ -25,21 +25,19 @@
  *
  */
 
-
-
-#include <pthread.h>
-#include "common/tti_sync.h"
-
+/******************************************************************************
+ *  File:         tti_synch_cv.h
+ *  Description:  Implements tti_sync interface with condition variables.
+ *  Reference:
+ *****************************************************************************/
 
 #ifndef TTISYNC_CV_H
 #define TTISYNC_CV_H
 
-
+#include <pthread.h>
+#include "common/tti_sync.h"
 
 namespace srsue {
-  
-  /* Implements tti_sync interface with condition variables. 
-   */
   
 class tti_sync_cv : public tti_sync
 {
@@ -55,6 +53,7 @@ class tti_sync_cv : public tti_sync
     pthread_cond_t  cond; 
     pthread_mutex_t mutex; 
 }; 
-}
 
-#endif
+} // namespace srsue
+
+#endif // TTISYNC_CV_H

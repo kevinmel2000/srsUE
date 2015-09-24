@@ -25,7 +25,8 @@
  *
  */
 
-
+#ifndef UEPHYWORKER_H
+#define UEPHYWORKER_H
 
 #include <string.h>
 #include "srslte/srslte.h"
@@ -33,11 +34,6 @@
 #include "common/phy_interface.h"
 #include "common/trace.h"
 #include "phy/phch_common.h"
-
-
-#ifndef UEPHYWORKER_H
-#define UEPHYWORKER_H
-
 
 namespace srsue {
 
@@ -128,9 +124,9 @@ private:
   bool                              rar_cqi_request;
   double snr;
   
-  
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // UEPHYWORKER_H
 

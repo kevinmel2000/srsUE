@@ -25,16 +25,14 @@
  *
  */
 
-
+#ifndef PROCSR_H
+#define PROCSR_H
 
 #include <stdint.h>
 
 #include "mac/proc.h"
 #include "phy/phy.h"
 #include "mac/mac_params.h"
-
-#ifndef PROCSR_H
-#define PROCSR_H
 
 /* Scheduling Request procedure as defined in 5.4.4 of 36.321 */
 
@@ -62,6 +60,7 @@ private:
   bool          initiated;
   bool          do_ra;
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // PROCSR_H

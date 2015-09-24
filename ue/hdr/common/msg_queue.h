@@ -25,6 +25,12 @@
  *
  */
 
+/******************************************************************************
+ *  File:         msg_queue.h
+ *  Description:  Thread-safe queue of srsue_byte_buffer structs.
+ *  Reference:
+ *****************************************************************************/
+
 #ifndef MSG_QUEUE_H
 #define MSG_QUEUE_H
 
@@ -130,6 +136,12 @@ public:
   {
     boost::mutex::scoped_lock lock(mutex);
     return unread_bytes;
+  }
+
+  uint32_t size_tail_bytes()
+  {
+    boost::mutex::scoped_lock lock(mutex);
+    return buf[tail].N_bytes;
   }
 
 private:

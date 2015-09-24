@@ -25,22 +25,18 @@
  *
  */
 
-
-#include <stdint.h>
-#include <string>
-#include "srslte/srslte.h"
-
 /******************************************************************************
  *  File:         mac_interface.h
- *
  *  Description:  LTE MAC layer interface
- *
  *  Reference:
  *****************************************************************************/
 
 #ifndef MAC_INTERFACE_H
 #define MAC_INTERFACE_H
 
+#include <stdint.h>
+#include <string>
+#include "srslte/srslte.h"
 
 namespace srsue {
   
