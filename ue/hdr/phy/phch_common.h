@@ -25,6 +25,8 @@
  *
  */
 
+#ifndef UEPHYWORKERCOMMON_H
+#define UEPHYWORKERCOMMON_H
 
 #include <pthread.h>
 #include <string.h>
@@ -34,11 +36,6 @@
 #include "radio/radio.h"
 #include "common/log.h"
 #include "phy/phy_params.h"
-
-
-#ifndef UEPHYWORKERCOMMON_H
-#define UEPHYWORKERCOMMON_H
-
 
 namespace srsue {
 
@@ -109,6 +106,6 @@ namespace srsue {
     
   };
   
-}
+} // namespace srsue
 
-#endif
+#endif // UEPHYWORKERCOMMON_H

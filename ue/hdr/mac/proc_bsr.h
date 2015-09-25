@@ -25,7 +25,8 @@
  *
  */
 
-
+#ifndef PROCBSR_H
+#define PROCBSR_H
 
 #include <stdint.h>
 
@@ -34,10 +35,7 @@
 #include "common/mac_interface.h"
 #include "common/interfaces.h"
 #include "mac/mac_params.h"
-#include "common/timers.h" 
-
-#ifndef PROCBSR_H
-#define PROCBSR_H
+#include "common/timers.h"
 
 /* Buffer status report procedure */
 
@@ -100,6 +98,7 @@ private:
   char* bsr_type_tostring(triggered_bsr_type_t type); 
   char* bsr_format_tostring(bsr_format_t format);
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // PROCBSR_H

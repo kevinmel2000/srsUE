@@ -25,13 +25,6 @@
  *
  */
 
-#include <stdint.h>
-#include <string>
-#include <stdarg.h>
-
-
-#include "common/log.h"
-
 /******************************************************************************
  *  File:         log_stout.h
  *
@@ -42,6 +35,13 @@
 
 #ifndef LOGSTDOUT_H
 #define LOGSTDOUT_H
+
+#include <stdint.h>
+#include <string>
+#include <stdarg.h>
+
+#include "common/log.h"
+
 
 using namespace std; 
 

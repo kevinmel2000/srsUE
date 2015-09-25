@@ -48,7 +48,8 @@
 *******************************************************************************/
 
 // FIXME: This was chosen arbitrarily
-#define LIBLTE_MAX_MSG_SIZE 8192
+#define LIBLTE_MAX_MSG_SIZE       102048
+#define LIBLTE_MSG_HEADER_OFFSET  1024
 
 /*******************************************************************************
                               TYPEDEFS
@@ -62,19 +63,69 @@ typedef enum{
 }LIBLTE_ERROR_ENUM;
 
 typedef struct{
-    uint32 N_bits;
-    uint8  msg[LIBLTE_MAX_MSG_SIZE];
-}LIBLTE_BIT_MSG_STRUCT;
+    bool   data_valid;
+    bool   data;
+}LIBLTE_BOOL_MSG_STRUCT;
 
 typedef struct{
-    bool   data_valid;
-    bool   data;    
-}LIBLTE_BOOL_MSG_STRUCT;
+    uint32 N_bits;
+    uint8  msg[LIBLTE_MAX_MSG_SIZE];
+}LIBLTE_SIMPLE_BIT_MSG_STRUCT;
 
 typedef struct{
     uint32 N_bytes;
     uint8  msg[LIBLTE_MAX_MSG_SIZE];
-}LIBLTE_BYTE_MSG_STRUCT;
+}LIBLTE_SIMPLE_BYTE_MSG_STRUCT;
+
+
+struct LIBLTE_BYTE_MSG_STRUCT{
+    uint32  N_bytes;
+    uint8   buffer[LIBLTE_MAX_MSG_SIZE];
+    uint8  *msg;
+
+    LIBLTE_BYTE_MSG_STRUCT():N_bytes(0)
+    {
+      msg = &buffer[LIBLTE_MSG_HEADER_OFFSET];
+    }
+    LIBLTE_BYTE_MSG_STRUCT(const LIBLTE_BYTE_MSG_STRUCT& buf)
+    {
+      N_bytes = buf.N_bytes;
+      memcpy(msg, buf.msg, N_bytes);
+    }
+    LIBLTE_BYTE_MSG_STRUCT & operator= (const LIBLTE_BYTE_MSG_STRUCT & buf)
+    {
+      N_bytes = buf.N_bytes;
+      memcpy(msg, buf.msg, N_bytes);
+    }
+    uint32 get_headroom()
+    {
+      return msg-buffer;
+    }
+};
+
+struct LIBLTE_BIT_MSG_STRUCT{
+    uint32  N_bits;
+    uint8   buffer[LIBLTE_MAX_MSG_SIZE];
+    uint8  *msg;
+
+    LIBLTE_BIT_MSG_STRUCT():N_bits(0)
+    {
+      msg = &buffer[LIBLTE_MSG_HEADER_OFFSET];
+    }
+    LIBLTE_BIT_MSG_STRUCT(const LIBLTE_BIT_MSG_STRUCT& buf){
+      N_bits = buf.N_bits;
+      memcpy(msg, buf.msg, N_bits);
+    }
+    LIBLTE_BIT_MSG_STRUCT & operator= (const LIBLTE_BIT_MSG_STRUCT & buf){
+      N_bits = buf.N_bits;
+      memcpy(msg, buf.msg, N_bits);
+    }
+    uint32 get_headroom()
+    {
+      return msg-buffer;
+    }
+};
+
 
 /*******************************************************************************
                               DECLARATIONS

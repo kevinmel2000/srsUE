@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "liblte_rrc.h"
+#include "liblte/hdr/liblte_rrc.h"
 #include "radio/radio_uhd.h"
 #include "phy/phy.h"
 #include "common/mac_interface.h"
@@ -281,7 +281,7 @@ void process_connsetup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *msg, srsue::mac *mac,
   // Setup radio bearers
   for (int i=0;i<msg->rr_cnfg.srb_to_add_mod_list_size;i++) {
     if (msg->rr_cnfg.srb_to_add_mod_list[i].lc_default_cnfg_present) {
-      printf("Setting up Default Configuration for SRB%d \n", msg->rr_cnfg.srb_to_add_mod_list[i].srb_id);  
+      printf("Setting up Default Configuration for SRB%d \n", msg->rr_cnfg.srb_to_add_mod_list[i].srb_id);
       switch(msg->rr_cnfg.srb_to_add_mod_list[i].srb_id) {
         case 1:
           mac->setup_lcid(1, 0, 1, -1, -1);
@@ -395,7 +395,7 @@ public:
       for (int i=0;i<nbytes;i++) {
         ue_cri_ptr[nbytes-i-1] = (uint8_t) srslte_bit_pack(&ptr, 8);
       }
-      printf("Setting UE contention resolution ID: %d\n", uecri);
+      printf("Setting UE contention resolution ID: %lu\n", uecri);
       mac.set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
 
       // Send ConnectionRequest Packet

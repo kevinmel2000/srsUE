@@ -25,13 +25,11 @@
  *
  */
 
-
-#include <stdint.h>
-#include "mac/pcap.h"
-
 #ifndef MACPCAP_H
 #define MACPCAP_H
 
+#include <stdint.h>
+#include "mac/pcap.h"
 
 namespace srsue {
 
@@ -58,7 +56,6 @@ private:
                               uint16_t crnti_, uint8_t direction, uint8_t rnti_type);
 };
 
-}
+} // namespace srsue
 
-
-#endif
+#endif // MACPCAP_H

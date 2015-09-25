@@ -25,21 +25,18 @@
  *
  */
 
-#include <stdint.h>
-#include <string>
-#include "srslte/srslte.h"
-
 /******************************************************************************
  *  File:         phy_interface.h
- *
- *  Description:  LTE PHY layer interface
- *
+ *  Description:  PHY layer interfaces provided to other layers
  *  Reference:
  *****************************************************************************/
 
 #ifndef PHY_INTERFACE_H
 #define PHY_INTERFACE_H
 
+#include <stdint.h>
+#include <string>
+#include "srslte/srslte.h"
 
 namespace srsue {
   

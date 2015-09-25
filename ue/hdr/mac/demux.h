@@ -25,7 +25,8 @@
  *
  */
 
-
+#ifndef DEMUX_H
+#define DEMUX_H
 
 #include "phy/phy.h"
 #include "common/mac_interface.h"
@@ -34,9 +35,6 @@
 #include "common/timers.h"
 #include "mac/mac_params.h"
 #include "mac/pdu.h"
-
-#ifndef DEMUX_H
-#define DEMUX_H
 
 /* Logical Channel Demultiplexing and MAC CE dissassemble */   
 
@@ -94,9 +92,10 @@ private:
   srslte::timers    *timers_db;
   rlc_interface_mac *rlc;
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // DEMUX_H
 
 
 

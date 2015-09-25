@@ -25,24 +25,20 @@
  *
  */
 
+/******************************************************************************
+ *  File:         task_dispatcher.h
+ *  Description:
+ *  Reference:
+ *****************************************************************************/
+
+#ifndef TASK_DISPATCHER_H
+#define TASK_DISPATCHER_H
 
 #include <pthread.h>
 #include <stdint.h>
 #include <string>
 #include <queue>
 #include "common/threads.h"
-
-/******************************************************************************
- *  File:         task_dispatcher.h
- *
- *  Description:  Implements a pool of threads. Pending tasks to execute are 
- *                identified by a pointer. 
- *
- *  Reference:
- *****************************************************************************/
-
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
 
 namespace srslte {
   
@@ -60,6 +56,7 @@ private:
   pthread_cond_t cvar; 
   bool running;
 };
-}
+
+} // namespace srsue
   
-#endif
+#endif // TASK_DISPATCHER_H

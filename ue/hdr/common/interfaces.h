@@ -25,10 +25,16 @@
  *
  */
 
+/******************************************************************************
+ * File:        interfaces.h
+ * Description: Abstract base class interfaces provided by layers
+ *              to other layers.
+ *****************************************************************************/
+
 #ifndef INTERFACES_H
 #define INTERFACES_H
 
-#include "liblte_rrc.h"
+#include "liblte/hdr/liblte_rrc.h"
 #include "common/common.h"
 #include "upper/rlc_entity.h"
 #include "mac_interface.h"
@@ -68,7 +74,7 @@ public:
 class rrc_interface_pdcp
 {
 public:
-  virtual void write_pdu(srsue_byte_buffer_t *pdu) = 0;
+  virtual void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu) = 0;
   virtual void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu) = 0;
   virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu) = 0;
 };
@@ -85,6 +91,7 @@ class pdcp_interface_rrc
 {
 public:
   virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
+  virtual void add_bearer(uint32_t lcid) = 0;
 };
 
 // PDCP interface for RLC
@@ -101,7 +108,7 @@ public:
 class rlc_interface_rrc
 {
 public:
-  virtual void add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
+  virtual void add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 };
 
 // RLC interface for PDCP
@@ -110,7 +117,7 @@ class rlc_interface_pdcp
 public:
   /* PDCP calls RLC to push an RLC SDU. SDU gets placed into the RLC buffer and MAC pulls
    * RLC PDUs according to TB size. */
-  virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
+  virtual void write_sdu(uint32_t lcid,  srsue_byte_buffer_t *sdu) = 0;
 };
 
 //RLC interface for MAC

@@ -25,7 +25,8 @@
  *
  */
 
-
+#ifndef PROCRA_H
+#define PROCRA_H
 
 #include <stdint.h>
 
@@ -39,9 +40,6 @@
 #include "mac/demux.h"
 #include "mac/pdu.h"
 #include "mac/mac_pcap.h"
-
-#ifndef PROCRA_H
-#define PROCRA_H
 
 /* Random access procedure as specified in Section 5.1 of 36.321 */
 
@@ -168,6 +166,7 @@ private:
     uint32_t rar_grant_tti;
     bool msg3_flushed;
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // PROCRA_H

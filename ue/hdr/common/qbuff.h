@@ -25,31 +25,30 @@
  *
  */
 
-
-#include <stdint.h>
-
+/******************************************************************************
+ * Implementation of a lock-free single-producer single-consumer queue buffer
+ * Communication can be pointer-based or stream based.
+ * Only 1 thread can read and only 1 thread can write.
+ *
+ * Writer:
+ *   - Call request, returns a pointer.
+ *   - Writes to memory, up to max_msg_size bytes
+ *   - Call to push() passing message size
+ *  or
+ *   - use send()
+ *
+ * Reader:
+ *   - Call to pop, receive pointer and message size
+ *   - Read memory contents
+ *   - Call to release() to release the message buffer
+ *  or
+ *   - use recv()
+ *****************************************************************************/
 
 #ifndef QBUFF_H
 #define QBUFF_H
 
-/** Implementation of a lock-free single-producer single-consumer queue buffer
- * Communication can be pointer-based or stream based. 
- * Only 1 thread can read and only 1 thread can write. 
- * 
- * Writer: 
- *   - Call request, returns a pointer. 
- *   - Writes to memory, up to max_msg_size bytes
- *   - Call to push() passing message size 
- *  or 
- *   - use send()
- * 
- * Reader: 
- *   - Call to pop, receive pointer and message size
- *   - Read memory contents
- *   - Call to release() to release the message buffer
- *  or 
- *   - use recv()
- */
+#include <stdint.h>
 
 namespace srslte {
 
@@ -88,6 +87,6 @@ namespace srslte {
     
   };
 
-}
+} // namespace srslte
 
-#endif
+#endif // QBUFF_H

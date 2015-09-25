@@ -45,8 +45,11 @@ public:
   void init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface_pdcp *gw_, srslte::log *pdcp_log_);
   void stop();
 
+  // RRC interface
   void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
+  void add_bearer(uint32_t lcid);
 
+  // RLC interface
   void write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
   void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu);
   void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu);

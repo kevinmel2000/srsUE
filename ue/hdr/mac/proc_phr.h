@@ -25,14 +25,11 @@
  *
  */
 
-
-
-#include <stdint.h>
-
-#include "mac/proc.h"
-
 #ifndef PROCPHR_H
 #define PROCPHR_H
+
+#include <stdint.h>
+#include "mac/proc.h"
 
 /* Power headroom report procedure */
 
@@ -51,6 +48,7 @@ public:
     
   }
 };
-}
 
-#endif
+} // namespace srsue
+
+#endif // PROCPHR_H

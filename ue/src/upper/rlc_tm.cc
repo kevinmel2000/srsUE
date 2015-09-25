@@ -42,7 +42,7 @@ void rlc_tm::init(srslte::log *log_, uint32_t lcid_)
 
 void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
-  //TODO
+  log->error("Attempted to configure TM RLC entity");
 }
 
 RLC_MODE_ENUM rlc_tm::get_mode()
@@ -61,6 +61,11 @@ void rlc_tm::write_sdu(srsue_byte_buffer_t *sdu)
   ul_queue.write(sdu);
 }
 
+bool rlc_tm::try_read_sdu(srsue_byte_buffer_t *sdu)
+{
+  return dl_queue.try_read(sdu);
+}
+
 // MAC interface
 uint32_t rlc_tm::get_buffer_state()
 {
@@ -69,16 +74,21 @@ uint32_t rlc_tm::get_buffer_state()
 
 int rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  int read = ul_queue.read(payload);
-  if(read > nof_bytes)
+  uint32_t pdu_size = ul_queue.size_tail_bytes();
+  if(pdu_size > nof_bytes)
   {
-    log->error("MAC read size doesn't match SDU size on bearer %s", srsue_rb_id_text[lcid]);
-    return read;
-  }else{
-    log->info_hex(payload, nof_bytes, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
-    return read;
+    log->error("UL %s PDU size larger than MAC opportunity\n", srsue_rb_id_text[lcid]);
+    return 0;
   }
-}
-void    rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
 
+  pdu_size = ul_queue.read(payload);
+  log->info_hex(payload, pdu_size, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
+  return pdu_size;
 }
+
+void rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes)
+{
+  dl_queue.write(payload, nof_bytes);
+}
+
+} // namespace srsue

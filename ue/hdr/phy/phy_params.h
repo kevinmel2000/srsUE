@@ -25,28 +25,24 @@
  *
  */
 
-
+#ifndef PHYPARAMS_H
+#define PHYPARAMS_H
 
 #include "srslte/srslte.h"
 #include "common/params_db.h"
 #include "common/phy_interface.h"
 
-#ifndef PHYPARAMS_H
-#define PHYPARAMS_H
-
-
-
 namespace srsue {
 
-  class phy_params : public params_db
-  {
-  public: 
+class phy_params : public params_db
+{
+public:
 
-    phy_params() : params_db(phy_interface_params::NOF_PARAMS) { }
-   ~phy_params() {}
-    
-    
-  };
-}
+  phy_params() : params_db(phy_interface_params::NOF_PARAMS) { }
+ ~phy_params() {}
 
-#endif
+};
+
+} // namespace srsue
+
+#endif // PHYPARAMS_H

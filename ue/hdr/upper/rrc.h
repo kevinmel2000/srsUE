@@ -89,16 +89,27 @@ private:
 
   pthread_t             sib_search_thread;
 
-  void write_pdu(srsue_byte_buffer_t *pdu);
+  // PDCP interface
+  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu);
 
-  static void*  start_sib_thread(void *rrc_);
+  // Senders
+  void send_con_request();
 
-  void      sib_search();
-  void      send_con_request();
-  uint32_t  sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
-  void      handle_sib2();
+  // Parsers
+  void parse_dl_ccch(srsue_byte_buffer_t *pdu);
+  void parse_dl_dcch(srsue_byte_buffer_t *pdu);
+
+  // Helpers
+  static void*  start_sib_thread(void *rrc_);
+  void          sib_search();
+  uint32_t      sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
+  void          apply_sib2_configs();
+  void          handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup);
+  void          add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg);
+  void          add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg);
+
 };
 
 } // namespace srsue

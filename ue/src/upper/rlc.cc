@@ -86,7 +86,9 @@ int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
+    rlc_log->info_hex(payload, nof_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
     rlc_array[lcid]->write_pdu(payload, nof_bytes);
+    ue->notify();
   }
 }
 
@@ -107,29 +109,35 @@ void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
 /*******************************************************************************
   RRC interface
 *******************************************************************************/
-void rlc::add_rlc(RLC_MODE_ENUM mode, uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
+void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
-    rlc_log->error("Logical channel index must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
+    rlc_log->error("Radio bearer id must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
     return;
   }
-  switch(mode)
+
+  switch(cnfg->rlc_mode)
   {
-  case RLC_MODE_TM:
-    rlc_array[lcid] = new rlc_tm;
+  case LIBLTE_RRC_RLC_MODE_AM:
+    rlc_array[lcid] = new rlc_am;
     break;
-  case RLC_MODE_UM:
+  case LIBLTE_RRC_RLC_MODE_UM_BI:
     rlc_array[lcid] = new rlc_um;
     break;
-  case RLC_MODE_AM:
-    rlc_array[lcid] = new rlc_am;
+  case LIBLTE_RRC_RLC_MODE_UM_UNI_UL:
+    rlc_array[lcid] = new rlc_um;
+    break;
+  case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
+    rlc_array[lcid] = new rlc_um;
     break;
   default:
     rlc_log->error("Cannot add RLC entity - invalid mode");
+    return;
   }
   rlc_array[lcid]->init(rlc_log, lcid);
   if(cnfg)
     rlc_array[lcid]->configure(cnfg);
+
 }
 
 /*******************************************************************************
@@ -154,7 +162,16 @@ bool rlc::check_dl_buffers()
     pdcp->write_pdu_bcch_dlsch(&mac_buf);
     ret = true;
   }
-  // TODO: Check each of the RB buffers
+  for(uint32_t i=0;i<SRSUE_N_RADIO_BEARERS;i++)
+  {
+    if(valid_lcid(i))
+    {
+      if(rlc_array[i]->try_read_sdu(&mac_buf))
+      {
+        pdcp->write_pdu(i, &mac_buf);
+      }
+    }
+  }
 
   return ret;
 }

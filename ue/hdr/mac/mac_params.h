@@ -25,29 +25,24 @@
  *
  */
 
-
+#ifndef MACPARAMS_H
+#define MACPARAMS_H
 
 #include "srslte/srslte.h"
 #include "common/params_db.h"
 #include "common/mac_interface.h"
 
-#ifndef MACPARAMS_H
-#define MACPARAMS_H
-
-
 
 namespace srsue {
 
-  class mac_params : public params_db
-  {
-  public: 
+class mac_params : public params_db
+{
+public:
 
-    mac_params() : params_db(mac_interface_params::NOF_PARAMS) {}
-   ~mac_params() {}
-    
-    
-  };
-}
+  mac_params() : params_db(mac_interface_params::NOF_PARAMS) {}
+  ~mac_params() {}
+};
 
+} // namespace srsue
 
-#endif
+#endif // MACPARAMS_H

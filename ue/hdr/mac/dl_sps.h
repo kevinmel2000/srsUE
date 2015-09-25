@@ -25,16 +25,13 @@
  *
  */
 
-
-
+#ifndef DL_SPS_H
+#define DL_SPS_H
 
 #include "common/log.h"
 #include "phy/phy.h"
 #include "mac/mac_params.h"
 #include "common/timers.h"
-
-#ifndef DLSPS_H
-#define DLSPS_H
 
 /* Downlink Semi-Persistent schedulign (Section 5.10.1) */
 
@@ -54,6 +51,6 @@ private:
   
 };
 
-} 
+} // namespace srsue
 
-#endif
+#endif // DL_SPS_H
