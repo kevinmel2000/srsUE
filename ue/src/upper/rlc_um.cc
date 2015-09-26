@@ -45,7 +45,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   //TODO
 }
 
-RLC_MODE_ENUM rlc_um::get_mode()
+rlc_mode_t rlc_um::get_mode()
 {
   return RLC_MODE_UM;
 }

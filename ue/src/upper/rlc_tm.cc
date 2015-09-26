@@ -45,7 +45,7 @@ void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   log->error("Attempted to configure TM RLC entity");
 }
 
-RLC_MODE_ENUM rlc_tm::get_mode()
+rlc_mode_t rlc_tm::get_mode()
 {
   return RLC_MODE_TM;
 }

@@ -31,27 +31,88 @@
 #include "common/log.h"
 #include "common/common.h"
 #include "liblte/hdr/liblte_rrc.h"
-#include "liblte/hdr/liblte_rlc.h"
 
 namespace srsue {
 
+/****************************************************************************
+ * Structs and Defines
+ * Ref: 3GPP TS 36.322 v10.0.0
+ ***************************************************************************/
+
+#define RLC_AM_WINDOW_SIZE 512
+
 typedef enum{
-    RLC_MODE_TM = 0,
-    RLC_MODE_UM,
-    RLC_MODE_AM,
-    RLC_MODE_N_ITEMS,
-}RLC_MODE_ENUM;
+  RLC_MODE_TM = 0,
+  RLC_MODE_UM,
+  RLC_MODE_AM,
+  RLC_MODE_N_ITEMS,
+}rlc_mode_t;
 static const char rlc_mode_text[RLC_MODE_N_ITEMS][20] = {"Transparent Mode",
                                                          "Unacknowledged Mode",
                                                          "Acknowledged Mode"};
 
+typedef enum{
+  RLC_FI_FIELD_FULL_SDU = 0,
+  RLC_FI_FIELD_FIRST_SDU_SEGMENT,
+  RLC_FI_FIELD_LAST_SDU_SEGMENT,
+  RLC_FI_FIELD_MIDDLE_SDU_SEGMENT,
+  RLC_FI_FIELD_N_ITEMS,
+}rlc_fi_field_t;
+static const char rlc_fi_field_text[RLC_FI_FIELD_N_ITEMS][20] = {"Full SDU",
+                                                                 "First SDU Segment",
+                                                                 "Last SDU Segment",
+                                                                 "Middle SDU Segment"};
+
+typedef enum{
+  RLC_DC_FIELD_CONTROL_PDU = 0,
+  RLC_DC_FIELD_DATA_PDU,
+  RLC_DC_FIELD_N_ITEMS,
+}rlc_dc_field_t;
+static const char rlc_dc_field_text[RLC_DC_FIELD_N_ITEMS][20] = {"Control PDU",
+                                                                 "Data PDU"};
+
+typedef enum{
+  RLC_UMD_SN_SIZE_5_BITS = 0,
+  RLC_UMD_SN_SIZE_10_BITS,
+  RLC_UMD_SN_SIZE_N_ITEMS,
+}rlc_umd_sn_size_t;
+static const char     rlc_umd_sn_size_text[RLC_UMD_SN_SIZE_N_ITEMS][20] = {"5 bits", "10 bits"};
+static const uint16_t rlc_umd_sn_size_num[RLC_UMD_SN_SIZE_N_ITEMS][20]  = {5, 10};
+
+// UMD PDU Header
+typedef struct{
+  rlc_fi_field_t    fi;       // Framing info
+  rlc_umd_sn_size_t sn_size;  // Sequence number size (5 or 10)
+  uint16_t          sn;       // Sequence number
+}rlc_umd_pdu_header_t;
+
+// AMD PDU Header
+typedef struct{
+  rlc_dc_field_t dc;          // Data or control
+  bool           rf;          // Resegmentation flag
+  bool           p;           // Polling bit
+  rlc_fi_field_t fi;          // Framing info
+  uint16_t       sn;          // Sequence number
+}rlc_amd_pdu_header_t;
+
+// STATUS PDU
+typedef struct{
+  uint32_t N_nack;
+  uint16_t ack_sn;
+  uint16_t nack_sn[RLC_AM_WINDOW_SIZE];
+}rlc_status_pdu_t;
+
+/****************************************************************************
+ * RLC Entity interface
+ * Common interface for all RLC entities
+ ***************************************************************************/
 class rlc_entity
 {
 public:
   virtual void init(srslte::log *rlc_entity_log_, uint32_t lcid_) = 0;
   virtual void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 
-  virtual RLC_MODE_ENUM get_mode() = 0;
+  virtual rlc_mode_t    get_mode() = 0;
   virtual uint32_t      get_bearer() = 0;
 
   // PDCP interface

@@ -36,6 +36,12 @@
 
 namespace srsue {
 
+/****************************************************************************
+ * RLC Layer
+ * Ref: 3GPP TS 36.322 v10.0.0
+ * Single interface for RLC layer - contains separate RLC entities for
+ * each bearer.
+ ***************************************************************************/
 class rlc
     :public rlc_interface_mac
     ,public rlc_interface_pdcp

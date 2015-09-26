@@ -31,6 +31,7 @@
 #include "common/log.h"
 #include "common/common.h"
 #include "common/msg_queue.h"
+#include "common/timeout.h"
 #include "upper/rlc_entity.h"
 
 namespace srsue {
@@ -43,7 +44,7 @@ public:
   void init(srslte::log *rlc_entity_log_, uint32_t lcid_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
-  RLC_MODE_ENUM get_mode();
+  rlc_mode_t    get_mode();
   uint32_t      get_bearer();
 
   // PDCP interface
@@ -60,6 +61,17 @@ private:
   srslte::log *log;
   uint32_t     lcid;
 
+  // Thread-safe SDU queues
+  msg_queue    tx_sdu_queue;
+  msg_queue    rx_sdu_queue;
+
+  srsue_byte_buffer_t status_pdu;
+
+  /****************************************************************************
+   * Configurable parameters
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+
   // UL configs
   int32_t    t_poll_retx;      // Poll retx timeout (ms)
   int32_t    poll_pdu;         // Insert poll bit after this many PDUs
@@ -67,12 +79,39 @@ private:
   int32_t    max_retx_thresh;  // Max number of retx
 
   // DL configs
-  int32_t   t_reordering;     // Timer used by rx to detect PDU loss  (ms)
-  int32_t   t_status_prohibit;// Timer used by rx to prohibit tx of status PDU (ms)
+  int32_t   t_reordering;       // Timer used by rx to detect PDU loss  (ms)
+  int32_t   t_status_prohibit;  // Timer used by rx to prohibit tx of status PDU (ms)
 
-  // Thread-safe queues for MAC messages
-  msg_queue    ul_queue;
-  msg_queue    dl_queue;
+  /****************************************************************************
+   * State variables and counters
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+
+  // Tx state variables
+  uint32_t vt_a;    // ACK state. SN of next PDU in sequence to be ACKed. Low edge of tx window.
+  uint32_t vt_ms;   // Max send state. High edge of tx window. vt_a + window_size.
+  uint32_t vt_s;    // Send state. SN to be assigned for next PDU.
+  uint32_t poll_sn; // Poll send state. SN of most recent PDU txed with poll bit set.
+
+  // Tx counters
+  uint32_t pdu_without_poll;
+  uint32_t byte_without_poll;
+
+  // Rx state variables
+  uint32_t vr_r;  // Receive state. SN following last in-sequence received PDU. Low edge of rx window
+  uint32_t vr_mr; // Max acceptable receive state. High edge of rx window. vr_r + window size.
+  uint32_t vr_x;  // t_reordering state. SN following PDU which triggered t_reordering.
+  uint32_t vr_ms; // Max status tx state. Highest possible value of SN for ACK_SN in status PDU.
+  uint32_t vr_h;  // Highest rx state. SN following PDU with highest SN among rxed PDUs.
+
+  /****************************************************************************
+   * Timers
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+
+  timeout poll_retx_timeout;
+  timeout reordering_timeout;
+  timeout status_prohibit_timeout;
 };
 
 } // namespace srsue

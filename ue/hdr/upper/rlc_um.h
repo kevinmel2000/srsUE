@@ -43,7 +43,7 @@ public:
   void init(srslte::log *rlc_entity_log_, uint32_t lcid_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
-  RLC_MODE_ENUM get_mode();
+  rlc_mode_t    get_mode();
   uint32_t      get_bearer();
 
   // PDCP interface

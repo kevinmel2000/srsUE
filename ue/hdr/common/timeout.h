@@ -28,7 +28,7 @@
 /******************************************************************************
  *  File:         timeout.h
  *  Description:  Millisecond resolution timeouts. Uses a dedicated thread to
- *                call a callback function upon timeout expiry.
+ *                call an optional callback function upon timeout expiry.
  *  Reference:
  *****************************************************************************/
 
@@ -51,9 +51,10 @@ class timeout_callback
 class timeout
 {
 public:
-  timeout(){}
-  void start(uint32_t timeout_id_, uint32_t duration_msec_, timeout_callback *callback_)
+  timeout():exp(false){}
+  void start(uint32_t timeout_id_, uint32_t duration_msec_, timeout_callback *callback_=NULL)
   {
+    exp = false;
     start_time = boost::posix_time::microsec_clock::local_time();
     timeout_id    = timeout_id_;
     duration_usec = duration_msec_*1000;
@@ -74,7 +75,13 @@ public:
     duration_usec -= diff.total_microseconds();
     if(duration_usec > 0)
       usleep(duration_usec);
-    callback->timeout_expired(timeout_id);
+    exp = true;
+    if(callback)
+        callback->timeout_expired(timeout_id);
+  }
+  bool expired()
+  {
+      return exp;
   }
 
 private:
@@ -83,6 +90,7 @@ private:
   uint32_t                  timeout_id;
   uint32_t                  duration_usec;
   timeout_callback         *callback;
+  bool                      exp;
 };
 
 } // namespace srsue

@@ -51,7 +51,7 @@ void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   t_status_prohibit = liblte_rrc_t_status_prohibit_num[cnfg->dl_am_rlc.t_status_prohibit];
 }
 
-RLC_MODE_ENUM rlc_am::get_mode()
+rlc_mode_t rlc_am::get_mode()
 {
   return RLC_MODE_AM;
 }
@@ -64,12 +64,12 @@ uint32_t rlc_am::get_bearer()
 // PDCP interface
 void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
 {
-  ul_queue.write(sdu);
+  tx_sdu_queue.write(sdu);
 }
 
 bool rlc_am::try_read_sdu(srsue_byte_buffer_t *sdu)
 {
-  return dl_queue.try_read(sdu);
+  return rx_sdu_queue.try_read(sdu);
 }
 
 // MAC interface
