@@ -261,12 +261,16 @@ void phch_recv::run_thread()
       case CELL_SEARCH:
         if (cell_search()) {
           init_cell();
-          /* Modify master clock rate for 15 Mhz */
-          if (cell.nof_prb == 75) {
-            radio_h->set_master_clock_rate(23.04e6);
+          float srate = (float) srslte_sampling_freq_hz(cell.nof_prb); 
+          if (srate < 10e6) {
+            radio_h->set_master_clock_rate(4*srate);        
+          } else {
+            radio_h->set_master_clock_rate(srate);        
           }
-          radio_h->set_rx_srate((float) srslte_sampling_freq_hz(cell.nof_prb));
-          radio_h->set_tx_srate((float) srslte_sampling_freq_hz(cell.nof_prb));
+          printf("Setting Sampling frequency %.2f MHz\n", (float) srate/1000000);
+
+          radio_h->set_rx_srate(srate);
+          radio_h->set_tx_srate(srate);
           Info("Cell found. Synchronizing...\n");
           phy_state = SYNCING;
         }
