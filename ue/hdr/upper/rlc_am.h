@@ -28,6 +28,7 @@
 #ifndef RLC_AM_H
 #define RLC_AM_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/msg_queue.h"
@@ -49,7 +50,7 @@ public:
 
   // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  bool try_read_sdu(srsue_byte_buffer_t *sdu);
+  bool try_read_sdu(srsue_byte_buffer_t **sdu);
 
   // MAC interface
   uint32_t get_buffer_state();
@@ -65,7 +66,7 @@ private:
   msg_queue    tx_sdu_queue;
   msg_queue    rx_sdu_queue;
 
-  srsue_byte_buffer_t status_pdu;
+  bool         status_requested;
 
   /****************************************************************************
    * Configurable parameters

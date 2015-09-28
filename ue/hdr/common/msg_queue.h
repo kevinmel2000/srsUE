@@ -27,7 +27,7 @@
 
 /******************************************************************************
  *  File:         msg_queue.h
- *  Description:  Thread-safe queue of srsue_byte_buffer structs.
+ *  Description:  Thread-safe queue of srsue_byte_buffer pointers.
  *  Reference:
  *****************************************************************************/
 
@@ -50,7 +50,7 @@ public:
     ,unread_bytes(0)
     ,capacity(capacity_)
   {
-    buf = new srsue_byte_buffer_t[capacity];
+    buf = new srsue_byte_buffer_t*[capacity];
   }
 
   ~msg_queue()
@@ -62,7 +62,7 @@ public:
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_full()) not_full.wait(lock);
-    buf[head] = *msg;
+    buf[head] = msg;
     head = (head+1)%capacity;
     unread++;
     unread_bytes += msg->N_bytes;
@@ -70,46 +70,19 @@ public:
     not_empty.notify_one();
   }
 
-  void write(uint8_t *payload, uint32_t nof_bytes)
-  {
-    boost::mutex::scoped_lock lock(mutex);
-    while(is_full()) not_full.wait(lock);
-    memcpy(buf[head].msg, payload, nof_bytes);
-    buf[head].N_bytes = nof_bytes;
-    head = (head+1)%capacity;
-    unread++;
-    unread_bytes += nof_bytes;
-    lock.unlock();
-    not_empty.notify_one();
-  }
-
-  void read(srsue_byte_buffer_t *msg)
+  void read(srsue_byte_buffer_t **msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_empty()) not_empty.wait(lock);
     *msg = buf[tail];
     tail = (tail+1)%capacity;
     unread--;
-    unread_bytes -= msg->N_bytes;
+    unread_bytes -= (*msg)->N_bytes;
     lock.unlock();
     not_full.notify_one();
   }
 
-  uint32_t read(uint8_t *payload)
-  {
-    boost::mutex::scoped_lock lock(mutex);
-    while(is_empty()) not_empty.wait(lock);
-    memcpy(payload, buf[tail].msg, buf[tail].N_bytes);
-    uint32_t r = buf[tail].N_bytes;
-    tail = (tail+1)%capacity;
-    unread--;
-    unread_bytes -= r;
-    lock.unlock();
-    not_full.notify_one();
-    return r;
-  }
-
-  bool try_read(srsue_byte_buffer_t *msg)
+  bool try_read(srsue_byte_buffer_t **msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     if(is_empty())
@@ -119,7 +92,7 @@ public:
       *msg = buf[tail];
       tail = (tail+1)%capacity;
       unread--;
-      unread_bytes -= msg->N_bytes;
+      unread_bytes -= (*msg)->N_bytes;
       lock.unlock();
       not_full.notify_one();
       return true;
@@ -141,7 +114,7 @@ public:
   uint32_t size_tail_bytes()
   {
     boost::mutex::scoped_lock lock(mutex);
-    return buf[tail].N_bytes;
+    return buf[tail]->N_bytes;
   }
 
 private:
@@ -151,10 +124,10 @@ private:
   boost::condition      not_empty;
   boost::condition      not_full;
   boost::mutex          mutex;
-  srsue_byte_buffer_t  *buf;
+  srsue_byte_buffer_t **buf;
   uint32_t              capacity;
   uint32_t              unread;
-  u_int32_t             unread_bytes;
+  uint32_t              unread_bytes;
   uint32_t              head;
   uint32_t              tail;
 };

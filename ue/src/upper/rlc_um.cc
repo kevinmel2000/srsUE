@@ -57,7 +57,7 @@ uint32_t rlc_um::get_bearer()
 
 // PDCP interface
 void rlc_um::write_sdu(srsue_byte_buffer_t *sdu){}
-bool rlc_um::try_read_sdu(srsue_byte_buffer_t *sdu){}
+bool rlc_um::try_read_sdu(srsue_byte_buffer_t **sdu){}
 
 // MAC interface
 uint32_t rlc_um::get_buffer_state(){return 0;}

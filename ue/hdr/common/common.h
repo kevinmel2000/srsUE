@@ -47,7 +47,8 @@
 
 // Cat 3 UE - Max number of DL-SCH transport block bits received within a TTI
 // 3GPP 36.306 Table 4.1.1
-#define SRSUE_MAX_BUFFER_SIZE       102048
+#define SRSUE_MAX_BUFFER_SIZE_BITS  102048
+#define SRSUE_MAX_BUFFER_SIZE_BYTES 12756
 #define SRSUE_BUFFER_HEADER_OFFSET  1024
 
 /*******************************************************************************
@@ -86,11 +87,13 @@ static const char srsue_rb_id_text[SRSUE_RB_ID_N_ITEMS][20] = { "SRB0",
  * Byte and Bit buffers
  *
  * Generic buffers with headroom to accommodate packet headers and custom
- * copy constructors & assignment operators for quick copying.
+ * copy constructors & assignment operators for quick copying. Byte buffer
+ * holds a next pointer to support linked lists.
  *****************************************************************************/
-struct srsue_byte_buffer_t{
+class srsue_byte_buffer_t{
+public:
     uint32_t  N_bytes;
-    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE_BYTES];
     uint8_t  *msg;
 
     srsue_byte_buffer_t():N_bytes(0)
@@ -107,15 +110,26 @@ struct srsue_byte_buffer_t{
       N_bytes = buf.N_bytes;
       memcpy(msg, buf.msg, N_bytes);
     }
+    void reset()
+    {
+      msg     = &buffer[SRSUE_BUFFER_HEADER_OFFSET];
+      N_bytes = 0;
+    }
     uint32_t get_headroom()
     {
       return msg-buffer;
     }
+
+    // Linked list support
+    srsue_byte_buffer_t*  get_next() { return next; }
+    void set_next(srsue_byte_buffer_t *b) { next = b; }
+private:
+    srsue_byte_buffer_t *next;
 };
 
 struct srsue_bit_buffer_t{
     uint32_t  N_bits;
-    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE];
+    uint8_t   buffer[SRSUE_MAX_BUFFER_SIZE_BITS];
     uint8_t  *msg;
 
     srsue_bit_buffer_t():N_bits(0)
@@ -129,6 +143,11 @@ struct srsue_bit_buffer_t{
     srsue_bit_buffer_t & operator= (const srsue_bit_buffer_t & buf){
       N_bits = buf.N_bits;
       memcpy(msg, buf.msg, N_bits);
+    }
+    void reset()
+    {
+      msg     = &buffer[SRSUE_BUFFER_HEADER_OFFSET];
+      N_bits  = 0;
     }
     uint32_t get_headroom()
     {

@@ -36,6 +36,8 @@ ue::ue(all_args_t *args_)
     ,started(false)
     ,have_data(false)
 {
+  pool      = buffer_pool::get_instance();
+
   logger    = new srsue::logger(args_->log.filename);
   phy_log   = new srsue::log_filter("PHY ", logger);
   mac_log   = new srsue::log_filter("MAC ", logger);
@@ -80,6 +82,8 @@ ue::~ue()
   delete nas_log;
   delete gw_log;
   delete user_log;
+
+  buffer_pool::cleanup();
 }
 
 void ue::init()

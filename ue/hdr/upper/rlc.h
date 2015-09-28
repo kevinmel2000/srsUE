@@ -28,6 +28,7 @@
 #ifndef RLC_H
 #define RLC_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -72,12 +73,11 @@ public:
   bool check_dl_buffers();
 
 private:
+  buffer_pool        *pool;
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
   ue_interface       *ue;
   rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
-
-  srsue_byte_buffer_t mac_buf;
 
   // Thread-safe queues for MAC messages
   msg_queue           bcch_bch_queue;

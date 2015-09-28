@@ -47,6 +47,7 @@
 #include "upper/gw.h"
 #include "upper/user.h"
 
+#include "common/buffer_pool.h"
 #include "common/interfaces.h"
 #include "common/threads.h"
 #include "common/logger.h"
@@ -144,6 +145,8 @@ private:
   srsue::log_filter *nas_log;
   srsue::log_filter *gw_log;
   srsue::log_filter *user_log;
+
+  srsue::buffer_pool *pool;
 
   all_args_t       *args;
   bool              started;

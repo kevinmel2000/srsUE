@@ -30,6 +30,7 @@
 
 #include "pthread.h"
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -69,6 +70,7 @@ public:
   void stop();
 
 private:
+  buffer_pool           *pool;
   srslte::log           *rrc_log;
   phy_interface_rrc     *phy;
   mac_interface_rrc     *mac;
@@ -76,8 +78,6 @@ private:
   pdcp_interface_rrc    *pdcp;
   nas_interface_rrc     *nas;
 
-  srsue_byte_buffer_t   pdcp_buf;
-  srsue_byte_buffer_t   nas_buf;
   srsue_bit_buffer_t    bit_buf;
 
   rrc_state_t           state;

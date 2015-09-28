@@ -67,14 +67,65 @@ void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
   tx_sdu_queue.write(sdu);
 }
 
-bool rlc_am::try_read_sdu(srsue_byte_buffer_t *sdu)
+bool rlc_am::try_read_sdu(srsue_byte_buffer_t **sdu)
 {
-  return rx_sdu_queue.try_read(sdu);
+  // Iterate through receive window
+    // If data
+      // Try to reassemble SDU and give to PDCP
+      // Update vr_r and vr_mr
+    // If missing
+      // Update vr_x and reordering_timeout if necessary
+    // If control
+      // Check if already handled
+      // Handle NACKs
+      // Handle ACKs
+      // Mark as handled
+
+  return false;
 }
 
 // MAC interface
 uint32_t rlc_am::get_buffer_state(){return 0;}
-int      rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes){}
-void     rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
 
+int rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes)
+{
+  // Is status_requested and !status_prohibit_timeout?
+    // Read the receive window, rx state variables
+    // Check if Poll is needed
+    // Create status PDU
+    // Add to tx window, set retx timer, set retx count
+    // Send PDU
+  // Check for retransmit PDUs
+    // If it fits in opportunity
+      // Set retx timer, set retx count
+      // Remove from retx buffer
+      // Check if Poll is needed
+      // Send PDU
+    // If it doesn't fit
+      // For now, wait for a bigger opportunity
+      // In future....
+        // Segment the PDU
+        // Recreate header
+        // Set segment info in tx window
+        // Set retx timer, set retx count
+        // Send PDU
+  // Create a PDU
+    // While we have room
+    // Pull SDU, add to PDU, check for space, repeat
+    // Check Poll
+    // Set Framing Info
+    // Send PDU
+}
+
+void rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
+
+  // If poll bit
+    // Set status_requested
+  // If Data
+    // Check SN is inside receive window
+    // Check SN isn't already in receive window
+    // Write to rx window, update vr_h, notify thread
+  // If Control
+    // Reset poll_retx_timeout
+    // Write to rx window, update vr_h, notify thread
 }

@@ -32,27 +32,27 @@
 using namespace srsue;
 
 typedef struct {
-  msg_queue *q;
+  msg_queue   *q;
 }args_t;
 
 void* write_thread(void *a) {
   args_t *args = (args_t*)a;
-  srsue_byte_buffer_t b;
   for(uint32_t i=0;i<NMSGS;i++)
   {
-    memcpy(b.msg, &i, 4);
-    b.N_bytes = 4;
-    args->q->write(&b);
+    srsue_byte_buffer_t *b = new srsue_byte_buffer_t;
+    memcpy(b->msg, &i, 4);
+    b->N_bytes = 4;
+    args->q->write(b);
   }
 }
 
 int main(int argc, char **argv) {
-  bool                result;
-  msg_queue           q;
-  srsue_byte_buffer_t b;
-  pthread_t           thread;
-  args_t              args;
-  u_int32_t           r;
+  bool                 result;
+  msg_queue            q;
+  srsue_byte_buffer_t *b;
+  pthread_t            thread;
+  args_t               args;
+  u_int32_t            r;
 
   result = true;
   args.q = &q;
@@ -62,7 +62,8 @@ int main(int argc, char **argv) {
   for(uint32_t i=0;i<NMSGS;i++)
   {
     q.read(&b);
-    memcpy(&r, b.msg, 4);
+    memcpy(&r, b->msg, 4);
+    delete b;
     if(r != i)
       result = false;
   }

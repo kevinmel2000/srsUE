@@ -38,7 +38,9 @@ pdcp_entity::pdcp_entity()
   ,tx_sn(0)
   ,rx_sn(0)
   ,do_security(false)
-{}
+{
+  pool = buffer_pool::get_instance();
+}
 
 void pdcp_entity::init(rlc_interface_pdcp *rlc_,
                        rrc_interface_pdcp *rrc_,
@@ -63,7 +65,7 @@ bool pdcp_entity::is_active()
 void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
 {
   LIBLTE_PDCP_CONTROL_PDU_STRUCT  control;
-  srsue_byte_buffer_t             pdu;
+  srsue_byte_buffer_t            *pdu;
 
   log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", srsue_rb_id_text[lcid]);
 
@@ -77,6 +79,7 @@ void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
   case SRSUE_RB_ID_SRB1:  // Intentional fall-through
   case SRSUE_RB_ID_SRB2:
     // Pack SDU into a control PDU
+    pdu = pool->allocate();
     control.count = tx_sn;
     if(do_security)
     {
@@ -92,7 +95,8 @@ void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
                                    (LIBLTE_BYTE_MSG_STRUCT*)&pdu);
     }
     tx_sn++;
-    rlc->write_sdu(lcid, &pdu);
+    pool->deallocate(sdu);
+    rlc->write_sdu(lcid, pdu);
 
     break;
   }

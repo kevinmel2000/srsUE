@@ -28,6 +28,7 @@
 #ifndef RLC_TM_H
 #define RLC_TM_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/msg_queue.h"
@@ -48,7 +49,7 @@ public:
 
   // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  bool try_read_sdu(srsue_byte_buffer_t *sdu);
+  bool try_read_sdu(srsue_byte_buffer_t **sdu);
 
   // MAC interface
   uint32_t get_buffer_state();
@@ -57,6 +58,7 @@ public:
 
 private:
 
+  buffer_pool *pool;
   srslte::log *log;
   uint32_t     lcid;
 

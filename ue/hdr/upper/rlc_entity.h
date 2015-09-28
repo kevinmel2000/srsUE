@@ -39,7 +39,8 @@ namespace srsue {
  * Ref: 3GPP TS 36.322 v10.0.0
  ***************************************************************************/
 
-#define RLC_AM_WINDOW_SIZE 512
+#define RLC_AM_WINDOW_SIZE  512
+#define RLC_COUNTER_MOD     1024
 
 typedef enum{
   RLC_MODE_TM = 0,
@@ -117,7 +118,7 @@ public:
 
   // PDCP interface
   virtual void write_sdu(srsue_byte_buffer_t *sdu) = 0;
-  virtual bool try_read_sdu(srsue_byte_buffer_t *sdu) = 0;
+  virtual bool try_read_sdu(srsue_byte_buffer_t **sdu) = 0;
 
   // MAC interface
   virtual uint32_t get_buffer_state() = 0;

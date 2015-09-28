@@ -48,7 +48,7 @@ public:
 
   // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  bool try_read_sdu(srsue_byte_buffer_t *sdu);
+  bool try_read_sdu(srsue_byte_buffer_t **sdu);
 
   // MAC interface
   uint32_t get_buffer_state();
