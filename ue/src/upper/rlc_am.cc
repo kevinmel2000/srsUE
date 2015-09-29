@@ -34,10 +34,11 @@ namespace srsue{
 rlc_am::rlc_am()
 {}
 
-void rlc_am::init(srslte::log *log_, uint32_t lcid_)
+void rlc_am::init(srslte::log *log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_)
 {
   log  = log_;
   lcid = lcid_;
+  pdcp = pdcp_;
 }
 
 void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -67,18 +68,19 @@ void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
   tx_sdu_queue.write(sdu);
 }
 
-bool rlc_am::try_read_sdu(srsue_byte_buffer_t **sdu)
+bool rlc_am::read_sdu()
 {
   // Iterate through receive window
     // If data
-      // Try to reassemble SDU and give to PDCP
+      // Try to reassemble SDUs and give to PDCP
       // Update vr_r and vr_mr
+      // Update receive state variables (for tx status packets)
     // If missing
       // Update vr_x and reordering_timeout if necessary
     // If control
       // Check if already handled
-      // Handle NACKs
-      // Handle ACKs
+      // Handle NACKs - add to tx retx buffer
+      // Handle ACKs - mark as ACKed, remove from tx window if possible
       // Mark as handled
 
   return false;
@@ -90,7 +92,7 @@ uint32_t rlc_am::get_buffer_state(){return 0;}
 int rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
   // Is status_requested and !status_prohibit_timeout?
-    // Read the receive window, rx state variables
+    // Read the receive state variables
     // Check if Poll is needed
     // Create status PDU
     // Add to tx window, set retx timer, set retx count
@@ -117,8 +119,8 @@ int rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes)
     // Send PDU
 }
 
-void rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
-
+void rlc_am::write_pdu(uint8_t *payload, uint32_t nof_bytes)
+{
   // If poll bit
     // Set status_requested
   // If Data
@@ -129,3 +131,132 @@ void rlc_am:: write_pdu(uint8_t *payload, uint32_t nof_bytes){}
     // Reset poll_retx_timeout
     // Write to rx window, update vr_h, notify thread
 }
+
+void rlc_am::read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header)
+{
+  uint8_t  ext;
+  uint8_t *ptr = pdu->msg;
+
+  header->dc = (rlc_dc_field_t)((*ptr >> 7) & 0x01);
+
+  if(RLC_DC_FIELD_DATA_PDU == header->dc)
+  {
+    // Fixed part
+    header->rf =                 ((*ptr >> 6) & 0x01);
+    header->p  =                 ((*ptr >> 5) & 0x01);
+    header->fi = (rlc_fi_field_t)((*ptr >> 3) & 0x03);
+    ext        =                 ((*ptr >> 2) & 0x01);
+    header->sn =                 (*ptr & 0x03) << 8; // 2 bits SN
+    ptr++;
+    header->sn |=                (*ptr & 0xFF);     // 8 bits SN
+    ptr++;
+
+    if(header->rf)
+    {
+      header->lsf = ((*ptr >> 7) & 0x01);
+      header->so  = (*ptr & 0x7F) << 8; // 7 bits of SO
+      ptr++;
+      header->so |= (*ptr & 0xFF);      // 8 bits of SO
+      ptr++;
+    }
+
+    // Extension part
+    header->N_li = 0;
+    while(ext)
+    {
+      if(header->N_li%2 == 0)
+      {
+        ext = ((*ptr >> 7) & 0x01);
+        header->li[header->N_li]  = (*ptr & 0x7F) << 4; // 7 bits of LI
+        ptr++;
+        header->li[header->N_li] |= (*ptr & 0xF0) >> 4; // 4 bits of LI
+        header->N_li++;
+      }
+      else
+      {
+        ext = (*ptr >> 3) & 0x01;
+        header->li[header->N_li] = (*ptr & 0x07) << 8; // 3 bits of LI
+        ptr++;
+        header->li[header->N_li] |= (*ptr & 0xFF);     // 8 bits of LI
+        header->N_li++;
+        ptr++;
+      }
+    }
+  }
+}
+
+void rlc_am::write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu)
+{
+  uint32_t i;
+  uint8_t ext = (header->N_li > 0) ? 1 : 0;
+
+  // Make room for the header
+  uint32_t len = packed_length(header);
+  pdu->msg -= len;
+  uint8_t *ptr = pdu->msg;
+
+  // Fixed part
+  *ptr  = (header->dc & 0x01) << 7;
+  *ptr |= (header->rf & 0x01) << 6;
+  *ptr |= (header->p  & 0x01) << 5;
+  *ptr |= (header->fi & 0x03) << 3;
+  *ptr |= (ext        & 0x01) << 2;
+
+  *ptr |= (header->sn & 0x300) >> 8; // 2 bits SN
+  ptr++;
+  *ptr  = (header->sn & 0xFF);       // 8 bits SN
+  ptr++;
+
+  // Segment part
+  if(header->rf)
+  {
+    *ptr  = (header->lsf & 0x01) << 7;
+    *ptr |= (header->so  & 0x7F00) >> 8; // 7 bits of SO
+    ptr++;
+    *ptr = (header->so  & 0x00FF);       // 8 bits of SO
+    ptr++;
+  }
+
+  // Extension part
+  i = 0;
+  while(i < header->N_li)
+  {
+    ext = ((i+1) == header->N_li) ? 0 : 1;
+    *ptr  = (ext           &  0x01) << 7; // 1 bit header
+    *ptr |= (header->li[i] & 0x7F0) >> 4; // 7 bits of LI
+    ptr++;
+    *ptr  = (header->li[i] & 0x00F) << 4; // 4 bits of LI
+    i++;
+    if(i < header->N_li - 1)
+    {
+      ext = ((i+1) == header->N_li) ? 0 : 1;
+      *ptr |= (ext           &  0x01) << 3; // 1 bit header
+      *ptr |= (header->li[i] & 0x700) >> 8; // 3 bits of LI
+      ptr++;
+      *ptr  = (header->li[i] & 0x0FF);      // 8 bits of LI
+      ptr++;
+      i++;
+    }
+    else
+    {
+      ptr++; // Pad to byte align
+    }
+  }
+
+  pdu->N_bytes = ptr-pdu->msg;
+}
+
+uint32_t rlc_am::packed_length(rlc_amd_pdu_header_t *header)
+{
+  uint32_t len = 2;               // Fixed part is 2 bytes
+  if(header->rf) len += 2;        // Segment header is 2 bytes
+  len += header->N_li * 1.5 + 1;  // Extension part - integer rounding up
+  return len;
+}
+
+bool rlc_am::is_status_pdu(srsue_byte_buffer_t *pdu)
+{
+  return ((*(pdu->msg) >> 7) & 0x01) == RLC_DC_FIELD_CONTROL_PDU;
+}
+
+} // namespace srsue

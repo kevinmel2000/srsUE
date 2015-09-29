@@ -36,10 +36,11 @@ rlc_tm::rlc_tm()
   pool = buffer_pool::get_instance();
 }
 
-void rlc_tm::init(srslte::log *log_, uint32_t lcid_)
+void rlc_tm::init(srslte::log *log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_)
 {
   log  = log_;
   lcid = lcid_;
+  pdcp = pdcp_;
 }
 
 void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -63,9 +64,15 @@ void rlc_tm::write_sdu(srsue_byte_buffer_t *sdu)
   ul_queue.write(sdu);
 }
 
-bool rlc_tm::try_read_sdu(srsue_byte_buffer_t **sdu)
+bool rlc_tm::read_sdu()
 {
-  return dl_queue.try_read(sdu);
+  srsue_byte_buffer_t *sdu;
+  if(dl_queue.try_read(&sdu))
+  {
+    pdcp->write_pdu(lcid, sdu);
+    return true;
+  }
+  return false;
 }
 
 // MAC interface

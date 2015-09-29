@@ -30,6 +30,7 @@
 
 #include "common/log.h"
 #include "common/common.h"
+#include "common/interfaces.h"
 #include "liblte/hdr/liblte_rrc.h"
 
 namespace srsue {
@@ -83,17 +84,21 @@ static const uint16_t rlc_umd_sn_size_num[RLC_UMD_SN_SIZE_N_ITEMS][20]  = {5, 10
 // UMD PDU Header
 typedef struct{
   rlc_fi_field_t    fi;       // Framing info
-  rlc_umd_sn_size_t sn_size;  // Sequence number size (5 or 10)
+  rlc_umd_sn_size_t sn_size;  // Sequence number size (5 or 10 bits)
   uint16_t          sn;       // Sequence number
 }rlc_umd_pdu_header_t;
 
 // AMD PDU Header
 typedef struct{
-  rlc_dc_field_t dc;          // Data or control
-  bool           rf;          // Resegmentation flag
-  bool           p;           // Polling bit
-  rlc_fi_field_t fi;          // Framing info
-  uint16_t       sn;          // Sequence number
+  rlc_dc_field_t dc;                      // Data or control
+  uint8_t        rf;                      // Resegmentation flag
+  uint8_t        p;                       // Polling bit
+  rlc_fi_field_t fi;                      // Framing info
+  uint16_t       sn;                      // Sequence number
+  uint8_t        lsf;                     // Last segment flag
+  uint16_t       so;                      // Segment offset
+  uint32_t       N_li;                    // Number of length indicators
+  uint16_t       li[RLC_AM_WINDOW_SIZE];  // Array of length indicators
 }rlc_amd_pdu_header_t;
 
 // STATUS PDU
@@ -110,7 +115,7 @@ typedef struct{
 class rlc_entity
 {
 public:
-  virtual void init(srslte::log *rlc_entity_log_, uint32_t lcid_) = 0;
+  virtual void init(srslte::log *rlc_entity_log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_) = 0;
   virtual void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 
   virtual rlc_mode_t    get_mode() = 0;
@@ -118,7 +123,7 @@ public:
 
   // PDCP interface
   virtual void write_sdu(srsue_byte_buffer_t *sdu) = 0;
-  virtual bool try_read_sdu(srsue_byte_buffer_t **sdu) = 0;
+  virtual bool read_sdu() = 0;
 
   // MAC interface
   virtual uint32_t get_buffer_state() = 0;

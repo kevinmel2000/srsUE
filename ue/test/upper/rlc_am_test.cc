@@ -25,4 +25,37 @@
  *
  */
 
+#include <iostream>
+#include "upper/rlc_am.h"
 
+uint8_t pdu1[] = {0x88, 0x06};
+uint32_t PDU1_LEN = 2;
+
+uint8_t pdu2[] = {0x8C, 0x00, 0xDD, 0xCD, 0xDC, 0x5D, 0xC0};
+uint32_t PDU2_LEN = 7;
+
+int main(int argc, char **argv) {
+  srsue::rlc_am rlc;
+  srsue::rlc_amd_pdu_header_t h;
+  srsue::srsue_byte_buffer_t b1,b2,b3,b4;
+
+  memcpy(b1.msg, &pdu1[0], PDU1_LEN);
+  b1.N_bytes = PDU1_LEN;
+  rlc.read_data_pdu_header(&b1, &h);
+  rlc.write_data_pdu_header(&h, &b2);
+  assert(b2.N_bytes == PDU1_LEN);
+  for(int i=0;i<b2.N_bytes;i++)
+    assert(b2.msg[i] == b1.msg[i]);
+
+  b1.reset();
+  b2.reset();
+  memset(&h, 0, sizeof(srsue::rlc_amd_pdu_header_t));
+
+  memcpy(b1.msg, &pdu2[0], PDU2_LEN);
+  b1.N_bytes = PDU2_LEN;
+  rlc.read_data_pdu_header(&b1, &h);
+  rlc.write_data_pdu_header(&h, &b2);
+  assert(b2.N_bytes == PDU2_LEN);
+  for(int i=0;i<b2.N_bytes;i++)
+    assert(b2.msg[i] == b1.msg[i]);
+}

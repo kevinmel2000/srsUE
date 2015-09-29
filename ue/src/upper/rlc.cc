@@ -55,7 +55,7 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
   }
 
   rlc_array[0] = new rlc_tm;
-  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0); // SRB0
+  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0, pdcp); // SRB0
 }
 
 void rlc::stop()
@@ -147,7 +147,7 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 //    rlc_log->error("Cannot add RLC entity - invalid mode");
 //    return;
 //  }
-//  rlc_array[lcid]->init(rlc_log, lcid);
+//  rlc_array[lcid]->init(rlc_log, lcid, pdcp);
 //  if(cnfg)
 //    rlc_array[lcid]->configure(cnfg);
 
@@ -180,10 +180,7 @@ bool rlc::check_dl_buffers()
   {
     if(valid_lcid(i))
     {
-      if(rlc_array[i]->try_read_sdu(&buf))
-      {
-        pdcp->write_pdu(i, buf);
-      }
+      return rlc_array[i]->read_sdu();
     }
   }
 

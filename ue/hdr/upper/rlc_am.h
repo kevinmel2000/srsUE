@@ -42,7 +42,7 @@ class rlc_am
 {
 public:
   rlc_am();
-  void init(srslte::log *rlc_entity_log_, uint32_t lcid_);
+  void init(srslte::log *rlc_entity_log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
   rlc_mode_t    get_mode();
@@ -50,21 +50,31 @@ public:
 
   // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  bool try_read_sdu(srsue_byte_buffer_t **sdu);
+  bool read_sdu();
 
   // MAC interface
   uint32_t get_buffer_state();
   int      read_pdu(uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
+  /****************************************************************************
+   * Header pack/unpack
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
+   ***************************************************************************/
+  void      read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
+  void      write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
+  uint32_t  packed_length(rlc_amd_pdu_header_t *header);
+  bool      is_status_pdu(srsue_byte_buffer_t *pdu);
+
 private:
 
-  srslte::log *log;
-  uint32_t     lcid;
+  srslte::log        *log;
+  uint32_t            lcid;
+  pdcp_interface_rlc *pdcp;
 
-  // Thread-safe SDU queues
+  // Thread-safe queues
   msg_queue    tx_sdu_queue;
-  msg_queue    rx_sdu_queue;
+  msg_queue    rx_pdu_queue;
 
   bool         status_requested;
 
@@ -109,7 +119,6 @@ private:
    * Timers
    * Ref: 3GPP TS 36.322 v10.0.0 Section 7
    ***************************************************************************/
-
   timeout poll_retx_timeout;
   timeout reordering_timeout;
   timeout status_prohibit_timeout;

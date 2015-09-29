@@ -36,7 +36,6 @@
 
 #include "liblte/hdr/liblte_rrc.h"
 #include "common/common.h"
-#include "upper/rlc_entity.h"
 #include "mac_interface.h"
 #include "phy_interface.h"
 
