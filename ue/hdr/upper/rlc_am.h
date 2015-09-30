@@ -57,15 +57,6 @@ public:
   int      read_pdu(uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
-  /****************************************************************************
-   * Header pack/unpack
-   * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
-   ***************************************************************************/
-  void      read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
-  void      write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
-  uint32_t  packed_length(rlc_amd_pdu_header_t *header);
-  bool      is_status_pdu(srsue_byte_buffer_t *pdu);
-
 private:
 
   srslte::log        *log;
@@ -123,6 +114,15 @@ private:
   timeout reordering_timeout;
   timeout status_prohibit_timeout;
 };
+
+/****************************************************************************
+ * Header pack/unpack helper functions
+ * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
+ ***************************************************************************/
+void      rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
+void      rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
+uint32_t  rlc_am_packed_length(rlc_amd_pdu_header_t *header);
+bool      rlc_am_is_status_pdu(srsue_byte_buffer_t *pdu);
 
 } // namespace srsue
 

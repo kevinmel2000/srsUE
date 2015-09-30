@@ -132,7 +132,7 @@ void rlc_am::write_pdu(uint8_t *payload, uint32_t nof_bytes)
     // Write to rx window, update vr_h, notify thread
 }
 
-void rlc_am::read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header)
+void rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header)
 {
   uint8_t  ext;
   uint8_t *ptr = pdu->msg;
@@ -185,13 +185,13 @@ void rlc_am::read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t
   }
 }
 
-void rlc_am::write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu)
+void rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu)
 {
   uint32_t i;
   uint8_t ext = (header->N_li > 0) ? 1 : 0;
 
   // Make room for the header
-  uint32_t len = packed_length(header);
+  uint32_t len = rlc_am_packed_length(header);
   pdu->msg -= len;
   uint8_t *ptr = pdu->msg;
 
@@ -227,7 +227,7 @@ void rlc_am::write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buff
     ptr++;
     *ptr  = (header->li[i] & 0x00F) << 4; // 4 bits of LI
     i++;
-    if(i < header->N_li - 1)
+    if(i < header->N_li)
     {
       ext = ((i+1) == header->N_li) ? 0 : 1;
       *ptr |= (ext           &  0x01) << 3; // 1 bit header
@@ -237,24 +237,23 @@ void rlc_am::write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buff
       ptr++;
       i++;
     }
-    else
-    {
-      ptr++; // Pad to byte align
-    }
   }
+  // Pad if N_li is odd
+  if(header->N_li%2 == 1)
+    ptr++;
 
   pdu->N_bytes = ptr-pdu->msg;
 }
 
-uint32_t rlc_am::packed_length(rlc_amd_pdu_header_t *header)
+uint32_t rlc_am_packed_length(rlc_amd_pdu_header_t *header)
 {
-  uint32_t len = 2;               // Fixed part is 2 bytes
-  if(header->rf) len += 2;        // Segment header is 2 bytes
-  len += header->N_li * 1.5 + 1;  // Extension part - integer rounding up
+  uint32_t len = 2;                 // Fixed part is 2 bytes
+  if(header->rf) len += 2;          // Segment header is 2 bytes
+  len += header->N_li * 1.5 + 0.5;  // Extension part - integer rounding up
   return len;
 }
 
-bool rlc_am::is_status_pdu(srsue_byte_buffer_t *pdu)
+bool rlc_am_is_status_pdu(srsue_byte_buffer_t *pdu)
 {
   return ((*(pdu->msg) >> 7) & 0x01) == RLC_DC_FIELD_CONTROL_PDU;
 }
