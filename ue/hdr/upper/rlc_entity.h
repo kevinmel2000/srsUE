@@ -30,8 +30,8 @@
 
 #include "common/log.h"
 #include "common/common.h"
-#include "liblte/hdr/liblte_rrc.h"
-#include "liblte/hdr/liblte_rlc.h"
+#include "liblte_rrc.h"
+#include "liblte_rlc.h"
 
 namespace srsue {
 

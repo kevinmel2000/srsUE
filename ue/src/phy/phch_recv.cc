@@ -326,8 +326,10 @@ void phch_recv::run_thread()
               Info("TX PRACH now. RX time: %d:%f, Now: %d:%f\n", rx_time.full_secs, rx_time.frac_secs, 
                    cur_time.full_secs, cur_time.frac_secs);
               // send prach if we have to 
-              prach_buffer->send(radio_h, cfo, tx_time_prach);
-              radio_h->tx_end();              
+              prach_buffer->send(radio_h, cfo, worker_com->pathloss, tx_time_prach);
+              radio_h->tx_end();            
+              worker_com->p0_preamble = prach_buffer->get_p0_preamble();
+              worker_com->cur_radio_power = SRSLTE_MIN(SRSLTE_PC_MAX, worker_com->pathloss + worker_com->p0_preamble);
             }            
             workers_pool->start_worker(worker);             
             mac->tti_clock(tti);

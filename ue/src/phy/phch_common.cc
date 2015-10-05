@@ -34,8 +34,13 @@
 #define Info(fmt, ...)    if (SRSLTE_DEBUG_ENABLED) log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define Debug(fmt, ...)   if (SRSLTE_DEBUG_ENABLED) log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
+#define CONTINUOUS_TX
 
 namespace srsue {
+
+#ifdef CONTINUOUS_TX
+cf_t zeros[50000];
+#endif
 
 phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
 {
@@ -49,6 +54,11 @@ phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
   is_first_tx       = true; 
   rar_grant_pending = false; 
   sr_last_tx_tti = -1;
+  cur_pusch_power = 0;
+#ifdef CONTINUOUS_TX
+  bzero(zeros, 50000*sizeof(cf_t));
+#endif
+  
 }
   
 void phch_common::init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac)
@@ -83,6 +93,11 @@ bool phch_common::dl_rnti_active(uint32_t tti) {
   } else {
     return false; 
   }
+}
+
+srslte::radio* phch_common::get_radio()
+{
+  return radio_h;
 }
 
 // Unpack RAR grant as defined in Section 6.2 of 36.213 
@@ -192,11 +207,18 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
   if (tx_enable) {
     radio_h->tx(buffer, nof_samples, tx_time);
     is_first_of_burst = false; 
+#ifdef CONTINUOUS_TX
+  } else {
+    if (!is_first_of_burst) {
+      radio_h->tx(zeros, nof_samples, tx_time);
+    }
+  }
+#else
   } else if (!is_first_of_burst) {
     radio_h->tx_end();
     is_first_of_burst = true;   
-  } 
-  
+  }
+#endif
   // Trigger next transmission 
   pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_workers]);
 }    

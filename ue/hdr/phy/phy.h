@@ -102,6 +102,8 @@ public:
   void    set_param(phy_param_t param, int64_t value); 
   int64_t get_param(phy_param_t param);
 
+  float   get_phr();
+  
   void    reset();
   
   uint32_t get_current_tti();

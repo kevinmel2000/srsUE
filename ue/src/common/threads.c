@@ -65,6 +65,7 @@ bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void 
     cpu_set_t cpuset; 
     CPU_ZERO(&cpuset);
     CPU_SET((size_t) cpu, &cpuset);
+    printf("Setting CPU affinity to cpu_id=%d\n", cpu);
     if (pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset)) {
       perror("pthread_attr_setaffinity_np");
     }

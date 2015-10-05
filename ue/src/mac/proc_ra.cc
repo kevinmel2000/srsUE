@@ -203,7 +203,7 @@ void ra_proc::step_resource_selection() {
       sel_group = last_msg3_group; 
     }
     if (sel_group == RA_GROUP_A) {
-      sel_preamble = rand()%(nof_groupA_preambles-1);
+      sel_preamble = preambleTransmissionCounter%(nof_groupA_preambles-1);
     } else {
       sel_preamble = nof_groupA_preambles + rand()%(nof_groupB_preambles-1);
     }
@@ -220,6 +220,7 @@ void ra_proc::step_preamble_transmission() {
       delta_preamble_db + 
       (preambleTransmissionCounter-1)*powerRampingStep;
       
+  rar_received = false; 
   phy_h->prach_send(sel_preamble, sel_maskIndex - 1, received_target_power_dbm); 
   rInfo("Selected received_target_power_dbm=%d dBm\n", received_target_power_dbm);
   state = PDCCH_SETUP;
@@ -278,6 +279,7 @@ void ra_proc::tb_decoded_ok() {
     if (rar_pdu_msg.get()->get_rapid() == sel_preamble) {
       rInfo("Received RAPID=%d\n", sel_preamble);
 
+      rar_received = true; 
       process_timeadv_cmd(rar_pdu_msg.get()->get_ta_cmd());
       
       // FIXME: Indicate received target power
@@ -327,6 +329,14 @@ void ra_proc::tb_decoded_ok() {
 
 void ra_proc::step_response_reception() {
   // do nothing. Processing done in tb_decoded_ok()
+  int ra_tti = phy_h->prach_tx_tti();
+  if (ra_tti >= 0 && !rar_received) {
+    uint32_t interval = srslte_tti_interval(phy_h->get_current_tti(), ra_tti+3+responseWindowSize); 
+    if (interval > 1 && interval < 100) {
+      rInfo("RA response not received within the response window\n");
+      state = RESPONSE_ERROR;
+    }
+  }
 }
 
 void ra_proc::step_response_error() {

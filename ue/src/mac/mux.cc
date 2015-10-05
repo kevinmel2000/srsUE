@@ -50,15 +50,15 @@ mux::mux() : pdu_msg(MAX_NOF_SUBHEADERS)
    BSD[i]             = 10;
    lchid_sorted[i]    = i; 
   }  
-  phr_included = false; 
   pending_crnti_ce = 0;
 }
 
-void mux::init(rlc_interface_mac *rlc_, srslte::log *log_h_, bsr_proc *bsr_procedure_)
+void mux::init(rlc_interface_mac *rlc_, srslte::log *log_h_, bsr_proc *bsr_procedure_, phr_proc *phr_procedure_)
 {
   log_h      = log_h_;
   rlc        = rlc_;
   bsr_procedure = bsr_procedure_;
+  phr_procedure = phr_procedure_;
 }
 
 void mux::reset()
@@ -185,11 +185,11 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     }
   }
   // MAC control element for PHR
-  if (!phr_included) {
+  float phr_value; 
+  if (phr_procedure->generate_phr_on_ul_grant(&phr_value)) {
     if (pdu_msg.new_subh()) {
-      phr_included = true; 
       pdu_msg.next();
-      pdu_msg.get()->set_phr(46);
+      pdu_msg.get()->set_phr(phr_value);
     }
   }
 

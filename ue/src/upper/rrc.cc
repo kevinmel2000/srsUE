@@ -301,9 +301,9 @@ void rrc::apply_sib2_configs()
          liblte_rrc_mac_contention_resolution_timer_num[sib2.rr_config_common_sib.rach_cnfg.mac_con_res_timer]);
 
   // PDSCH ConfigCommon
-  mac->set_param(srsue::mac_interface_params::PDSCH_RSPOWER,
+  phy->set_param(srsue::phy_interface_params::PDSCH_RSPOWER,
                  sib2.rr_config_common_sib.pdsch_cnfg.rs_power);
-  mac->set_param(srsue::mac_interface_params::PDSCH_PB,
+  phy->set_param(srsue::phy_interface_params::PDSCH_PB,
                  sib2.rr_config_common_sib.pdsch_cnfg.p_b);
 
   // PUSCH ConfigCommon
@@ -346,6 +346,24 @@ void rrc::apply_sib2_configs()
          sib2.rr_config_common_sib.pucch_cnfg.n1_pucch_an,
          sib2.rr_config_common_sib.pucch_cnfg.n_rb_cqi);
 
+  // UL Power control config ConfigCommon
+    phy->set_param(srsue::phy_interface_params::PWRCTRL_P0_NOMINAL_PUSCH, sib2.rr_config_common_sib.ul_pwr_ctrl.p0_nominal_pusch);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_ALPHA, 
+                round(10*liblte_rrc_ul_power_control_alpha_num[sib2.rr_config_common_sib.ul_pwr_ctrl.alpha]));
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_P0_NOMINAL_PUCCH, sib2.rr_config_common_sib.ul_pwr_ctrl.p0_nominal_pucch);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_PUCCH_F1, 
+                liblte_rrc_delta_f_pucch_format_1_num[sib2.rr_config_common_sib.ul_pwr_ctrl.delta_flist_pucch.format_1]);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_PUCCH_F1B, 
+                liblte_rrc_delta_f_pucch_format_1b_num[sib2.rr_config_common_sib.ul_pwr_ctrl.delta_flist_pucch.format_1b]);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_PUCCH_F2, 
+                liblte_rrc_delta_f_pucch_format_2_num[sib2.rr_config_common_sib.ul_pwr_ctrl.delta_flist_pucch.format_2]);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_PUCCH_F2A, 
+                liblte_rrc_delta_f_pucch_format_2a_num[sib2.rr_config_common_sib.ul_pwr_ctrl.delta_flist_pucch.format_2a]);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_PUCCH_F2B, 
+                liblte_rrc_delta_f_pucch_format_2b_num[sib2.rr_config_common_sib.ul_pwr_ctrl.delta_flist_pucch.format_2b]);
+  phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_MSG3, sib2.rr_config_common_sib.ul_pwr_ctrl.delta_preamble_msg3);
+
+  
   // PRACH Configcommon
   phy->set_param(srsue::phy_interface_params::PRACH_ROOT_SEQ_IDX,
                  sib2.rr_config_common_sib.prach_cnfg.root_sequence_index);
@@ -402,7 +420,13 @@ void rrc::handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup)
       }
       if(phy_cnfg->ul_pwr_ctrl_ded_present)
       {
-          //TODO
+        phy->set_param(srsue::phy_interface_params::PWRCTRL_P0_UE_PUSCH, phy_cnfg->ul_pwr_ctrl_ded.p0_ue_pusch);
+        phy->set_param(srsue::phy_interface_params::PWRCTRL_DELTA_MCS_EN, 
+                      phy_cnfg->ul_pwr_ctrl_ded.delta_mcs_en==LIBLTE_RRC_DELTA_MCS_ENABLED_EN0?0:1);
+        phy->set_param(srsue::phy_interface_params::PWRCTRL_ACC_EN, 
+                      phy_cnfg->ul_pwr_ctrl_ded.accumulation_en==false?0:1);
+        phy->set_param(srsue::phy_interface_params::PWRCTRL_P0_UE_PUCCH, phy_cnfg->ul_pwr_ctrl_ded.p0_ue_pucch);
+        phy->set_param(srsue::phy_interface_params::PWRCTRL_SRS_OFFSET, phy_cnfg->ul_pwr_ctrl_ded.p_srs_offset);
       }
       if(phy_cnfg->tpc_pdcch_cnfg_pucch_present)
       {
@@ -512,7 +536,9 @@ void rrc::handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup)
     }
     if(mac_cnfg->phr_cnfg_present)
     {
-      //TODO
+      mac->set_param(srsue::mac_interface_params::PHR_TIMER_PERIODIC, liblte_rrc_periodic_phr_timer_num[mac_cnfg->phr_cnfg.periodic_phr_timer]);
+      mac->set_param(srsue::mac_interface_params::PHR_TIMER_PROHIBIT, liblte_rrc_prohibit_phr_timer_num[mac_cnfg->phr_cnfg.prohibit_phr_timer]);
+      mac->set_param(srsue::mac_interface_params::PHR_DL_PATHLOSS_CHANGE, liblte_rrc_dl_pathloss_change_num[mac_cnfg->phr_cnfg.dl_pathloss_change]);
     }
     //TODO: time_alignment_timer?
 

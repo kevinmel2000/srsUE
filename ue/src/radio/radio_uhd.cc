@@ -42,6 +42,7 @@ bool radio_uhd::init(char *args)
     fprintf(stderr, "Error opening uhd\n");
     return false;
   }
+  agc_enabled = false; 
   bzero(zeros, burst_settle_max_samples*sizeof(cf_t));
   return true;    
 }
@@ -58,7 +59,7 @@ void radio_uhd::set_tx_rx_gain_offset(float offset) {
 bool radio_uhd::init_agc(char *args)
 {
   printf("Opening UHD device with threaded RX Gain control ...\n");
-  if (cuhd_open_th(args, &uhd, true)) {
+  if (cuhd_open_th(args, &uhd, false)) {
     fprintf(stderr, "Error opening uhd\n");
     return false;
   }
@@ -68,6 +69,7 @@ bool radio_uhd::init_agc(char *args)
   burst_settle_samples = 0; 
   burst_settle_time_rounded = 0; 
   is_start_of_burst = true; 
+  agc_enabled = true; 
 
   return true;    
 }
@@ -90,10 +92,42 @@ void radio_uhd::get_time(srslte_timestamp_t *now) {
   cuhd_get_time(uhd, &now->full_secs, &now->frac_secs);  
 }
 
+// TODO: Use Calibrated values for this 
+float radio_uhd::set_tx_power(float power)
+{
+  if (power > 10) {
+    power = 10; 
+  }
+  if (power < -30) {
+    power = 30; 
+  }
+  float gain = power + 74;
+  if (agc_enabled) {
+    cuhd_set_tx_gain_th(uhd, gain);
+  } else {
+    cuhd_set_tx_gain(uhd, gain);
+  }
+  return power; 
+}
+
+float radio_uhd::get_max_tx_power()
+{
+  return 10;
+}
+
+float radio_uhd::get_rssi()
+{
+  return cuhd_get_rssi(uhd);
+}
+
+bool radio_uhd::has_rssi()
+{
+  return cuhd_has_rssi(uhd);
+}
+
 bool radio_uhd::tx(void* buffer, uint32_t nof_samples, srslte_timestamp_t tx_time)
 {
   if (is_start_of_burst) {
-    
     if (burst_settle_samples != 0) {
       srslte_timestamp_t tx_time_pad; 
       srslte_timestamp_copy(&tx_time_pad, &tx_time);
@@ -101,7 +135,7 @@ bool radio_uhd::tx(void* buffer, uint32_t nof_samples, srslte_timestamp_t tx_tim
       save_trace(1, &tx_time_pad);
       cuhd_send_timed2(uhd, zeros, burst_settle_samples, tx_time_pad.full_secs, tx_time_pad.frac_secs, true, false);
     }        
-    is_start_of_burst = false; 
+    is_start_of_burst = false;     
   }
   
   // Save possible end of burst time 

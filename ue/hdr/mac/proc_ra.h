@@ -165,6 +165,7 @@ private:
     uint32_t rar_grant_nbytes;
     uint32_t rar_grant_tti;
     bool msg3_flushed;
+    bool rar_received;
 };
 
 } // namespace srsue
