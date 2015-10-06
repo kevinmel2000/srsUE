@@ -392,17 +392,6 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
       snprintf(timestr, 64, ", dec_time=%4d us", (int) t[0].tv_usec);
 #endif
       
-      /*
-      if (grant->nof_prb == 50 && grant->mcs.idx == 20 && rv == 0 && !ack) {
-        srslte_vec_save_file("signal", signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb)*sizeof(cf_t));
-        srslte_vec_save_file("symbols", ue_dl.sf_symbols, SRSLTE_SF_LEN_RE(cell.nof_prb, cell.cp)*sizeof(cf_t));
-        srslte_vec_save_file("ce", ue_dl.ce[0], SRSLTE_SF_LEN_RE(cell.nof_prb, cell.cp)*sizeof(cf_t));
-        srslte_vec_save_file("llr", ue_dl.pdsch.e, ue_dl.pdsch_cfg.nbits.nof_re*sizeof(float));
-        printf("Saved signal for sf_idx=%d, rnti=%d, cfi=%d\n", tti%10, rnti, cfi);
-        exit(0);
-      }
-      */
-      
       Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
              grant->nof_prb, harq_pid, 
              grant->mcs.tbs/8, grant->mcs.idx, rv, 
