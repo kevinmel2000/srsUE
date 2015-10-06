@@ -433,10 +433,10 @@ bool sch_subh::set_con_res_id(uint64_t con_res_id)
     return false; 
   }
 }
-bool sch_subh::set_phr(uint8_t phr)
+bool sch_subh::set_phr(float phr)
 {
   if (((sch_pdu*)parent)->has_space_ce(1)) {
-    w_payload_ce[0] = phr&0x3f; 
+    w_payload_ce[0] = phr_report_table(phr)&0x3f; 
     lcid = PHR_REPORT;
     ((sch_pdu*)parent)->update_space_ce(1);
     return true; 
@@ -574,9 +574,17 @@ uint8_t sch_subh::buff_size_table(uint32_t buffer_size) {
   }
 }
   
-
-
-
+// Implements Table 9.1.8.4-1 Power headroom report mapping (36.133)
+uint8_t sch_subh::phr_report_table(float phr_value)
+{
+  if (phr_value < -23) {
+    phr_value = -23; 
+  }
+  if (phr_value > 40) {
+    phr_value = 40;
+  }
+  return (uint8_t) floor(phr_value+23);
+}
 
 
 

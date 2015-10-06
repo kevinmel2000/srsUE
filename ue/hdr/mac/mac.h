@@ -90,6 +90,8 @@ public:
     CONTENTION_TIMER,
     BSR_TIMER_PERIODIC,
     BSR_TIMER_RETX,
+    PHR_TIMER_PERIODIC,
+    PHR_TIMER_PROHIBIT,
     NOF_MAC_TIMERS
   } mac_timers_t; 
   
@@ -139,6 +141,7 @@ private:
   int si_window_length;
   int si_window_start;
   bool signals_pregenerated;
+  bool is_first_ul_grant;
   
 };
 

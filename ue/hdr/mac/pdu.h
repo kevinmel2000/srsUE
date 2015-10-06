@@ -234,7 +234,7 @@ public:
   bool     set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool update_size);
   bool     set_con_res_id(uint64_t con_res_id);
   bool     set_ta_cmd(uint8_t ta_cmd);
-  bool     set_phr(uint8_t phr);
+  bool     set_phr(float phr);
   void     set_padding();
   void     set_padding(uint32_t padding_len);
 
@@ -249,7 +249,8 @@ private:
   uint8_t  w_payload_ce[8];
   bool     F_bit;    
   uint32_t sizeof_ce(uint32_t lcid, bool is_ul);
-  uint8_t buff_size_table(uint32_t buffer_size);
+  static uint8_t buff_size_table(uint32_t buffer_size);
+  static uint8_t phr_report_table(float phr_value);
 };
 
 class sch_pdu : public pdu<sch_subh>

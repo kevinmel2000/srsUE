@@ -30,23 +30,39 @@
 
 #include <stdint.h>
 #include "mac/proc.h"
+#include "mac_params.h"
+#include "common/timers.h"
+#include "common/phy_interface.h"
+#include "common/log.h"
 
 /* Power headroom report procedure */
 
 
 namespace srsue {
 
-class phr_proc : public proc
+class phr_proc : public proc, srslte::timer_callback
 {
 public:
-  void step(uint32_t tti) {
-    if (is_running()) {
-      fprintf(stderr, "PHR procedure not implemented\n");          
-    }
-  }
-  void reset() {
-    
-  }
+  phr_proc();  
+  void init(phy_interface* phy_h, srslte::log* log_h_, mac_params* params_db_, srslte::timers *timers_db_);
+  
+  void step(uint32_t tti);
+  void reset();
+  
+  bool generate_phr_on_ul_grant(float *phr);
+  void timer_expired(uint32_t timer_id);
+  
+private:
+  srslte::log* log_h;
+  mac_params* params_db; 
+  phy_interface* phy_h; 
+  srslte::timers* timers_db;
+  bool initiated;
+  int timer_prohibit;
+  int timer_periodic;
+  int dl_pathloss_change; 
+  int cur_pathloss_db;
+  bool phr_is_triggered;
 };
 
 } // namespace srsue

@@ -50,7 +50,8 @@ namespace srsue {
     bool           is_ready_to_send(uint32_t current_tti);
     int            tx_tti();
     
-    bool           send(srslte::radio* radio_handler, float cfo, srslte_timestamp_t rx_time);
+    bool           send(srslte::radio* radio_handler, float cfo, float pathloss, srslte_timestamp_t rx_time);
+    float          get_p0_preamble();
     
   private: 
     static const uint32_t tx_advance_sf = 4; // Number of subframes to advance transmission
@@ -66,6 +67,7 @@ namespace srsue {
     srslte_cell_t  cell;
     cf_t          *signal_buffer;
     srslte_cfo_t   cfo_h; 
+    float target_power_dbm;
     
   };
 

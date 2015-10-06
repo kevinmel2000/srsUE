@@ -194,7 +194,7 @@ thread_pool::worker* thread_pool::wait_worker(uint32_t tti)
 } else {
     x = NULL; 
   }  
-  debug_thread("wait_worker() - exit - id=%d, x=0x%x\n", id, x);
+  debug_thread("wait_worker() - exit - id=%d\n", id);
 #else
   
   uint32_t id = tti%nof_workers;

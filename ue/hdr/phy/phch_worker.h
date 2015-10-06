@@ -35,6 +35,8 @@
 #include "common/trace.h"
 #include "phy/phch_common.h"
 
+#define LOG_EXECTIME
+
 namespace srsue {
 
 class phch_worker : public srslte::thread_pool::worker
@@ -72,10 +74,11 @@ private:
   bool decode_pdcch_ul(mac_interface_phy::mac_grant_t *grant);
   bool decode_pdcch_dl(mac_interface_phy::mac_grant_t *grant);
   bool decode_phich(bool *ack); 
-  bool decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload, srslte_softbuffer_rx_t* softbuffer, uint32_t rv, uint16_t rnti);
+  bool decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload, srslte_softbuffer_rx_t* softbuffer, uint32_t rv, uint16_t rnti, uint32_t pid);
 
   /* ... for UL */
-  void encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, uint32_t current_tx_nb, srslte_softbuffer_tx_t *softbuffer, uint32_t rv, uint16_t rnti);
+  void encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, uint32_t current_tx_nb, srslte_softbuffer_tx_t *softbuffer, 
+                    uint32_t rv, uint16_t rnti, bool is_from_rar);
   void encode_pucch();
   void encode_srs();
   void reset_uci();
@@ -83,7 +86,7 @@ private:
   void set_uci_periodic_cqi();
   void set_uci_ack(bool ack);
   bool srs_is_ready_to_send();
-  void normalize();
+  void normalize(float tx_power);
   
   void tr_log_start();
   void tr_log_end();
@@ -119,10 +122,15 @@ private:
   srslte_pucch_sched_t              pucch_sched; 
   srslte_uci_cfg_t                  uci_cfg; 
   srslte_cqi_periodic_cfg_t         period_cqi; 
+  srslte_ue_ul_powerctrl_t          power_ctrl;           
   uint32_t                          I_sr; 
   float                             cfo;
   bool                              rar_cqi_request;
   double snr;
+  
+#ifdef LOG_EXECTIME
+  struct timeval logtime_start[3]; 
+#endif
   
 };
 

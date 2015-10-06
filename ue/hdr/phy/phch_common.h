@@ -42,11 +42,29 @@ namespace srsue {
 /* Subclass that manages variables common to all workers */
   class phch_common {
   public:
+    
+    phch_common() {
+      pathloss = 0; 
+      rsrp_filtered = 0; 
+      cur_pusch_power = 0; 
+      p0_preamble = 0; 
+      cur_radio_power = 0; 
+      rx_gain_offset = 0; 
+    }
+    
     /* Common variables used by all phy workers */
     phy_params        *params_db; 
     srslte::log       *log_h;
     mac_interface_phy *mac;
     srslte_ue_ul_t     ue_ul; 
+    
+    /* Power control variables */
+    float pathloss;
+    float p0_preamble;     
+    float cur_radio_power; 
+    float cur_pusch_power;
+    float rsrp_filtered;
+    float rx_gain_offset;
 
     phch_common(uint32_t nof_workers);
     void init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac);
@@ -73,6 +91,8 @@ namespace srsue {
     
     bool sr_enabled; 
     int  sr_last_tx_tti; 
+   
+    srslte::radio*    get_radio();
     
   private: 
     std::vector<pthread_mutex_t>    tx_mutex; 

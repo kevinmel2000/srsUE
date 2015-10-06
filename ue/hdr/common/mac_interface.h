@@ -151,11 +151,13 @@ public:
       BSR_TIMER_PERIODIC,
       BSR_TIMER_RETX,
       
+      PHR_TIMER_PERIODIC,
+      PHR_TIMER_PROHIBIT,
+      PHR_DL_PATHLOSS_CHANGE,
+      PHR_PATHLOSS_DB,
+      
       HARQ_MAXTX,
       HARQ_MAXMSG3TX,
-      
-      PDSCH_RSPOWER,
-      PDSCH_PB,
       
       NOF_PARAMS,    
     } mac_param_t;

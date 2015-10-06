@@ -69,7 +69,12 @@ namespace srslte {
 
       float get_tx_gain();
       float get_rx_gain();
-
+      
+      float get_max_tx_power();
+      float set_tx_power(float power);
+      float get_rssi();
+      bool  has_rssi();
+      
       void start_trace();
       void write_trace(std::string filename);
       void start_rx();
@@ -100,6 +105,7 @@ namespace srslte {
       trace<uint32_t> tr_is_eob;
       bool trace_enabled;
       uint32_t tti;
+      bool agc_enabled;
   }; 
 }
 

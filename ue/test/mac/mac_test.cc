@@ -145,9 +145,9 @@ void setup_mac_phy_sib2(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT *sib2, srsue::ma
          liblte_rrc_preamble_trans_max_num[sib2->rr_config_common_sib.rach_cnfg.preamble_trans_max]);
   
   // PDSCH ConfigCommon
-  mac->set_param(srsue::mac_interface_params::PDSCH_RSPOWER, 
+  phy->set_param(srsue::phy_interface_params::PDSCH_RSPOWER, 
                  sib2->rr_config_common_sib.pdsch_cnfg.rs_power);
-  mac->set_param(srsue::mac_interface_params::PDSCH_PB, 
+  phy->set_param(srsue::phy_interface_params::PDSCH_PB, 
                  sib2->rr_config_common_sib.pdsch_cnfg.p_b);
 
   // PUSCH ConfigCommon

@@ -64,7 +64,8 @@ bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h_)
   phy_rnti = 0; 
   
   bsr_procedure.init(       rlc_h, log_h, &params_db, &timers_db);
-  mux_unit.init     (       rlc_h, log_h,                          &bsr_procedure);
+  phr_procedure.init(phy_h,        log_h, &params_db, &timers_db);
+  mux_unit.init     (       rlc_h, log_h,                          &bsr_procedure, &phr_procedure);
   demux_unit.init   (phy_h, rlc_h, log_h,             &timers_db);
   ra_procedure.init (phy_h,        log_h, &params_db, &timers_db, &mux_unit, &demux_unit);
   sr_procedure.init (phy_h,        log_h, &params_db);
@@ -124,6 +125,7 @@ void mac::reset()
   phy_h->pdcch_ul_search_reset();
   
   signals_pregenerated = false; 
+  is_first_ul_grant = true; 
   
   params_db.set_param(mac_interface_params::BCCH_SI_WINDOW_ST, -1);
   params_db.set_param(mac_interface_params::BCCH_SI_WINDOW_LEN, -1);
@@ -152,6 +154,7 @@ void mac::run_thread() {
       
       // Step all procedures 
       bsr_procedure.step(tti);
+      phr_procedure.step(tti);
       
       // Check if BSR procedure need to start SR 
       
@@ -277,6 +280,11 @@ uint32_t mac::get_current_tti()
 
 void mac::new_grant_ul(mac_interface_phy::mac_grant_t grant, mac_interface_phy::tb_action_ul_t* action)
 {
+  /* Start PHR Periodic timer on first UL grant */
+  if (is_first_ul_grant) {
+    is_first_ul_grant = false; 
+    timers_db.get(mac::PHR_TIMER_PERIODIC)->run();
+  }
   if (grant.rnti_type == SRSLTE_RNTI_USER) {
     if (ra_procedure.is_contention_resolution()) {
       ra_procedure.pdcch_to_crnti(true);

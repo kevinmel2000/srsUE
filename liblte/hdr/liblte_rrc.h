@@ -3759,6 +3759,8 @@ typedef enum{
 }LIBLTE_RRC_PERIODIC_PHR_TIMER_ENUM;
 static const char liblte_rrc_periodic_phr_timer_text[LIBLTE_RRC_PERIODIC_PHR_TIMER_N_ITEMS][20] = {    "sf10",     "sf20",     "sf50",    "sf100",
                                                                                                       "sf200",    "sf500",   "sf1000", "INFINITY"};
+static int liblte_rrc_periodic_phr_timer_num[LIBLTE_RRC_PERIODIC_PHR_TIMER_N_ITEMS] = {10, 20, 50, 100, 200, 500, 1000, -1};
+                                                                                                      
 typedef enum{
     LIBLTE_RRC_PROHIBIT_PHR_TIMER_SF0 = 0,
     LIBLTE_RRC_PROHIBIT_PHR_TIMER_SF10,
@@ -3772,6 +3774,9 @@ typedef enum{
 }LIBLTE_RRC_PROHIBIT_PHR_TIMER_ENUM;
 static const char liblte_rrc_prohibit_phr_timer_text[LIBLTE_RRC_PROHIBIT_PHR_TIMER_N_ITEMS][20] = {   "sf0",   "sf10",   "sf20",   "sf50",
                                                                                                     "sf100",  "sf200",  "sf500", "sf1000"};
+                                                                                                    
+static int liblte_rrc_prohibit_phr_timer_num[LIBLTE_RRC_PROHIBIT_PHR_TIMER_N_ITEMS] = {0, 10, 20, 50, 100, 200, 500, 1000};
+
 typedef enum{
     LIBLTE_RRC_DL_PATHLOSS_CHANGE_DB1 = 0,
     LIBLTE_RRC_DL_PATHLOSS_CHANGE_DB3,
@@ -3780,6 +3785,9 @@ typedef enum{
     LIBLTE_RRC_DL_PATHLOSS_CHANGE_N_ITEMS,
 }LIBLTE_RRC_DL_PATHLOSS_CHANGE_ENUM;
 static const char liblte_rrc_dl_pathloss_change_text[LIBLTE_RRC_DL_PATHLOSS_CHANGE_N_ITEMS][20] = {"1dB", "3dB", "6dB", "INFINITY"};
+
+static int liblte_rrc_dl_pathloss_change_num[LIBLTE_RRC_DL_PATHLOSS_CHANGE_N_ITEMS] = {1, 3, 6, -1};
+
 // Structs
 typedef struct{
     LIBLTE_RRC_MAX_HARQ_TX_ENUM              max_harq_tx;

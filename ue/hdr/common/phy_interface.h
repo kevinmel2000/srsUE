@@ -54,6 +54,10 @@ public:
     CELLSEARCH_TIMEOUT_MIB_NFRAMES, 
     CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD, // integer that will be divided by 10 
 
+    P_MAX,
+    PDSCH_RSPOWER,
+    PDSCH_PB,
+    
     PUSCH_EN_64QAM,
     PUSCH_RS_CYCLIC_SHIFT,
     PUSCH_RS_GROUP_ASSIGNMENT,
@@ -96,6 +100,21 @@ public:
     CQI_PERIODIC_FORMAT_SUBBAND_K,
     CQI_PERIODIC_CONFIGURED,
           
+    PWRCTRL_P0_NOMINAL_PUSCH,
+    PWRCTRL_ALPHA,
+    PWRCTRL_P0_NOMINAL_PUCCH,
+    PWRCTRL_DELTA_PUCCH_F1,
+    PWRCTRL_DELTA_PUCCH_F1B,
+    PWRCTRL_DELTA_PUCCH_F2,
+    PWRCTRL_DELTA_PUCCH_F2A,
+    PWRCTRL_DELTA_PUCCH_F2B,
+    PWRCTRL_DELTA_MSG3,
+    PWRCTRL_P0_UE_PUSCH,
+    PWRCTRL_DELTA_MCS_EN,
+    PWRCTRL_ACC_EN,
+    PWRCTRL_P0_UE_PUCCH,
+    PWRCTRL_SRS_OFFSET,
+        
     UCI_I_OFFSET_ACK,
     UCI_I_OFFSET_RI,
     UCI_I_OFFSET_CQI,
@@ -147,6 +166,8 @@ public:
   virtual void pdcch_dl_search_reset() = 0;
   
   virtual uint32_t get_current_tti() = 0;
+  
+  virtual float get_phr() = 0; 
   
   virtual void reset() = 0;
   

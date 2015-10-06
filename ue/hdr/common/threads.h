@@ -49,6 +49,9 @@ public:
   bool start(uint32_t prio = 0) {
     return threads_new_rt_prio(&_thread, thread_function_entry, this, prio);    
   }
+  bool start_cpu(uint32_t prio, int cpu) {
+    return threads_new_rt_cpu(&_thread, thread_function_entry, this, cpu, prio);    
+  }
   void print_priority() {
     threads_print_self();
   }

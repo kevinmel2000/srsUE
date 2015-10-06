@@ -36,6 +36,7 @@
 #include "mac/mac_params.h"
 #include "mac/pdu.h"
 #include "mac/proc_bsr.h"
+#include "mac/proc_phr.h"
 
 /* Logical Channel Multiplexing and Prioritization + Msg3 Buffer */   
 
@@ -47,7 +48,7 @@ class mux
 public:
   mux();
   void     reset();
-  void     init(rlc_interface_mac *rlc, srslte::log *log_h, bsr_proc *bsr_procedure);
+  void     init(rlc_interface_mac *rlc, srslte::log *log_h, bsr_proc *bsr_procedure, phr_proc *phr_procedure_);
 
   bool     is_pending_ccch_sdu();
   bool     is_pending_any_sdu();
@@ -86,6 +87,7 @@ private:
   srslte::log       *log_h;
   rlc_interface_mac *rlc; 
   bsr_proc          *bsr_procedure;
+  phr_proc          *phr_procedure;
   uint16_t           pending_crnti_ce;
   
   /* Msg3 Buffer */
@@ -95,7 +97,8 @@ private:
   /* PDU Buffer */
   sch_pdu               pdu_msg; 
   bool msg3_has_been_transmitted;
-  bool phr_included;
+  
+  
   
 };
 

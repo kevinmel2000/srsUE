@@ -61,7 +61,12 @@ class SRSLTE_API radio
 
     virtual float get_tx_gain() = 0;
     virtual float get_rx_gain() = 0;
-
+    
+    virtual float get_max_tx_power() = 0; 
+    virtual float set_tx_power(float power_dbm) = 0;
+    virtual float get_rssi() = 0; 
+    virtual bool  has_rssi() = 0; 
+    
     // This is used for debugging/trace purposes
     virtual void set_tti(uint32_t tti) = 0;
 };
