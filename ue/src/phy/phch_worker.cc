@@ -392,6 +392,21 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
       snprintf(timestr, 64, ", dec_time=%4d us", (int) t[0].tv_usec);
 #endif
       
+      if (!ack && grant->nof_prb==100 && grant->mcs.idx==27 && (tti%10)==1 && rv==0 && 10*log10(srslte_chest_dl_get_snr(&ue_dl.chest))>20) {
+        printf("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
+             grant->nof_prb, harq_pid, 
+             grant->mcs.tbs/8, grant->mcs.idx, rv, 
+             ack?"ok":"ko", 
+             10*log10(srslte_chest_dl_get_snr(&ue_dl.chest)), 
+             srslte_pdsch_last_noi(&ue_dl.pdsch),
+             timestr);
+        printf("cfi=%d, sf=%d, rnti=%d\n", cfi, tti%10, rnti);
+        srslte_vec_save_file("signal", signal_buffer,23040*sizeof(cf_t));
+        srslte_vec_save_file("eq_symbols", ue_dl.pdsch.d,ue_dl.pdsch_cfg.nbits.nof_re*sizeof(cf_t));
+        srslte_vec_save_file("llr", ue_dl.pdsch.d,ue_dl.pdsch_cfg.nbits.nof_bits*sizeof(int16_t));
+        exit(-1);
+      }
+      
       Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
              grant->nof_prb, harq_pid, 
              grant->mcs.tbs/8, grant->mcs.idx, rv, 
@@ -444,6 +459,7 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
   
   bool ret = false; 
   if (phy->get_pending_rar(tti, &rar_grant)) {
+
     Info("Pending RAR UL grant\n");
     if (srslte_dci_rar_to_ul_grant(&rar_grant, cell.nof_prb, pusch_hopping.hopping_offset, 
       &dci_unpacked, &grant->phy_grant.ul)) 
@@ -539,9 +555,6 @@ void phch_worker::set_uci_periodic_cqi()
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
-        if (cqi_report.wideband.wideband_cqi > 12) {
-          cqi_report.wideband.wideband_cqi = 12; 
-        } 
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
       rar_cqi_request = false; 
