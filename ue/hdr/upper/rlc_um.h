@@ -40,7 +40,10 @@ class rlc_um
 {
 public:
   rlc_um();
-  void init(srslte::log *rlc_entity_log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_);
+  void init(srslte::log        *rlc_entity_log_,
+            uint32_t            lcid_,
+            pdcp_interface_rlc *pdcp_,
+            rrc_interface_rlc  *rcc_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
   rlc_mode_t    get_mode();
@@ -60,6 +63,7 @@ private:
   srslte::log        *log;
   uint32_t            lcid;
   pdcp_interface_rlc *pdcp;
+  rrc_interface_rlc  *rrc;
 
   // Thread-safe queues for MAC messages
   msg_queue    pdu_queue;

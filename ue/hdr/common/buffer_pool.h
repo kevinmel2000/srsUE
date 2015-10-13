@@ -68,6 +68,7 @@ private:
   srsue_byte_buffer_t  *first_available;
   boost::mutex          mutex;
   static boost::mutex   instance_mutex;
+  int                   allocated;
 };
 
 

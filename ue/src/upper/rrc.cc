@@ -131,6 +131,15 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
 }
 
 /*******************************************************************************
+  RLC interface
+*******************************************************************************/
+
+void rrc::max_retx_attempted()
+{
+  //TODO: Handle the radio link failure
+}
+
+/*******************************************************************************
   Senders
 *******************************************************************************/
 
@@ -602,6 +611,8 @@ void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
       priority = 3;
   }
   mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, -1, -1);
+
+  rrc_log->info("Added radio bearer %s", srsue_rb_id_text[srb_cnfg->srb_id]);
 }
 
 void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)

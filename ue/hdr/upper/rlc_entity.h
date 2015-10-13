@@ -55,16 +55,16 @@ static const char rlc_mode_text[RLC_MODE_N_ITEMS][20] = {"Transparent Mode",
                                                          "Acknowledged Mode"};
 
 typedef enum{
-  RLC_FI_FIELD_FULL_SDU = 0,
-  RLC_FI_FIELD_FIRST_SDU_SEGMENT,
-  RLC_FI_FIELD_LAST_SDU_SEGMENT,
-  RLC_FI_FIELD_MIDDLE_SDU_SEGMENT,
+  RLC_FI_FIELD_START_AND_END_ALIGNED = 0,
+  RLC_FI_FIELD_NOT_END_ALIGNED,
+  RLC_FI_FIELD_NOT_START_ALIGNED,
+  RLC_FI_FIELD_NOT_START_OR_END_ALIGNED,
   RLC_FI_FIELD_N_ITEMS,
 }rlc_fi_field_t;
-static const char rlc_fi_field_text[RLC_FI_FIELD_N_ITEMS][20] = {"Full SDU",
-                                                                 "First SDU Segment",
-                                                                 "Last SDU Segment",
-                                                                 "Middle SDU Segment"};
+static const char rlc_fi_field_text[RLC_FI_FIELD_N_ITEMS][32] = {"Start and end aligned",
+                                                                 "Not end aligned",
+                                                                 "Not start aligned",
+                                                                 "Not start or end aligned"};
 
 typedef enum{
   RLC_DC_FIELD_CONTROL_PDU = 0,
@@ -90,24 +90,43 @@ typedef struct{
 }rlc_umd_pdu_header_t;
 
 // AMD PDU Header
-typedef struct{
+struct rlc_amd_pdu_header_t{
   rlc_dc_field_t dc;                      // Data or control
   uint8_t        rf;                      // Resegmentation flag
   uint8_t        p;                       // Polling bit
-  rlc_fi_field_t fi;                      // Framing info
+  uint8_t        fi;                      // Framing info
   uint16_t       sn;                      // Sequence number
   uint8_t        lsf;                     // Last segment flag
   uint16_t       so;                      // Segment offset
   uint32_t       N_li;                    // Number of length indicators
   uint16_t       li[RLC_AM_WINDOW_SIZE];  // Array of length indicators
-}rlc_amd_pdu_header_t;
+
+  rlc_amd_pdu_header_t(){N_li=0;}
+  rlc_amd_pdu_header_t(const rlc_amd_pdu_header_t& h){copy(h);}
+  rlc_amd_pdu_header_t& operator= (const rlc_amd_pdu_header_t& h){copy(h);}
+  void copy(const rlc_amd_pdu_header_t& h)
+  {
+    dc   = h.dc;
+    rf   = h.rf;
+    p    = h.p;
+    fi   = h.fi;
+    sn   = h.sn;
+    lsf  = h.lsf;
+    so   = h.so;
+    N_li = h.N_li;
+    for(int i=0;i<h.N_li;i++)
+      li[i] = h.li[i];
+  }
+};
 
 // STATUS PDU
-typedef struct{
+struct rlc_status_pdu_t{
   uint32_t N_nack;
   uint16_t ack_sn;
   uint16_t nack_sn[RLC_AM_WINDOW_SIZE];
-}rlc_status_pdu_t;
+
+  rlc_status_pdu_t(){N_nack=0;}
+};
 
 /****************************************************************************
  * RLC Entity interface
@@ -116,7 +135,10 @@ typedef struct{
 class rlc_entity
 {
 public:
-  virtual void init(srslte::log *rlc_entity_log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_) = 0;
+  virtual void init(srslte::log        *rlc_entity_log_,
+                    uint32_t            lcid_,
+                    pdcp_interface_rlc *pdcp_,
+                    rrc_interface_rlc  *rrc_) = 0;
   virtual void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 
   virtual rlc_mode_t    get_mode() = 0;

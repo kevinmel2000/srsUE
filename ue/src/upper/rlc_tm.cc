@@ -36,11 +36,15 @@ rlc_tm::rlc_tm()
   pool = buffer_pool::get_instance();
 }
 
-void rlc_tm::init(srslte::log *log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_)
+void rlc_tm::init(srslte::log        *log_,
+                  uint32_t            lcid_,
+                  pdcp_interface_rlc *pdcp_,
+                  rrc_interface_rlc  *rrc_)
 {
   log  = log_;
   lcid = lcid_;
   pdcp = pdcp_;
+  rrc  = rrc_;
 }
 
 void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)

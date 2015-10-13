@@ -42,10 +42,12 @@ rlc::rlc()
 }
 
 void rlc::init(pdcp_interface_rlc *pdcp_,
-               ue_interface *ue_,
-               srslte::log *rlc_log_)
+               rrc_interface_rlc  *rrc_,
+               ue_interface       *ue_,
+               srslte::log        *rlc_log_)
 {
   pdcp    = pdcp_;
+  rrc     = rrc_;
   ue      = ue_;
   rlc_log = rlc_log_;
 
@@ -55,7 +57,7 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
   }
 
   rlc_array[0] = new rlc_tm;
-  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0, pdcp); // SRB0
+  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0, pdcp, rrc); // SRB0
 }
 
 void rlc::stop()
@@ -127,29 +129,31 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     rlc_log->error("Radio bearer id must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
     return;
+  }else{
+    rlc_log->info("Adding radio bearer %s", srsue_rb_id_text[lcid]);
   }
 
-//  switch(cnfg->rlc_mode)
-//  {
-//  case LIBLTE_RRC_RLC_MODE_AM:
-//    rlc_array[lcid] = new rlc_am;
-//    break;
-//  case LIBLTE_RRC_RLC_MODE_UM_BI:
-//    rlc_array[lcid] = new rlc_um;
-//    break;
-//  case LIBLTE_RRC_RLC_MODE_UM_UNI_UL:
-//    rlc_array[lcid] = new rlc_um;
-//    break;
-//  case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
-//    rlc_array[lcid] = new rlc_um;
-//    break;
-//  default:
-//    rlc_log->error("Cannot add RLC entity - invalid mode");
-//    return;
-//  }
-//  rlc_array[lcid]->init(rlc_log, lcid, pdcp);
-//  if(cnfg)
-//    rlc_array[lcid]->configure(cnfg);
+  switch(cnfg->rlc_mode)
+  {
+  case LIBLTE_RRC_RLC_MODE_AM:
+    rlc_array[lcid] = new rlc_am;
+    break;
+  case LIBLTE_RRC_RLC_MODE_UM_BI:
+    rlc_array[lcid] = new rlc_um;
+    break;
+  case LIBLTE_RRC_RLC_MODE_UM_UNI_UL:
+    rlc_array[lcid] = new rlc_um;
+    break;
+  case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
+    rlc_array[lcid] = new rlc_um;
+    break;
+  default:
+    rlc_log->error("Cannot add RLC entity - invalid mode");
+    return;
+  }
+  rlc_array[lcid]->init(rlc_log, lcid, pdcp, rrc);
+  if(cnfg)
+    rlc_array[lcid]->configure(cnfg);
 
 }
 
@@ -180,7 +184,8 @@ bool rlc::check_dl_buffers()
   {
     if(valid_lcid(i))
     {
-      return rlc_array[i]->read_sdu();
+      if(rlc_array[i]->read_sdu())
+        ret = true;
     }
   }
 

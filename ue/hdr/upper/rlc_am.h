@@ -34,15 +34,36 @@
 #include "common/msg_queue.h"
 #include "common/timeout.h"
 #include "upper/rlc_entity.h"
+#include <boost/thread/mutex.hpp>
+#include <boost/circular_buffer.hpp>
+#include <map>
+#include <queue>
 
 namespace srsue {
 
+struct rlc_amd_rx_pdu_t{
+  rlc_amd_pdu_header_t  header;
+  srsue_byte_buffer_t  *buf;
+  bool                  pdu_complete;
+};
+
+struct rlc_amd_tx_pdu_t{
+  rlc_amd_pdu_header_t  header;
+  srsue_byte_buffer_t  *buf;
+  uint32_t              retx_count;
+  bool                  is_acked;
+};
+
 class rlc_am
     :public rlc_entity
+    ,public timeout_callback
 {
 public:
   rlc_am();
-  void init(srslte::log *rlc_entity_log_, uint32_t lcid_, pdcp_interface_rlc *pdcp_);
+  void init(srslte::log        *rlc_entity_log_,
+            uint32_t            lcid_,
+            pdcp_interface_rlc *pdcp_,
+            rrc_interface_rlc  *rrc_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
   rlc_mode_t    get_mode();
@@ -57,17 +78,35 @@ public:
   int      read_pdu(uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
+  // Timeout callback interface
+  void timeout_expired(uint32_t timeout_id);
+
 private:
 
+  buffer_pool        *pool;
   srslte::log        *log;
   uint32_t            lcid;
   pdcp_interface_rlc *pdcp;
+  rrc_interface_rlc  *rrc;
 
-  // Thread-safe queues
-  msg_queue    tx_sdu_queue;
-  msg_queue    rx_pdu_queue;
+  // TX SDU buffers
+  msg_queue            tx_sdu_queue;
+  srsue_byte_buffer_t *tx_sdu;
 
-  bool         status_requested;
+  // Tx and Rx windows
+  std::map<uint32_t, rlc_amd_tx_pdu_t>  tx_window;
+  std::queue<uint32_t>                  retx_queue;
+  std::map<uint32_t, rlc_amd_rx_pdu_t>  rx_window;
+
+  // RX SDU buffers
+  msg_queue            rx_sdu_queue;
+  srsue_byte_buffer_t *rx_sdu;
+
+  // Mutexes
+  boost::mutex        mutex;
+
+  bool                poll_received;
+  bool                do_status;
 
   /****************************************************************************
    * Configurable parameters
@@ -113,16 +152,48 @@ private:
   timeout poll_retx_timeout;
   timeout reordering_timeout;
   timeout status_prohibit_timeout;
+
+  static const int reordering_timeout_id = 1;
+
+  // Timer checks
+  bool status_prohibited();
+  bool poll_retx();
+
+  // Helpers
+  bool poll_required();
+
+  int  build_status_pdu(uint8_t *payload, uint32_t nof_bytes);
+  int  build_retx_pdu(uint8_t *payload, uint32_t nof_bytes);
+  int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);
+
+  void handle_data_pdu(uint8_t *payload, uint32_t nof_bytes);
+  void handle_control_pdu(uint8_t *payload, uint32_t nof_bytes);
+
+  void reassemble_rx_sdus();
+
+  void debug_state();
 };
 
 /****************************************************************************
  * Header pack/unpack helper functions
  * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
  ***************************************************************************/
-void      rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
-void      rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
-uint32_t  rlc_am_packed_length(rlc_amd_pdu_header_t *header);
-bool      rlc_am_is_status_pdu(srsue_byte_buffer_t *pdu);
+void        rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
+void        rlc_am_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_amd_pdu_header_t *header);
+void        rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
+void        rlc_am_read_status_pdu(srsue_byte_buffer_t *pdu, rlc_status_pdu_t *status);
+void        rlc_am_read_status_pdu(uint8_t *payload, uint32_t nof_bytes, rlc_status_pdu_t *status);
+void        rlc_am_write_status_pdu(rlc_status_pdu_t *status, srsue_byte_buffer_t *pdu );
+int         rlc_am_write_status_pdu(rlc_status_pdu_t *status, uint8_t *payload);
+
+uint32_t    rlc_am_packed_length(rlc_amd_pdu_header_t *header);
+uint32_t    rlc_am_packed_length(rlc_status_pdu_t *status);
+bool        rlc_am_is_control_pdu(srsue_byte_buffer_t *pdu);
+bool        rlc_am_is_control_pdu(uint8_t *payload);
+bool        rlc_am_status_has_nack(rlc_status_pdu_t *status, uint32_t sn);
+std::string rlc_am_to_string(rlc_status_pdu_t *status);
+bool        rlc_am_start_aligned(uint8_t fi);
+bool        rlc_am_end_aligned(uint8_t fi);
 
 } // namespace srsue
 

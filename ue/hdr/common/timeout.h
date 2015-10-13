@@ -51,16 +51,22 @@ class timeout_callback
 class timeout
 {
 public:
-  timeout():exp(false){}
-  void start(uint32_t timeout_id_, uint32_t duration_msec_, timeout_callback *callback_=NULL)
+  timeout():running(false),callback(NULL){}
+  void start(uint32_t duration_msec_, uint32_t timeout_id_=0,timeout_callback *callback_=NULL)
   {
-    exp = false;
-    start_time = boost::posix_time::microsec_clock::local_time();
+    reset();
+    stop_time     = boost::posix_time::microsec_clock::local_time() + boost::posix_time::milliseconds(duration_msec_);
+    running       = true;
     timeout_id    = timeout_id_;
-    duration_usec = duration_msec_*1000;
     callback      = callback_;
-
-    pthread_create(&thread, NULL, &thread_start, this);
+    if(callback)
+      pthread_create(&thread, NULL, &thread_start, this);
+  }
+  void reset()
+  {
+    if(callback)
+      pthread_cancel(thread);
+    running = false;
   }
   static void* thread_start(void *t_)
   {
@@ -71,26 +77,31 @@ public:
   {
     boost::posix_time::time_duration diff;
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
-    diff = now - start_time;
-    duration_usec -= diff.total_microseconds();
-    if(duration_usec > 0)
-      usleep(duration_usec);
-    exp = true;
-    if(callback)
+    diff = stop_time - now;
+    int32_t usec = diff.total_microseconds();
+    if(usec > 0)
+      usleep(usec);
+    if(callback && running)
         callback->timeout_expired(timeout_id);
   }
   bool expired()
   {
-      return exp;
+    if(running)
+      return boost::posix_time::microsec_clock::local_time() > stop_time;
+    else
+      return false;
+  }
+  bool is_running()
+  {
+    return running;
   }
 
 private:
-  boost::posix_time::ptime  start_time;
+  boost::posix_time::ptime  stop_time;
   pthread_t                 thread;
   uint32_t                  timeout_id;
-  uint32_t                  duration_usec;
   timeout_callback         *callback;
-  bool                      exp;
+  bool                      running;
 };
 
 } // namespace srsue

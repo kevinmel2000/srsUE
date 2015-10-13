@@ -128,7 +128,7 @@ void ue::init()
   radio_uhd->set_tx_freq(args->rf.ul_freq);
   phy->init_agc(radio_uhd, mac, phy_log);
   mac->init(phy, rlc, mac_log);
-  rlc->init(pdcp, this, rlc_log);
+  rlc->init(pdcp, rrc, this, rlc_log);
   pdcp->init(rlc, rrc, gw, pdcp_log);
   rrc->init(phy, mac, rlc, pdcp, nas, rrc_log);
   nas->init(rrc, nas_log);

@@ -51,8 +51,9 @@ class rlc
 public:
   rlc();
   void init(pdcp_interface_rlc *pdcp_,
-            ue_interface *ue_,
-            srslte::log *rlc_log_);
+            rrc_interface_rlc  *rrc_,
+            ue_interface       *ue_,
+            srslte::log        *rlc_log_);
   void stop();
 
   // PDCP interface
@@ -76,6 +77,7 @@ private:
   buffer_pool        *pool;
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
+  rrc_interface_rlc  *rrc;
   ue_interface       *ue;
   rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
 

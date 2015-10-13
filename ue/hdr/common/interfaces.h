@@ -78,6 +78,13 @@ public:
   virtual void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu) = 0;
 };
 
+// RRC interface for RLC
+class rrc_interface_rlc
+{
+public:
+  virtual void max_retx_attempted() = 0;
+};
+
 // PDCP interface for GW
 class pdcp_interface_gw
 {
