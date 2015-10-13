@@ -28,6 +28,7 @@
 #ifndef NAS_H
 #define NAS_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -58,12 +59,21 @@ class nas
 {
 public:
   nas();
-  void init(rrc_interface_nas *rrc_, srslte::log *nas_log_);
+  void init(usim_interface_nas *usim_, rrc_interface_nas *rrc_, srslte::log *nas_log_);
   void stop();
 
+  // RRC interface
+  void notify_connection_setup();
+  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
+
+  void send_attach_request();
+  void gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg);
+
 private:
-  srslte::log       *nas_log;
-  rrc_interface_nas *rrc;
+  buffer_pool        *pool;
+  srslte::log        *nas_log;
+  rrc_interface_nas  *rrc;
+  usim_interface_nas *usim;
 
   emm_state_t        state;
 };

@@ -26,7 +26,6 @@
  */
 
 #include "upper/pdcp_entity.h"
-#include "liblte/hdr/liblte_pdcp.h"
 #include "liblte/hdr/liblte_security.h"
 
 using namespace srslte;
@@ -64,9 +63,6 @@ bool pdcp_entity::is_active()
 // RRC interface
 void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
 {
-  LIBLTE_PDCP_CONTROL_PDU_STRUCT  control;
-  srsue_byte_buffer_t            *pdu;
-
   log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", srsue_rb_id_text[lcid]);
 
   // Handle SRB messages
@@ -79,24 +75,19 @@ void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
   case SRSUE_RB_ID_SRB1:  // Intentional fall-through
   case SRSUE_RB_ID_SRB2:
     // Pack SDU into a control PDU
-    pdu = pool->allocate();
-    control.count = tx_sn;
     if(do_security)
     {
-      /*liblte_pdcp_pack_control_pdu(&control,
-                                   (LIBLTE_BYTE_MSG_STRUCT*)sdu,
-                                   user->get_k_rrc_int(),
-                                   LIBLTE_SECURITY_DIRECTION_UPLINK,
-                                   lcid-1,
-                                   (LIBLTE_BYTE_MSG_STRUCT*)&pdu);*/
+      /*pdcp_pack_control_pdu(&control,
+                             (LIBLTE_BYTE_MSG_STRUCT*)sdu,
+                             user->get_k_rrc_int(),
+                             LIBLTE_SECURITY_DIRECTION_UPLINK,
+                             lcid-1,
+                             (LIBLTE_BYTE_MSG_STRUCT*)&pdu);*/
     }else{
-      liblte_pdcp_pack_control_pdu(&control,
-                                   (LIBLTE_BYTE_MSG_STRUCT*)sdu,
-                                   (LIBLTE_BYTE_MSG_STRUCT*)&pdu);
+      pdcp_pack_control_pdu(tx_sn, sdu);
     }
     tx_sn++;
-    pool->deallocate(sdu);
-    rlc->write_sdu(lcid, pdu);
+    rlc->write_sdu(lcid, sdu);
 
     break;
   }
@@ -119,8 +110,11 @@ void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
     log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
     rrc->write_pdu(SRSUE_RB_ID_SRB0, pdu);
     break;
-  case SRSUE_RB_ID_SRB1:
+  case SRSUE_RB_ID_SRB1: // Intentional fall-through
   case SRSUE_RB_ID_SRB2:
+    uint32_t sn;
+    pdcp_unpack_control_pdu(pdu, &sn);
+    rrc->write_pdu(lcid, pdu);
     break;
   }
 
@@ -129,6 +123,75 @@ void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
   {
 
   }
+}
+
+/****************************************************************************
+ * Pack/Unpack helper functions
+ * Ref: 3GPP TS 36.323 v10.1.0
+ ***************************************************************************/
+
+void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu)
+{
+  // Make room and add header
+  sdu->msg--;
+  sdu->N_bytes++;
+  *sdu->msg = sn & 0x1F;
+
+  // Add MAC
+  sdu->msg[sdu->N_bytes++] = (PDCP_CONTROL_MAC_I >> 24) & 0xFF;
+  sdu->msg[sdu->N_bytes++] = (PDCP_CONTROL_MAC_I >> 16) & 0xFF;
+  sdu->msg[sdu->N_bytes++] = (PDCP_CONTROL_MAC_I >>  8) & 0xFF;
+  sdu->msg[sdu->N_bytes++] =  PDCP_CONTROL_MAC_I        & 0xFF;
+
+}
+
+void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid)
+{
+  // Make room and add header
+  sdu->msg--;
+  sdu->N_bytes++;
+  *sdu->msg = sn & 0x1F;
+
+  // Add MAC
+  liblte_security_128_eia2(&key_256[16],
+                           sn,
+                           lcid,
+                           direction,
+                           sdu->msg,
+                           sdu->N_bytes,
+                           &sdu->msg[sdu->N_bytes]);
+  sdu->N_bytes += 4;
+}
+
+void pdcp_unpack_control_pdu(srsue_byte_buffer_t *pdu, uint32_t *sn)
+{
+  // Strip header
+  *sn = *pdu->msg & 0x1F;
+  pdu->msg++;
+  pdu->N_bytes--;
+
+  // Strip MAC
+  pdu->N_bytes -= 4;
+
+  // TODO: integrity check MAC
+}
+
+void pdcp_pack_data_pdu_long_sn(uint32_t sn, srsue_byte_buffer_t *sdu)
+{
+  // Make room and add header
+  sdu->msg     -= 2;
+  sdu->N_bytes += 2;
+  sdu->msg[0] = (PDCP_D_C_DATA_PDU << 7) | ((sn >> 8) & 0x0F);
+  sdu->msg[1] = sn & 0xFF;
+}
+
+void pdcp_unpack_data_pdu_long_sn(srsue_byte_buffer_t *sdu, uint32_t *sn)
+{
+  // Strip header
+  *sn  = (sdu->msg[0] & 0x0F) << 8;
+  *sn |= sdu->msg[1];
+  sdu->msg     += 2;
+  sdu->N_bytes -= 2;
 }
 
 }

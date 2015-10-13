@@ -59,11 +59,11 @@ void pdcp::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
 void pdcp::add_bearer(uint32_t lcid)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
-    pdcp_log->error("Radio bearer id must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
+    pdcp_log->error("Radio bearer id must be in [0:%d] - %d\n", SRSUE_N_RADIO_BEARERS, lcid);
     return;
   }
   pdcp_array[lcid].init(rlc, rrc, gw, pdcp_log, lcid);
-  pdcp_log->debug("Added bearer %s", srsue_rb_id_text[lcid]);
+  pdcp_log->info("Added bearer %s\n", srsue_rb_id_text[lcid]);
 }
 
 /*******************************************************************************

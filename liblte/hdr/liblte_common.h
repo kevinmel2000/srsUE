@@ -48,7 +48,8 @@
 *******************************************************************************/
 
 // FIXME: This was chosen arbitrarily
-#define LIBLTE_MAX_MSG_SIZE       102048
+#define LIBLTE_MAX_MSG_SIZE_BITS  102048
+#define LIBLTE_MAX_MSG_SIZE_BYTES 12756
 #define LIBLTE_MSG_HEADER_OFFSET  1024
 
 /*******************************************************************************
@@ -69,18 +70,18 @@ typedef struct{
 
 typedef struct{
     uint32 N_bits;
-    uint8  msg[LIBLTE_MAX_MSG_SIZE];
+    uint8  msg[LIBLTE_MAX_MSG_SIZE_BITS];
 }LIBLTE_SIMPLE_BIT_MSG_STRUCT;
 
 typedef struct{
     uint32 N_bytes;
-    uint8  msg[LIBLTE_MAX_MSG_SIZE];
+    uint8  msg[LIBLTE_MAX_MSG_SIZE_BYTES];
 }LIBLTE_SIMPLE_BYTE_MSG_STRUCT;
 
 
 struct LIBLTE_BYTE_MSG_STRUCT{
     uint32  N_bytes;
-    uint8   buffer[LIBLTE_MAX_MSG_SIZE];
+    uint8   buffer[LIBLTE_MAX_MSG_SIZE_BYTES];
     uint8  *msg;
 
     LIBLTE_BYTE_MSG_STRUCT():N_bytes(0)
@@ -105,7 +106,7 @@ struct LIBLTE_BYTE_MSG_STRUCT{
 
 struct LIBLTE_BIT_MSG_STRUCT{
     uint32  N_bits;
-    uint8   buffer[LIBLTE_MAX_MSG_SIZE];
+    uint8   buffer[LIBLTE_MAX_MSG_SIZE_BITS];
     uint8  *msg;
 
     LIBLTE_BIT_MSG_STRUCT():N_bits(0)

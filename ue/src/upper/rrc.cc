@@ -52,10 +52,35 @@ void rrc::init(phy_interface_rrc     *phy_,
   pdcp    = pdcp_;
   nas     = nas_;
   rrc_log = rrc_log_;
+
+  transaction_id = 0;
 }
 
 void rrc::stop()
 {}
+
+
+/*******************************************************************************
+  NAS interface
+*******************************************************************************/
+
+void rrc::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
+{
+  rrc_log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", srsue_rb_id_text[lcid]);
+
+  switch(state)
+  {
+  case RRC_STATE_COMPLETING_SETUP:
+    send_con_setup_complete(sdu);
+    break;
+  case RRC_STATE_RRC_CONNECTED:
+    send_ul_info_transfer(lcid, sdu);
+    break;
+  default:
+    rrc_log->error("SDU received from NAS while RRC state = %s", rrc_state_text[state]);
+    break;
+  }
+}
 
 /*******************************************************************************
   PDCP interface
@@ -145,7 +170,9 @@ void rrc::max_retx_attempted()
 
 void rrc::send_con_request()
 {
+  rrc_log->debug("Preparing RRC Connection Request");
   LIBLTE_RRC_UL_CCCH_MSG_STRUCT ul_ccch_msg;
+
   // Prepare ConnectionRequest packet
   ul_ccch_msg.msg_type = LIBLTE_RRC_UL_CCCH_MSG_TYPE_RRC_CON_REQ;
   ul_ccch_msg.msg.rrc_con_req.ue_id_type = LIBLTE_RRC_CON_REQ_UE_ID_TYPE_RANDOM_VALUE;
@@ -179,6 +206,63 @@ void rrc::send_con_request()
   pdcp->write_sdu(SRSUE_RB_ID_SRB0, pdcp_buf);
 }
 
+void rrc::send_con_setup_complete(srsue_byte_buffer_t *nas_msg)
+{
+  rrc_log->debug("Preparing RRC Connection Setup Complete\n");
+  LIBLTE_RRC_UL_DCCH_MSG_STRUCT ul_dcch_msg;
+
+  // Prepare ConnectionSetupComplete packet
+  ul_dcch_msg.msg_type = LIBLTE_RRC_UL_DCCH_MSG_TYPE_RRC_CON_SETUP_COMPLETE;
+  ul_dcch_msg.msg.rrc_con_setup_complete.registered_mme_present = false;
+  ul_dcch_msg.msg.rrc_con_setup_complete.rrc_transaction_id = transaction_id;
+  ul_dcch_msg.msg.rrc_con_setup_complete.selected_plmn_id = 1;
+  memcpy(ul_dcch_msg.msg.rrc_con_setup_complete.dedicated_info_nas.msg, nas_msg->msg, nas_msg->N_bytes);
+  ul_dcch_msg.msg.rrc_con_setup_complete.dedicated_info_nas.N_bytes = nas_msg->N_bytes;
+  liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srsue_byte_buffer_t *pdcp_buf = pool->allocate();
+  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf->msg, bit_buf.N_bits);
+  pdcp_buf->N_bytes = bit_buf.N_bits/8;
+
+  rrc_log->info("Sending RRC Connection Setup Complete\n");
+  state = RRC_STATE_RRC_CONNECTED;
+  pdcp->write_sdu(SRSUE_RB_ID_SRB1, pdcp_buf);
+}
+
+void rrc::send_ul_info_transfer(uint32_t lcid, srsue_byte_buffer_t *sdu)
+{
+  rrc_log->debug("Preparing UL Info Transfer\n");
+  LIBLTE_RRC_UL_DCCH_MSG_STRUCT ul_dcch_msg;
+
+  // Prepare UL INFO packet
+  ul_dcch_msg.msg_type                                 = LIBLTE_RRC_UL_DCCH_MSG_TYPE_UL_INFO_TRANSFER;
+  ul_dcch_msg.msg.ul_info_transfer.dedicated_info_type = LIBLTE_RRC_UL_INFORMATION_TRANSFER_TYPE_NAS;
+  memcpy(ul_dcch_msg.msg.ul_info_transfer.dedicated_info.msg, sdu->msg, sdu->N_bytes);
+  ul_dcch_msg.msg.ul_info_transfer.dedicated_info.N_bytes = sdu->N_bytes;
+  liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srsue_byte_buffer_t *pdcp_buf = pool->allocate();
+  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf->msg, bit_buf.N_bits);
+  pdcp_buf->N_bytes = bit_buf.N_bits/8;
+
+  rrc_log->info("Sending UL Info Transfer\n");
+  pdcp->write_sdu(lcid, pdcp_buf);
+}
+
 /*******************************************************************************
   Parsers
 *******************************************************************************/
@@ -201,6 +285,9 @@ void rrc::parse_dl_ccch(srsue_byte_buffer_t *pdu)
   case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_SETUP:
     rrc_log->info("Connection Setup received\n");
     handle_con_setup(&dl_ccch_msg.msg.rrc_con_setup);
+    rrc_log->info("Notifying NAS of connection setup\n");
+    state = RRC_STATE_COMPLETING_SETUP;
+    nas->notify_connection_setup();
     break;
   case LIBLTE_RRC_DL_CCCH_MSG_TYPE_RRC_CON_REEST:
     rrc_log->error("Not handling Connection Reestablishment message");
@@ -213,7 +300,32 @@ void rrc::parse_dl_ccch(srsue_byte_buffer_t *pdu)
   }
 }
 
-void rrc::parse_dl_dcch(srsue_byte_buffer_t *pdu){}
+void rrc::parse_dl_dcch(srsue_byte_buffer_t *pdu)
+{
+  LIBLTE_RRC_DL_DCCH_MSG_STRUCT dl_dcch_msg;
+  srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
+  bit_buf.N_bits = pdu->N_bytes*8;
+  pool->deallocate(pdu);
+  liblte_rrc_unpack_dl_dcch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dl_dcch_msg);
+
+  switch(dl_dcch_msg.msg_type)
+  {
+  case LIBLTE_RRC_DL_DCCH_MSG_TYPE_DL_INFO_TRANSFER:
+    rrc_log->error("Not handling DL INFO message\n");
+    break;
+  case LIBLTE_RRC_DL_DCCH_MSG_TYPE_SECURITY_MODE_COMMAND:
+    rrc_log->error("Not handling Security Mode Command\n");
+    break;
+  case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RECONFIG:
+    rrc_log->error("Not handling RRC Connection Reconfiguration\n");
+    break;
+  case LIBLTE_RRC_DL_DCCH_MSG_TYPE_UE_CAPABILITY_ENQUIRY:
+    rrc_log->error("Not handling UE Capability Enquiry\n");
+    break;
+  default:
+    break;
+  }
+}
 
 /*******************************************************************************
   Helpers
@@ -586,33 +698,47 @@ void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
   pdcp->add_bearer(srb_cnfg->srb_id);
 
   // Setup RLC
-  LIBLTE_RRC_RLC_CONFIG_STRUCT *rlc_cnfg = NULL;
   if(srb_cnfg->rlc_cnfg_present)
   {
-    rlc_cnfg = &srb_cnfg->rlc_explicit_cnfg;
+    if(srb_cnfg->rlc_default_cnfg_present)
+    {
+      rlc->add_bearer(srb_cnfg->srb_id);
+    }else{
+      rlc->add_bearer(srb_cnfg->srb_id, &srb_cnfg->rlc_explicit_cnfg);
+    }
   }
-  rlc->add_bearer(srb_cnfg->srb_id, rlc_cnfg);
 
   // Setup MAC
-  uint8_t log_chan_group = 0;
-  uint8_t priority       = 1;
-  if(srb_cnfg->lc_default_cnfg_present)
-  {
-    if(srb_cnfg->lc_explicit_cnfg.log_chan_sr_mask_present)
-    {
-      //TODO
-    }
-    if(srb_cnfg->lc_explicit_cnfg.ul_specific_params_present)
-    {
-      //TODO
-    }
-  }else{
-    if(2 == srb_cnfg->srb_id)
-      priority = 3;
-  }
-  mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, -1, -1);
+  uint8_t  log_chan_group       =  0;
+  uint8_t  priority             =  1;
+  int      prioritized_bit_rate = -1;
+  int      bucket_size_duration = -1;
 
-  rrc_log->info("Added radio bearer %s", srsue_rb_id_text[srb_cnfg->srb_id]);
+  if(srb_cnfg->lc_cnfg_present)
+  {
+    if(srb_cnfg->lc_default_cnfg_present)
+    {
+      if(SRSUE_RB_ID_SRB2 == srb_cnfg->srb_id)
+        priority = 3;
+    }else{
+      if(srb_cnfg->lc_explicit_cnfg.log_chan_sr_mask_present)
+      {
+        //TODO
+      }
+      if(srb_cnfg->lc_explicit_cnfg.ul_specific_params_present)
+      {
+        if(srb_cnfg->lc_explicit_cnfg.ul_specific_params.log_chan_group_present)
+          log_chan_group      = srb_cnfg->lc_explicit_cnfg.ul_specific_params.log_chan_group;
+
+        priority              = srb_cnfg->lc_explicit_cnfg.ul_specific_params.priority;
+        prioritized_bit_rate  = liblte_rrc_prioritized_bit_rate_num[srb_cnfg->lc_explicit_cnfg.ul_specific_params.prioritized_bit_rate];
+        bucket_size_duration  = liblte_rrc_bucket_size_duration_num[srb_cnfg->lc_explicit_cnfg.ul_specific_params.bucket_size_duration];
+      }
+    }
+    mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, prioritized_bit_rate, bucket_size_duration);
+  }
+
+  rrc_log->info("Added radio bearer %s\n", srsue_rb_id_text[srb_cnfg->srb_id]);
 }
 
 void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)

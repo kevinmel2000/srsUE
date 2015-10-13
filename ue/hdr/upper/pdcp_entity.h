@@ -35,6 +35,28 @@
 
 namespace srsue {
 
+/****************************************************************************
+ * Structs and Defines
+ * Ref: 3GPP TS 36.323 v10.1.0
+ ***************************************************************************/
+
+#define PDCP_CONTROL_MAC_I 0x00000000
+
+#define PDCP_PDU_TYPE_PDCP_STATUS_REPORT                0x0
+#define PDCP_PDU_TYPE_INTERSPERSED_ROHC_FEEDBACK_PACKET 0x1
+
+typedef enum{
+    PDCP_D_C_CONTROL_PDU = 0,
+    PDCP_D_C_DATA_PDU,
+    PDCP_D_C_N_ITEMS,
+}pdcp_d_c_t;
+static const char pdcp_d_c_text[PDCP_D_C_N_ITEMS][20] = {"Control PDU",
+                                                         "Data PDU"};
+
+/****************************************************************************
+ * PDCP Entity interface
+ * Common interface for all PDCP entities
+ ***************************************************************************/
 class pdcp_entity
 {
 public:
@@ -73,6 +95,18 @@ private:
   uint32              tx_sn;
 
 };
+
+/****************************************************************************
+ * Pack/Unpack helper functions
+ * Ref: 3GPP TS 36.323 v10.1.0
+ ***************************************************************************/
+
+void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu);
+void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid);
+void pdcp_unpack_control_pdu(srsue_byte_buffer_t *sdu, uint32_t *sn);
+
+void pdcp_pack_data_pdu_long_sn(uint32_t sn, srsue_byte_buffer_t *sdu);
+void pdcp_unpack_data_pdu_long_sn(srsue_byte_buffer_t *sdu, uint32_t *sn);
 
 } // namespace srsue
 

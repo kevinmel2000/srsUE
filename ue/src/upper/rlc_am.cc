@@ -98,6 +98,7 @@ uint32_t rlc_am::get_bearer()
 
 void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
 {
+  log->info_hex(sdu->msg, sdu->N_bytes, "%s Tx SDU", srsue_rb_id_text[lcid]);
   tx_sdu_queue.write(sdu);
 }
 
@@ -124,16 +125,34 @@ bool rlc_am::read_sdu()
 
 uint32_t rlc_am::get_buffer_state()
 {
-  // TODO: Do we also need to account for retx and status messages here?
+  // Bytes needed for status report
+  if(do_status && !status_prohibited())
+    return prepare_status();
+
+  // TODO: Bytes needed for retx
+
+  // Bytes needed for tx PDUs
+  uint32_t n_pdus  = tx_sdu_queue.size();
   uint32_t n_bytes = tx_sdu_queue.size_bytes();
+
+  if(n_pdus > 1)
+  {
+    n_bytes += (n_pdus*1.5)+0.5; // More room for header extensions (integer rounding)
+  }
   if(tx_sdu)
     n_bytes += tx_sdu->N_bytes;
+
+  if(n_bytes > 0)
+    n_bytes += 2; // Make room for fixed header
+
   return n_bytes;
 }
 
 int rlc_am::read_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
   boost::lock_guard<boost::mutex> lock(mutex);
+
+  log->info("MAC opportunity - %d bytes\n", nof_bytes);
 
   // Tx STATUS if requested
   if(do_status && !status_prohibited())
@@ -218,9 +237,9 @@ bool rlc_am::poll_required()
   return false;
 }
 
-int  rlc_am::build_status_pdu(uint8_t *payload, uint32_t nof_bytes)
+int rlc_am::prepare_status()
 {
-  rlc_status_pdu_t status;
+  status.N_nack = 0;
   status.ack_sn = vr_ms;
 
   uint32_t i = vr_r;
@@ -231,6 +250,11 @@ int  rlc_am::build_status_pdu(uint8_t *payload, uint32_t nof_bytes)
     i = (i + 1)%RLC_COUNTER_MOD;
   }
 
+  return rlc_am_packed_length(&status);
+}
+
+int  rlc_am::build_status_pdu(uint8_t *payload, uint32_t nof_bytes)
+{
   int pdu_len = rlc_am_packed_length(&status);
   if(nof_bytes >= pdu_len)
   {
@@ -286,6 +310,12 @@ int  rlc_am::build_retx_pdu(uint8_t *payload, uint32_t nof_bytes)
 
 int  rlc_am::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
+  if(!tx_sdu && tx_sdu_queue.size() == 0)
+  {
+    log->info("No data available to be sent");
+    return 0;
+  }
+
   srsue_byte_buffer_t *pdu = pool->allocate();
   rlc_amd_pdu_header_t header;
   header.dc   = RLC_DC_FIELD_DATA_PDU;
@@ -388,7 +418,7 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   rlc_amd_pdu_header_t header;
   rlc_am_read_data_pdu_header(payload, nof_bytes, &header);
 
-  log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d\n",
+  log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d",
                 srsue_rb_id_text[lcid], header.sn);
 
   if(header.sn > vr_mr || header.sn < vr_r)
@@ -434,7 +464,7 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   // Check poll bit
   if(header.p)
   {
-    log->info("%s Status packet requested through polling bit", srsue_rb_id_text[lcid]);
+    log->info("%s Status packet requested through polling bit\n", srsue_rb_id_text[lcid]);
     poll_received = true;
 
     // 36.322 v10 Section 5.2.3

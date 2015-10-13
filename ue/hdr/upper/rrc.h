@@ -82,6 +82,7 @@ private:
   srsue_bit_buffer_t    bit_buf;
 
   rrc_state_t           state;
+  uint8_t               transaction_id;
 
   LIBLTE_RRC_MIB_STRUCT mib;
   LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_1_STRUCT sib1;
@@ -89,6 +90,9 @@ private:
 
 
   pthread_t             sib_search_thread;
+
+  // NAS interface
+  void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
 
   // PDCP interface
   void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
@@ -100,6 +104,8 @@ private:
 
   // Senders
   void send_con_request();
+  void send_con_setup_complete(srsue_byte_buffer_t *nas_msg);
+  void send_ul_info_transfer(uint32_t lcid, srsue_byte_buffer_t *sdu);
 
   // Parsers
   void parse_dl_ccch(srsue_byte_buffer_t *pdu);

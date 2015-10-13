@@ -46,7 +46,7 @@ ue::ue(all_args_t *args_)
   rrc_log   = new srsue::log_filter("RRC ", logger);
   nas_log   = new srsue::log_filter("NAS ", logger);
   gw_log    = new srsue::log_filter("GW  ", logger);
-  user_log  = new srsue::log_filter("USER", logger);
+  usim_log  = new srsue::log_filter("USIM", logger);
 
   radio_uhd = new srslte::radio_uhd;
   phy       = new srsue::phy;
@@ -57,7 +57,7 @@ ue::ue(all_args_t *args_)
   rrc       = new srsue::rrc;
   nas       = new srsue::nas;
   gw        = new srsue::gw;
-  user      = new srsue::user;
+  usim      = new srsue::usim;
 }
 
 ue::~ue()
@@ -71,7 +71,7 @@ ue::~ue()
   delete rrc;
   delete nas;
   delete gw;
-  delete user;
+  delete usim;
 
   delete logger;
   delete phy_log;
@@ -81,7 +81,7 @@ ue::~ue()
   delete rrc_log;
   delete nas_log;
   delete gw_log;
-  delete user_log;
+  delete usim_log;
 
   buffer_pool::cleanup();
 }
@@ -98,7 +98,7 @@ void ue::init()
   rrc_log->set_level(level(args->log.rrc_level));
   nas_log->set_level(level(args->log.nas_level));
   gw_log->set_level(level(args->log.gw_level));
-  user_log->set_level(level(args->log.user_level));
+  usim_log->set_level(level(args->log.usim_level));
 
   phy_log->set_hex_limit(args->log.phy_hex_limit);
   mac_log->set_hex_limit(args->log.mac_hex_limit);
@@ -107,7 +107,7 @@ void ue::init()
   rrc_log->set_hex_limit(args->log.rrc_hex_limit);
   nas_log->set_hex_limit(args->log.nas_hex_limit);
   gw_log->set_hex_limit(args->log.gw_hex_limit);
-  user_log->set_hex_limit(args->log.user_hex_limit);
+  usim_log->set_hex_limit(args->log.usim_hex_limit);
 
   // Set up pcap and trace
   if(args->pcap.enable)
@@ -131,8 +131,9 @@ void ue::init()
   rlc->init(pdcp, rrc, this, rlc_log);
   pdcp->init(rlc, rrc, gw, pdcp_log);
   rrc->init(phy, mac, rlc, pdcp, nas, rrc_log);
-  nas->init(rrc, nas_log);
+  nas->init(usim, rrc, nas_log);
   gw->init(pdcp, this, gw_log);
+  usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
 
   started = true;
   start();
@@ -149,6 +150,7 @@ void ue::stop()
     rrc->stop();
     nas->stop();
     gw->stop();
+    usim->stop();
 
     sleep(1);
     if(args->pcap.enable)

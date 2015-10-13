@@ -69,7 +69,7 @@
     Document Reference: 24.301 v10.2.0 Section 9.9.2.0
 *********************************************************************/
 // Defines
-#define LIBLTE_MME_ADDITIONAL_INFORMATION_MAX_N_OCTETS (LIBLTE_MAX_MSG_SIZE/2)
+#define LIBLTE_MME_ADDITIONAL_INFORMATION_MAX_N_OCTETS (LIBLTE_MAX_MSG_SIZE_BITS/2)
 // Enums
 // Structs
 typedef struct{
@@ -410,7 +410,7 @@ LIBLTE_ERROR_ENUM liblte_mme_unpack_plmn_list_ie(uint8                       **i
                         24.008 v10.2.0 Section 10.5.4.32
 *********************************************************************/
 // Defines
-#define LIBLTE_MME_MAX_N_SUPPORTED_CODECS (LIBLTE_MAX_MSG_SIZE/16)
+#define LIBLTE_MME_MAX_N_SUPPORTED_CODECS (LIBLTE_MAX_MSG_SIZE_BITS/16)
 // Enums
 // Structs
 typedef struct{

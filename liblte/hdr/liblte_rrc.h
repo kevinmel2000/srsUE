@@ -3496,6 +3496,10 @@ static const char liblte_rrc_prioritized_bit_rate_text[LIBLTE_RRC_PRIORITIZED_BI
                                                                                                              "64",      "128",      "256", "INFINITY",
                                                                                                           "SPARE",    "SPARE",    "SPARE",    "SPARE",
                                                                                                           "SPARE",    "SPARE",    "SPARE",    "SPARE"};
+static const int liblte_rrc_prioritized_bit_rate_num[LIBLTE_RRC_PRIORITIZED_BIT_RATE_N_ITEMS] = {         0 ,         8 ,        16 ,        32 ,
+                                                                                                         64 ,       128 ,       256 ,        -1 ,
+                                                                                                         -1 ,        -1 ,        -1 ,        -1 ,
+                                                                                                         -1 ,        -1 ,        -1 ,        -1 };
 typedef enum{
     LIBLTE_RRC_BUCKET_SIZE_DURATION_MS50 = 0,
     LIBLTE_RRC_BUCKET_SIZE_DURATION_MS100,

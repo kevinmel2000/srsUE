@@ -45,7 +45,7 @@
 #include "upper/rrc.h"
 #include "upper/nas.h"
 #include "upper/gw.h"
-#include "upper/user.h"
+#include "upper/usim.h"
 
 #include "common/buffer_pool.h"
 #include "common/interfaces.h"
@@ -85,7 +85,7 @@ typedef struct {
   std::string   rrc_level;
   std::string   gw_level;
   std::string   nas_level;
-  std::string   user_level;
+  std::string   usim_level;
   std::string   all_level;
   int           phy_hex_limit;
   int           mac_hex_limit;
@@ -94,16 +94,23 @@ typedef struct {
   int           rrc_hex_limit;
   int           gw_hex_limit;
   int           nas_hex_limit;
-  int           user_hex_limit;
+  int           usim_hex_limit;
   int           all_hex_limit;
   std::string   filename;
 }log_args_t;
+
+typedef struct{
+  std::string imsi;
+  std::string imei;
+  std::string k;
+}usim_args_t;
 
 typedef struct {
   rf_args_t     rf;
   pcap_args_t   pcap;
   trace_args_t  trace;
   log_args_t    log;
+  usim_args_t   usim;
 }all_args_t;
 
 /*******************************************************************************
@@ -134,7 +141,7 @@ private:
   srsue::rrc        *rrc;
   srsue::nas        *nas;
   srsue::gw         *gw;
-  srsue::user       *user;
+  srsue::usim       *usim;
 
   srsue::logger     *logger;
   srsue::log_filter *phy_log;
@@ -144,7 +151,7 @@ private:
   srsue::log_filter *rrc_log;
   srsue::log_filter *nas_log;
   srsue::log_filter *gw_log;
-  srsue::log_filter *user_log;
+  srsue::log_filter *usim_log;
 
   srsue::buffer_pool *pool;
 

@@ -25,26 +25,36 @@
  *
  */
 
-#ifndef USER_H
-#define USER_H
+#ifndef USIM_H
+#define USIM_H
 
+#include <string>
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
 
 namespace srsue {
 
-class user
+class usim
+    :public usim_interface_nas
 {
 public:
-  user();
-  void init(srslte::log *user_log_);
+  usim();
+  void init(std::string imsi_, std::string imei_, std::string k_, srslte::log *usim_log_);
+  void stop();
+
+  // NAS interface
+  void get_imsi_vec(uint8_t* imsi_, uint32_t n);
 
 private:
-  srslte::log *user_log;
+  srslte::log *usim_log;
+  uint64_t imsi;
+  uint64_t imei;
+  uint8_t  k[16];
+
 };
 
 } // namespace srsue
 
 
-#endif // USER_H
+#endif // USIM_H

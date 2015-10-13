@@ -107,6 +107,7 @@ private:
 
   bool                poll_received;
   bool                do_status;
+  rlc_status_pdu_t    status;
 
   /****************************************************************************
    * Configurable parameters
@@ -162,6 +163,7 @@ private:
   // Helpers
   bool poll_required();
 
+  int  prepare_status();
   int  build_status_pdu(uint8_t *payload, uint32_t nof_bytes);
   int  build_retx_pdu(uint8_t *payload, uint32_t nof_bytes);
   int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);

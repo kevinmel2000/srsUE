@@ -124,13 +124,34 @@ void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
 /*******************************************************************************
   RRC interface
 *******************************************************************************/
+void rlc::add_bearer(uint32_t lcid)
+{
+  // No config provided - use defaults for lcid
+  LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
+  if(SRSUE_RB_ID_SRB1 == lcid || SRSUE_RB_ID_SRB2 == lcid)
+  {
+    cnfg.rlc_mode                     = LIBLTE_RRC_RLC_MODE_AM;
+    cnfg.ul_am_rlc.t_poll_retx        = LIBLTE_RRC_T_POLL_RETRANSMIT_MS45;
+    cnfg.ul_am_rlc.poll_pdu           = LIBLTE_RRC_POLL_PDU_INFINITY;
+    cnfg.ul_am_rlc.poll_byte          = LIBLTE_RRC_POLL_BYTE_INFINITY;
+    cnfg.ul_am_rlc.max_retx_thresh    = LIBLTE_RRC_MAX_RETX_THRESHOLD_T4;
+    cnfg.dl_am_rlc.t_reordering       = LIBLTE_RRC_T_REORDERING_MS35;
+    cnfg.dl_am_rlc.t_status_prohibit  = LIBLTE_RRC_T_STATUS_PROHIBIT_MS0;
+    add_bearer(lcid, &cnfg);
+  }else{
+    rlc_log->error("Radio bearer %s does not support default RLC configuration.",
+                   srsue_rb_id_text[lcid]);
+  }
+}
+
 void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
-    rlc_log->error("Radio bearer id must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
+    rlc_log->error("Radio bearer id must be in [0:%d] - %d\n", SRSUE_N_RADIO_BEARERS, lcid);
     return;
   }else{
-    rlc_log->info("Adding radio bearer %s", srsue_rb_id_text[lcid]);
+    rlc_log->info("Adding radio bearer %s with mode %s\n",
+                  srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode]);
   }
 
   switch(cnfg->rlc_mode)
@@ -148,7 +169,7 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     rlc_array[lcid] = new rlc_um;
     break;
   default:
-    rlc_log->error("Cannot add RLC entity - invalid mode");
+    rlc_log->error("Cannot add RLC entity - invalid mode\n");
     return;
   }
   rlc_array[lcid]->init(rlc_log, lcid, pdcp, rrc);

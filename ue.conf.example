@@ -16,7 +16,11 @@ radio_filename = /tmp/ue.radio_trace
 [log]
 rlc_level = debug
 rrc_level = debug
-mac_level = debug
 all_level = info
 all_hex_limit = -1
 filename = /tmp/ue.log
+
+[usim]
+imsi = 001010123456789
+imei = 353490069873319
+k    = 00112233445566778899aabbccddeeff

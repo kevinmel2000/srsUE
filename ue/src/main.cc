@@ -93,13 +93,17 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         ("log.gw_hex_limit",  bpo::value<int>(&args->log.gw_hex_limit),   "GW log hex dump limit")
         ("log.nas_level",     bpo::value<string>(&args->log.nas_level),   "NAS log level")
         ("log.nas_hex_limit", bpo::value<int>(&args->log.nas_hex_limit),  "NAS log hex dump limit")
-        ("log.user_level",    bpo::value<string>(&args->log.user_level),  "USER log level")
-        ("log.user_hex_limit",bpo::value<int>(&args->log.user_hex_limit), "USER log hex dump limit")
+        ("log.usim_level",    bpo::value<string>(&args->log.usim_level),  "USIM log level")
+        ("log.usim_hex_limit",bpo::value<int>(&args->log.usim_hex_limit), "USIM log hex dump limit")
 
         ("log.all_level",     bpo::value<string>(&args->log.all_level)->default_value("info"),   "ALL log level")
         ("log.all_hex_limit", bpo::value<int>(&args->log.all_hex_limit)->default_value(32),  "ALL log hex dump limit")
 
         ("log.filename",      bpo::value<string>(&args->log.filename)->default_value("/tmp/ue.log"),"Log filename")
+
+        ("usim.imsi",         bpo::value<string>(&args->usim.imsi),        "USIM IMSI")
+        ("usim.imei",         bpo::value<string>(&args->usim.imei),        "USIM IMEI")
+        ("usim.k",            bpo::value<string>(&args->usim.k),           "USIM K")
     ;
 
     // Positional options - config file location
@@ -171,8 +175,8 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
       if(!vm.count("log.gw_level")) {
         args->log.gw_level = args->log.all_level;
       }
-      if(!vm.count("log.user_level")) {
-        args->log.user_level = args->log.all_level;
+      if(!vm.count("log.usim_level")) {
+        args->log.usim_level = args->log.all_level;
       }
     }
 
@@ -199,8 +203,8 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
       if(!vm.count("log.gw_hex_limit")) {
         args->log.gw_hex_limit = args->log.all_hex_limit;
       }
-      if(!vm.count("log.user_hex_limit")) {
-        args->log.user_hex_limit = args->log.all_hex_limit;
+      if(!vm.count("log.usim_hex_limit")) {
+        args->log.usim_hex_limit = args->log.all_hex_limit;
       }
     }
 }

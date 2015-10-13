@@ -48,6 +48,13 @@ public:
   virtual void notify() = 0;
 };
 
+// USIM interface for NAS
+class usim_interface_nas
+{
+public:
+  virtual void get_imsi_vec(uint8* imsi, uint32 n) = 0;
+};
+
 // GW interface for PDCP
 class gw_interface_pdcp
 {
@@ -59,14 +66,15 @@ public:
 class nas_interface_rrc
 {
 public:
-  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void notify_connection_setup() = 0;
+  virtual void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu) = 0;
 };
 
 // RRC interface for NAS
 class rrc_interface_nas
 {
 public:
-  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu) = 0;
 };
 
 // RRC interface for PDCP
@@ -114,6 +122,7 @@ public:
 class rlc_interface_rrc
 {
 public:
+  virtual void add_bearer(uint32_t lcid) = 0;
   virtual void add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 };
 
