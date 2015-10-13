@@ -17,6 +17,14 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-include_directories(${CMAKE_SOURCE_DIR}/liblte/hdr)
-#add_executable(rlc_test rlc_test.cc)
-#target_link_libraries(rlc_test srsue_common srsue_rlc srsue_mac srsue_phy srsue_radio lte)
+add_executable(rlc_am_data_test rlc_am_data_test.cc)
+target_link_libraries(rlc_am_data_test srsue_upper)
+add_test(rlc_am_data_test rlc_am_data_test)
+
+add_executable(rlc_am_control_test rlc_am_control_test.cc)
+target_link_libraries(rlc_am_control_test srsue_upper)
+add_test(rlc_am_control_test rlc_am_control_test)
+
+add_executable(rlc_am_test rlc_am_test.cc)
+target_link_libraries(rlc_am_test srsue_upper)
+add_test(rlc_am_test rlc_am_test)

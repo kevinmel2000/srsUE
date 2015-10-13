@@ -32,12 +32,19 @@ using namespace srslte;
 namespace srsue{
 
 rlc_tm::rlc_tm()
-{}
+{
+  pool = buffer_pool::get_instance();
+}
 
-void rlc_tm::init(srslte::log *log_, uint32_t lcid_)
+void rlc_tm::init(srslte::log        *log_,
+                  uint32_t            lcid_,
+                  pdcp_interface_rlc *pdcp_,
+                  rrc_interface_rlc  *rrc_)
 {
   log  = log_;
   lcid = lcid_;
+  pdcp = pdcp_;
+  rrc  = rrc_;
 }
 
 void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -45,7 +52,7 @@ void rlc_tm::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   log->error("Attempted to configure TM RLC entity");
 }
 
-RLC_MODE_ENUM rlc_tm::get_mode()
+rlc_mode_t rlc_tm::get_mode()
 {
   return RLC_MODE_TM;
 }
@@ -61,9 +68,15 @@ void rlc_tm::write_sdu(srsue_byte_buffer_t *sdu)
   ul_queue.write(sdu);
 }
 
-bool rlc_tm::try_read_sdu(srsue_byte_buffer_t *sdu)
+bool rlc_tm::read_sdu()
 {
-  return dl_queue.try_read(sdu);
+  srsue_byte_buffer_t *sdu;
+  if(dl_queue.try_read(&sdu))
+  {
+    pdcp->write_pdu(lcid, sdu);
+    return true;
+  }
+  return false;
 }
 
 // MAC interface
@@ -81,14 +94,21 @@ int rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
     return 0;
   }
 
-  pdu_size = ul_queue.read(payload);
+  srsue_byte_buffer_t *buf;
+  ul_queue.read(&buf);
+  pdu_size = buf->N_bytes;
+  memcpy(payload, buf->msg, buf->N_bytes);
+  pool->deallocate(buf);
   log->info_hex(payload, pdu_size, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
   return pdu_size;
 }
 
 void rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  dl_queue.write(payload, nof_bytes);
+  srsue_byte_buffer_t *buf = pool->allocate();
+  memcpy(buf->msg, payload, nof_bytes);
+  buf->N_bytes = nof_bytes;
+  dl_queue.write(buf);
 }
 
 } // namespace srsue

@@ -30,6 +30,7 @@
 
 #include "pthread.h"
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -57,6 +58,7 @@ static const char rrc_state_text[RRC_STATE_N_ITEMS][100] = {"IDLE",
 class rrc
     :public rrc_interface_nas
     ,public rrc_interface_pdcp
+    ,public rrc_interface_rlc
 {
 public:
   rrc();
@@ -69,6 +71,7 @@ public:
   void stop();
 
 private:
+  buffer_pool           *pool;
   srslte::log           *rrc_log;
   phy_interface_rrc     *phy;
   mac_interface_rrc     *mac;
@@ -76,8 +79,6 @@ private:
   pdcp_interface_rrc    *pdcp;
   nas_interface_rrc     *nas;
 
-  srsue_byte_buffer_t   pdcp_buf;
-  srsue_byte_buffer_t   nas_buf;
   srsue_bit_buffer_t    bit_buf;
 
   rrc_state_t           state;
@@ -93,6 +94,9 @@ private:
   void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
   void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu);
+
+  // RLC interface
+  void max_retx_attempted();
 
   // Senders
   void send_con_request();

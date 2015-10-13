@@ -37,18 +37,27 @@ namespace srsue{
 rlc::rlc()
   :bcch_bch_queue(2)
   ,bcch_dlsch_queue(2)
-{}
+{
+  pool = buffer_pool::get_instance();
+}
 
 void rlc::init(pdcp_interface_rlc *pdcp_,
-               ue_interface *ue_,
-               srslte::log *rlc_log_)
+               rrc_interface_rlc  *rrc_,
+               ue_interface       *ue_,
+               srslte::log        *rlc_log_)
 {
   pdcp    = pdcp_;
+  rrc     = rrc_;
   ue      = ue_;
   rlc_log = rlc_log_;
 
+  for(uint32_t i=0;i<SRSUE_N_RADIO_BEARERS;i++)
+  {
+    rlc_array[i] = NULL;
+  }
+
   rlc_array[0] = new rlc_tm;
-  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0); // SRB0
+  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0, pdcp, rrc); // SRB0
 }
 
 void rlc::stop()
@@ -95,14 +104,20 @@ void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
 {
   rlc_log->info_hex(payload, nof_bytes, "BCCH BCH message received.");
-  bcch_bch_queue.write(payload, nof_bytes);
+  srsue_byte_buffer_t *buf = pool->allocate();
+  memcpy(buf->msg, payload, nof_bytes);
+  buf->N_bytes = nof_bytes;
+  bcch_bch_queue.write(buf);
   ue->notify();
 }
 
 void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
 {
   rlc_log->info_hex(payload, nof_bytes, "BCCH DLSCH message received.");
-  bcch_dlsch_queue.write(payload, nof_bytes);
+  srsue_byte_buffer_t *buf = pool->allocate();
+  memcpy(buf->msg, payload, nof_bytes);
+  buf->N_bytes = nof_bytes;
+  bcch_dlsch_queue.write(buf);
   ue->notify();
 }
 
@@ -114,6 +129,8 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     rlc_log->error("Radio bearer id must be in [0:%d] - %d", SRSUE_N_RADIO_BEARERS, lcid);
     return;
+  }else{
+    rlc_log->info("Adding radio bearer %s", srsue_rb_id_text[lcid]);
   }
 
   switch(cnfg->rlc_mode)
@@ -134,7 +151,7 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     rlc_log->error("Cannot add RLC entity - invalid mode");
     return;
   }
-  rlc_array[lcid]->init(rlc_log, lcid);
+  rlc_array[lcid]->init(rlc_log, lcid, pdcp, rrc);
   if(cnfg)
     rlc_array[lcid]->configure(cnfg);
 
@@ -151,25 +168,24 @@ bool rlc::check_retx_buffers()
 bool rlc::check_dl_buffers()
 {
   bool ret = false;
+  srsue_byte_buffer_t *buf;
 
-  if(bcch_bch_queue.try_read(&mac_buf))
+  if(bcch_bch_queue.try_read(&buf))
   {
-    pdcp->write_pdu_bcch_bch(&mac_buf);
+    pdcp->write_pdu_bcch_bch(buf);
     ret = true;
   }
-  if(bcch_dlsch_queue.try_read(&mac_buf))
+  if(bcch_dlsch_queue.try_read(&buf))
   {
-    pdcp->write_pdu_bcch_dlsch(&mac_buf);
+    pdcp->write_pdu_bcch_dlsch(buf);
     ret = true;
   }
   for(uint32_t i=0;i<SRSUE_N_RADIO_BEARERS;i++)
   {
     if(valid_lcid(i))
     {
-      if(rlc_array[i]->try_read_sdu(&mac_buf))
-      {
-        pdcp->write_pdu(i, &mac_buf);
-      }
+      if(rlc_array[i]->read_sdu())
+        ret = true;
     }
   }
 

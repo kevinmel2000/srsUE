@@ -14,6 +14,7 @@ phy_filename = /tmp/ue.phy_trace
 radio_filename = /tmp/ue.radio_trace
 
 [log]
+rlc_level = debug
 rrc_level = debug
 mac_level = debug
 all_level = info

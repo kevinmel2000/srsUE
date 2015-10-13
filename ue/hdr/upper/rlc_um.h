@@ -40,15 +40,18 @@ class rlc_um
 {
 public:
   rlc_um();
-  void init(srslte::log *rlc_entity_log_, uint32_t lcid_);
+  void init(srslte::log        *rlc_entity_log_,
+            uint32_t            lcid_,
+            pdcp_interface_rlc *pdcp_,
+            rrc_interface_rlc  *rcc_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
-  RLC_MODE_ENUM get_mode();
+  rlc_mode_t    get_mode();
   uint32_t      get_bearer();
 
   // PDCP interface
   void write_sdu(srsue_byte_buffer_t *sdu);
-  bool try_read_sdu(srsue_byte_buffer_t *sdu);
+  bool read_sdu();
 
   // MAC interface
   uint32_t get_buffer_state();
@@ -57,8 +60,10 @@ public:
 
 private:
 
-  srslte::log *log;
-  uint32_t     lcid;
+  srslte::log        *log;
+  uint32_t            lcid;
+  pdcp_interface_rlc *pdcp;
+  rrc_interface_rlc  *rrc;
 
   // Thread-safe queues for MAC messages
   msg_queue    pdu_queue;

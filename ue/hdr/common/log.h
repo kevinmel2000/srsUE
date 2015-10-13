@@ -94,16 +94,16 @@ public:
   virtual void debug(std::string message, ...)   = 0;
 
   // Same with hex dump
-  virtual void error_hex(uint8_t *hex, int size, std::string message, ...){error("error_hex not implemented.");}
-  virtual void warning_hex(uint8_t *hex, int size, std::string message, ...){error("warning_hex not implemented.");}
-  virtual void info_hex(uint8_t *hex, int size, std::string message, ...){error("info_hex not implemented.");}
-  virtual void debug_hex(uint8_t *hex, int size, std::string message, ...){error("debug_hex not implemented.");}
+  virtual void error_hex(uint8_t *hex, int size, std::string message, ...){error("error_hex not implemented.\n");}
+  virtual void warning_hex(uint8_t *hex, int size, std::string message, ...){error("warning_hex not implemented.\n");}
+  virtual void info_hex(uint8_t *hex, int size, std::string message, ...){error("info_hex not implemented.\n");}
+  virtual void debug_hex(uint8_t *hex, int size, std::string message, ...){error("debug_hex not implemented.\n");}
 
   // Same with line and file info
-  virtual void error_line(std::string file, int line, std::string message, ...){error("error_line not implemented.");}
-  virtual void warning_line(std::string file, int line, std::string message, ...){error("warning_line not implemented.");}
-  virtual void info_line(std::string file, int line, std::string message, ...){error("info_line not implemented.");}
-  virtual void debug_line(std::string file, int line, std::string message, ...){error("debug_line not implemented.");}
+  virtual void error_line(std::string file, int line, std::string message, ...){error("error_line not implemented.\n");}
+  virtual void warning_line(std::string file, int line, std::string message, ...){error("warning_line not implemented.\n");}
+  virtual void info_line(std::string file, int line, std::string message, ...){error("info_line not implemented.\n");}
+  virtual void debug_line(std::string file, int line, std::string message, ...){error("debug_line not implemented.\n");}
 
 protected:
   std::string get_service_name() { return service_name; }

@@ -28,6 +28,7 @@
 #ifndef RLC_H
 #define RLC_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -36,6 +37,12 @@
 
 namespace srsue {
 
+/****************************************************************************
+ * RLC Layer
+ * Ref: 3GPP TS 36.322 v10.0.0
+ * Single interface for RLC layer - contains separate RLC entities for
+ * each bearer.
+ ***************************************************************************/
 class rlc
     :public rlc_interface_mac
     ,public rlc_interface_pdcp
@@ -44,8 +51,9 @@ class rlc
 public:
   rlc();
   void init(pdcp_interface_rlc *pdcp_,
-            ue_interface *ue_,
-            srslte::log *rlc_log_);
+            rrc_interface_rlc  *rrc_,
+            ue_interface       *ue_,
+            srslte::log        *rlc_log_);
   void stop();
 
   // PDCP interface
@@ -66,12 +74,12 @@ public:
   bool check_dl_buffers();
 
 private:
+  buffer_pool        *pool;
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
+  rrc_interface_rlc  *rrc;
   ue_interface       *ue;
   rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
-
-  srsue_byte_buffer_t mac_buf;
 
   // Thread-safe queues for MAC messages
   msg_queue           bcch_bch_queue;

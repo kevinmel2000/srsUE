@@ -28,6 +28,7 @@
 #ifndef PDCP_ENTITY_H
 #define PDCP_ENTITY_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
@@ -52,6 +53,7 @@ public:
   void write_pdu(srsue_byte_buffer_t *pdu);
 
 private:
+  buffer_pool        *pool;
   srslte::log        *log;
   rlc_interface_pdcp *rlc;
   rrc_interface_pdcp *rrc;

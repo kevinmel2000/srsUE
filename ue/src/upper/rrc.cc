@@ -45,6 +45,7 @@ void rrc::init(phy_interface_rrc     *phy_,
                nas_interface_rrc     *nas_,
                srslte::log           *rrc_log_)
 {
+  pool    = buffer_pool::get_instance();
   phy     = phy_;
   mac     = mac_;
   rlc     = rlc_;
@@ -86,6 +87,7 @@ void rrc::write_pdu_bcch_bch(srsue_byte_buffer_t *pdu)
   rrc_log->info_hex(pdu->msg, pdu->N_bytes, "BCCH BCH message received.");
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
   bit_buf.N_bits = pdu->N_bytes*8;
+  pool->deallocate(pdu);
   liblte_rrc_unpack_bcch_bch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &mib);
   rrc_log->info("MIB received BW=%s MHz\n", liblte_rrc_dl_bandwidth_text[mib.dl_bw]);
 
@@ -100,6 +102,7 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
   LIBLTE_RRC_BCCH_DLSCH_MSG_STRUCT dlsch_msg;
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
   bit_buf.N_bits = pdu->N_bytes*8;
+  pool->deallocate(pdu);
   liblte_rrc_unpack_bcch_dlsch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dlsch_msg);
 
   if (dlsch_msg.N_sibs > 0) {
@@ -128,6 +131,15 @@ void rrc::write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu)
 }
 
 /*******************************************************************************
+  RLC interface
+*******************************************************************************/
+
+void rrc::max_retx_attempted()
+{
+  //TODO: Handle the radio link failure
+}
+
+/*******************************************************************************
   Senders
 *******************************************************************************/
 
@@ -148,22 +160,23 @@ void rrc::send_con_request()
       bit_buf.msg[bit_buf.N_bits + i] = 0;
     bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
   }
-  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf.msg, bit_buf.N_bits);
-  pdcp_buf.N_bytes = bit_buf.N_bits/8;
+  srsue_byte_buffer_t *pdcp_buf = pool->allocate();
+  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf->msg, bit_buf.N_bits);
+  pdcp_buf->N_bytes = bit_buf.N_bits/8;
 
   // Set UE contention resolution ID in MAC
   uint64_t uecri=0;
   uint8_t *ue_cri_ptr = (uint8_t*) &uecri;
   uint32_t nbytes = 6;
   for (int i=0;i<nbytes;i++) {
-    ue_cri_ptr[nbytes-i-1] = pdcp_buf.msg[i];
+    ue_cri_ptr[nbytes-i-1] = pdcp_buf->msg[i];
   }
   rrc_log->debug("Setting UE contention resolution ID: %d\n", uecri);
   mac->set_param(srsue::mac_interface_params::CONTENTION_ID, uecri);
 
   rrc_log->info("Sending RRC Connection Request on SRB0\n");
   state = RRC_STATE_WAIT_FOR_CON_SETUP;
-  pdcp->write_sdu(SRSUE_RB_ID_SRB0, &pdcp_buf);
+  pdcp->write_sdu(SRSUE_RB_ID_SRB0, pdcp_buf);
 }
 
 /*******************************************************************************
@@ -175,6 +188,7 @@ void rrc::parse_dl_ccch(srsue_byte_buffer_t *pdu)
   LIBLTE_RRC_DL_CCCH_MSG_STRUCT dl_ccch_msg;
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
   bit_buf.N_bits = pdu->N_bytes*8;
+  pool->deallocate(pdu);
   liblte_rrc_unpack_dl_ccch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dl_ccch_msg);
 
   switch(dl_ccch_msg.msg_type)
@@ -597,6 +611,8 @@ void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
       priority = 3;
   }
   mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, -1, -1);
+
+  rrc_log->info("Added radio bearer %s", srsue_rb_id_text[srb_cnfg->srb_id]);
 }
 
 void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)

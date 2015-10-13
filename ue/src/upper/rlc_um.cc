@@ -34,10 +34,15 @@ namespace srsue{
 rlc_um::rlc_um()
 {}
 
-void rlc_um::init(srslte::log *log_, uint32_t lcid_)
+void rlc_um::init(srslte::log        *log_,
+                  uint32_t            lcid_,
+                  pdcp_interface_rlc *pdcp_,
+                  rrc_interface_rlc  *rrc_)
 {
   log  = log_;
   lcid = lcid_;
+  pdcp = pdcp_;
+  rrc  = rrc_;
 }
 
 void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -45,7 +50,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   //TODO
 }
 
-RLC_MODE_ENUM rlc_um::get_mode()
+rlc_mode_t rlc_um::get_mode()
 {
   return RLC_MODE_UM;
 }
@@ -57,7 +62,7 @@ uint32_t rlc_um::get_bearer()
 
 // PDCP interface
 void rlc_um::write_sdu(srsue_byte_buffer_t *sdu){}
-bool rlc_um::try_read_sdu(srsue_byte_buffer_t *sdu){}
+bool rlc_um::read_sdu(){}
 
 // MAC interface
 uint32_t rlc_um::get_buffer_state(){return 0;}

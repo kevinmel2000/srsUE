@@ -36,6 +36,8 @@ ue::ue(all_args_t *args_)
     ,started(false)
     ,have_data(false)
 {
+  pool      = buffer_pool::get_instance();
+
   logger    = new srsue::logger(args_->log.filename);
   phy_log   = new srsue::log_filter("PHY ", logger);
   mac_log   = new srsue::log_filter("MAC ", logger);
@@ -80,6 +82,8 @@ ue::~ue()
   delete nas_log;
   delete gw_log;
   delete user_log;
+
+  buffer_pool::cleanup();
 }
 
 void ue::init()
@@ -124,7 +128,7 @@ void ue::init()
   radio_uhd->set_tx_freq(args->rf.ul_freq);
   phy->init_agc(radio_uhd, mac, phy_log);
   mac->init(phy, rlc, mac_log);
-  rlc->init(pdcp, this, rlc_log);
+  rlc->init(pdcp, rrc, this, rlc_log);
   pdcp->init(rlc, rrc, gw, pdcp_log);
   rrc->init(phy, mac, rlc, pdcp, nas, rrc_log);
   nas->init(rrc, nas_log);
