@@ -147,6 +147,7 @@ bool phch_recv::cell_search(int force_N_id_2)
   srslte_ue_cellsearch_set_threshold(&cs, (float) 
     worker_com->params_db->get_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD)/10);
 
+  radio_h->set_master_clock_rate(30.72e6);
   radio_h->set_rx_srate(1920000.0);
   radio_h->start_rx();
   

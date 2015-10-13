@@ -64,7 +64,8 @@ bool ra_proc::init(phy_interface* phy_h_, srslte::log* log_h_, mac_params* param
 }
 
 void ra_proc::reset() {
-  state = IDLE;   
+  state = IDLE;
+  msg3_transmitted = false;
 }
 
 void ra_proc::start_pcap(mac_pcap* pcap_)
@@ -186,6 +187,7 @@ void ra_proc::step_initialization() {
 
 void ra_proc::step_resource_selection() {
   ra_group_t sel_group; 
+
   if (preambleIndex > 0) {
     // Preamble is chosen by Higher layers (ie Network)
     sel_maskIndex = maskIndex;
