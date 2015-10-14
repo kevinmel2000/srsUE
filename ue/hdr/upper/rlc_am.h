@@ -35,7 +35,6 @@
 #include "common/timeout.h"
 #include "upper/rlc_entity.h"
 #include <boost/thread/mutex.hpp>
-#include <boost/circular_buffer.hpp>
 #include <map>
 #include <queue>
 
@@ -114,13 +113,13 @@ private:
    * Ref: 3GPP TS 36.322 v10.0.0 Section 7
    ***************************************************************************/
 
-  // UL configs
+  // TX configs
   int32_t    t_poll_retx;      // Poll retx timeout (ms)
   int32_t    poll_pdu;         // Insert poll bit after this many PDUs
   int32_t    poll_byte;        // Insert poll bit after this much data (KB)
   int32_t    max_retx_thresh;  // Max number of retx
 
-  // DL configs
+  // RX configs
   int32_t   t_reordering;       // Timer used by rx to detect PDU loss  (ms)
   int32_t   t_status_prohibit;  // Timer used by rx to prohibit tx of status PDU (ms)
 

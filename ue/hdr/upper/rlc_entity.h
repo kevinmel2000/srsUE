@@ -42,7 +42,6 @@ namespace srsue {
  ***************************************************************************/
 
 #define RLC_AM_WINDOW_SIZE  512
-#define RLC_COUNTER_MOD     1024
 
 typedef enum{
   RLC_MODE_TM = 0,
@@ -84,9 +83,11 @@ static const uint16_t rlc_umd_sn_size_num[RLC_UMD_SN_SIZE_N_ITEMS][20]  = {5, 10
 
 // UMD PDU Header
 typedef struct{
-  rlc_fi_field_t    fi;       // Framing info
-  rlc_umd_sn_size_t sn_size;  // Sequence number size (5 or 10 bits)
-  uint16_t          sn;       // Sequence number
+  rlc_fi_field_t    fi;                     // Framing info
+  rlc_umd_sn_size_t sn_size;                // Sequence number size (5 or 10 bits)
+  uint16_t          sn;                     // Sequence number
+  uint32_t          N_li;                   // Number of length indicators
+  uint16_t          li[RLC_AM_WINDOW_SIZE]; // Array of length indicators
 }rlc_umd_pdu_header_t;
 
 // AMD PDU Header

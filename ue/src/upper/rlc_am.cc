@@ -27,6 +27,8 @@
 
 #include "upper/rlc_am.h"
 
+#define MOD 1024
+
 using namespace srslte;
 
 namespace srsue{
@@ -129,21 +131,29 @@ uint32_t rlc_am::get_buffer_state()
   if(do_status && !status_prohibited())
     return prepare_status();
 
-  // TODO: Bytes needed for retx
+  // Bytes needed for retx
+  if(retx_queue.size() > 0)
+    return tx_window[retx_queue.front()].buf->N_bytes;
 
-  // Bytes needed for tx PDUs
-  uint32_t n_pdus  = tx_sdu_queue.size();
+  // Bytes needed for tx SDUs
+  uint32_t n_sdus  = tx_sdu_queue.size();
   uint32_t n_bytes = tx_sdu_queue.size_bytes();
 
-  if(n_pdus > 1)
-  {
-    n_bytes += (n_pdus*1.5)+0.5; // More room for header extensions (integer rounding)
-  }
   if(tx_sdu)
+  {
+    n_sdus++;
     n_bytes += tx_sdu->N_bytes;
+  }
 
+  // Room needed for header extensions? (integer rounding)
+  if(n_sdus > 1)
+  {
+    n_bytes += (n_sdus*1.5)+0.5;
+  }
+
+  // Room needed for fixed header?
   if(n_bytes > 0)
-    n_bytes += 2; // Make room for fixed header
+    n_bytes += 2;
 
   return n_bytes;
 }
@@ -186,6 +196,8 @@ void rlc_am::timeout_expired(uint32_t timeout_id)
 {
   if(reordering_timeout_id == timeout_id)
   {
+    boost::lock_guard<boost::mutex> lock(mutex);
+
     // 36.322 v10 Section 5.1.3.2.4
     log->debug("%s reordering timeout expiry - updating vr_ms", srsue_rb_id_text[lcid]);
 
@@ -193,15 +205,17 @@ void rlc_am::timeout_expired(uint32_t timeout_id)
     std::map<uint32_t, rlc_amd_rx_pdu_t>::iterator it = rx_window.find(vr_ms);
     while(rx_window.end() != it && it->second.pdu_complete)
     {
-      vr_ms = (vr_ms + 1)%RLC_COUNTER_MOD;
+      vr_ms = (vr_ms + 1)%MOD;
       it = rx_window.find(vr_ms);
     }
     if(poll_received)
       do_status = true;
 
-    if(vr_h > vr_ms)
+    if((vr_h-vr_r)%MOD > (vr_ms-vr_r)%MOD)
     {
-      reordering_timeout.start(t_reordering, reordering_timeout_id, this);
+      if(t_reordering > 0)
+        reordering_timeout.start(t_reordering, reordering_timeout_id, this);
+      vr_x = vr_h;
     }
 
     debug_state();
@@ -243,11 +257,11 @@ int rlc_am::prepare_status()
   status.ack_sn = vr_ms;
 
   uint32_t i = vr_r;
-  while(i < vr_ms)
+  while((i-vr_r)%MOD < (vr_ms-vr_r)%MOD)
   {
     if(rx_window.find(i) == rx_window.end())
       status.nack_sn[status.N_nack++] = i;
-    i = (i + 1)%RLC_COUNTER_MOD;
+    i = (i + 1)%MOD;
   }
 
   return rlc_am_packed_length(&status);
@@ -398,7 +412,7 @@ int  rlc_am::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
 
   // Set SN
   header.sn = vt_s;
-  vt_s = (vt_s + 1)%RLC_COUNTER_MOD;
+  vt_s = (vt_s + 1)%MOD;
 
   // Add header, place PDU in tx_window and TX
   rlc_am_write_data_pdu_header(&header, pdu);
@@ -421,7 +435,8 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d",
                 srsue_rb_id_text[lcid], header.sn);
 
-  if(header.sn > vr_mr || header.sn < vr_r)
+  if((header.sn-vr_r)%MOD > (vr_mr-vr_r)%MOD ||
+     (header.sn-vr_r)%MOD < (vr_r-vr_r)%MOD)
   {
     log->info("%s SN: %d outside rx window [%d:%d] - discarding\n",
               srsue_rb_id_text[lcid], header.sn, vr_r, vr_mr);
@@ -450,14 +465,14 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   rx_window[header.sn] = pdu;
 
   // Update vr_h
-  if(header.sn >= vr_h)
-    vr_h  = (header.sn + 1)%RLC_COUNTER_MOD;
+  if((header.sn-vr_r)%MOD >= (vr_h-vr_r)%MOD)
+    vr_h  = (header.sn + 1)%MOD;
 
   // Update vr_ms
   it = rx_window.find(vr_ms);
   while(rx_window.end() != it && it->second.pdu_complete)
   {
-    vr_ms = (vr_ms + 1)%RLC_COUNTER_MOD;
+    vr_ms = (vr_ms + 1)%MOD;
     it = rx_window.find(vr_ms);
   }
 
@@ -468,8 +483,11 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
     poll_received = true;
 
     // 36.322 v10 Section 5.2.3
-    if(header.sn < vr_ms || header.sn >= vr_mr)
+    if((header.sn-vr_r)%MOD < (vr_ms-vr_r)%MOD ||
+       (header.sn-vr_r)%MOD >= (vr_mr-vr_r)%MOD)
+    {
       do_status = true;
+    }
     // else delay for reordering timer
   }
 
@@ -492,7 +510,9 @@ void rlc_am::handle_control_pdu(uint8_t *payload, uint32_t nof_bytes)
 
   // Handle ACKs and NACKs
   bool update_vt_a = true;
-  for(int i=vt_a; i<status.ack_sn && i<vt_s; i++)
+  uint32_t i = vt_a;
+  while((i-vt_a)%MOD < (status.ack_sn-vt_a)%MOD &&
+        (i-vt_a)%MOD < (vt_s-vt_a)%MOD)
   {
     std::map<uint32_t, rlc_amd_tx_pdu_t>::iterator it;
     if(rlc_am_status_has_nack(&status, i))
@@ -513,11 +533,12 @@ void rlc_am::handle_control_pdu(uint8_t *payload, uint32_t nof_bytes)
         {
           pool->deallocate(tx_window[i].buf);
           tx_window.erase(i);
-          vt_a = (vt_a + 1)%RLC_COUNTER_MOD;
-          vt_ms = (vt_ms + 1)%RLC_COUNTER_MOD;
+          vt_a = (vt_a + 1)%MOD;
+          vt_ms = (vt_ms + 1)%MOD;
         }
       }
     }
+    i = (i+1)%MOD;
   }
 
   debug_state();
@@ -555,19 +576,26 @@ void rlc_am::reassemble_rx_sdus()
     // Move the rx_window
     pool->deallocate(rx_window[vr_r].buf);
     rx_window.erase(vr_r);
-    vr_r = (vr_r + 1)%RLC_COUNTER_MOD;
-    vr_mr = (vr_mr + 1)%RLC_COUNTER_MOD;
+    vr_r = (vr_r + 1)%MOD;
+    vr_mr = (vr_mr + 1)%MOD;
   }
 
-  // Update reordering variables and timers
+  // Update reordering variables and timers (36.322 v10.0.0 Section 5.1.3.2.3)
   if(reordering_timeout.is_running())
   {
-    if(vr_x == vr_r || vr_x < vr_r || vr_x > vr_mr)
+    if(
+       vr_x == vr_r ||
+       ((vr_x-vr_r)%MOD < (vr_r-vr_r)%MOD ||
+       (vr_x-vr_r)%MOD > (vr_mr-vr_r)%MOD &&
+        vr_x != vr_mr)
+       )
+    {
       reordering_timeout.reset();
+    }
   }
   if(!reordering_timeout.is_running())
   {
-    if(vr_h > vr_r)
+    if((vr_h-vr_r)%MOD > (vr_r-vr_r)%MOD)
     {
       if(t_reordering > 0)
         reordering_timeout.start(t_reordering, reordering_timeout_id, this);
