@@ -52,8 +52,10 @@ class timeout
 {
 public:
   timeout():running(false),callback(NULL){}
-  void start(uint32_t duration_msec_, uint32_t timeout_id_=0,timeout_callback *callback_=NULL)
+  void start(int duration_msec_, uint32_t timeout_id_=0,timeout_callback *callback_=NULL)
   {
+    if(duration_msec_ < 0)
+      return;
     reset();
     stop_time     = boost::posix_time::microsec_clock::local_time() + boost::posix_time::milliseconds(duration_msec_);
     running       = true;

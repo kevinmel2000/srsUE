@@ -36,14 +36,9 @@
 #ifndef LOGSTDOUT_H
 #define LOGSTDOUT_H
 
-#include <stdint.h>
-#include <string>
 #include <stdarg.h>
-
-#include "common/log.h"
-
-
-using namespace std; 
+#include <string>
+#include <common/log.h>
 
 namespace srslte {
   
@@ -51,25 +46,34 @@ class log_stdout : public log
 {
 public:
 
-  log_stdout(string service_name_) : log(service_name_) { }
+  log_stdout(std::string service_name_) : log(service_name_) { }
   
-  void error(string message, ...);
-  void warning(string message, ...);
-  void info(string message, ...);   
-  void debug(string message, ...);  
-  
+  void error(std::string message, ...);
+  void warning(std::string message, ...);
+  void info(std::string message, ...);
+  void debug(std::string message, ...);
+
+  // Same with hex dump
+  void error_hex(uint8_t *hex, int size, std::string message, ...);
+  void warning_hex(uint8_t *hex, int size, std::string message, ...);
+  void info_hex(uint8_t *hex, int size, std::string message, ...);
+  void debug_hex(uint8_t *hex, int size, std::string message, ...);
+
   // Same with line and file info
-  void error_line(string file, int line, string message, ...);  
-  void warning_line(string file, int line, string message, ...);
-  void info_line(string file, int line, string message, ...);   
-  void debug_line(string file, int line, string message, ...);  
+  void error_line(std::string file, int line, std::string message, ...);
+  void warning_line(std::string file, int line, std::string message, ...);
+  void info_line(std::string file, int line, std::string message, ...);
+  void debug_line(std::string file, int line, std::string message, ...);
 
 private:
-  typedef enum {
-    ERROR=0, WARNING, INFO, DEBUG, NOF_LEVELS
-  } level_t;
-  void printlog(level_t level, uint32_t tti, string file, int line, string message, va_list args);
-  void printlog(level_t level, uint32_t tti, string message, va_list args);
+  void printlog(srslte::LOG_LEVEL_ENUM level, uint32_t tti, std::string file, int line, std::string message, va_list args);
+  void printlog(srslte::LOG_LEVEL_ENUM level, uint32_t tti, std::string message, va_list args);
+
+  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg);
+  void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg, uint8_t *hex, int size);
+  void all_log_line(srslte::LOG_LEVEL_ENUM level, uint32_t tti, std::string file, int line, char *msg);
+  std::string now_time();
+  std::string hex_string(uint8_t *hex, int size);
 };
 
 }

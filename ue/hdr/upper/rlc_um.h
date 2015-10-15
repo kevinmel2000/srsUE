@@ -28,22 +28,34 @@
 #ifndef RLC_UM_H
 #define RLC_UM_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
 #include "common/msg_queue.h"
+#include "common/timeout.h"
 #include "upper/rlc_entity.h"
+#include <boost/thread/mutex.hpp>
+#include <map>
+#include <queue>
 
 namespace srsue {
 
+struct rlc_umd_pdu_t{
+  rlc_umd_pdu_header_t  header;
+  srsue_byte_buffer_t  *buf;
+  bool                  pdu_complete;
+};
+
 class rlc_um
     :public rlc_entity
+    ,public timeout_callback
 {
 public:
   rlc_um();
   void init(srslte::log        *rlc_entity_log_,
             uint32_t            lcid_,
             pdcp_interface_rlc *pdcp_,
-            rrc_interface_rlc  *rcc_);
+            rrc_interface_rlc  *rrc_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
   rlc_mode_t    get_mode();
@@ -58,17 +70,81 @@ public:
   int      read_pdu(uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
+  // Timeout callback interface
+  void timeout_expired(uint32_t timeout_id);
+
 private:
 
+  buffer_pool        *pool;
   srslte::log        *log;
   uint32_t            lcid;
   pdcp_interface_rlc *pdcp;
   rrc_interface_rlc  *rrc;
 
-  // Thread-safe queues for MAC messages
-  msg_queue    pdu_queue;
-  msg_queue    sdu_queue;
+  // TX SDU buffers
+  msg_queue            tx_sdu_queue;
+  srsue_byte_buffer_t *tx_sdu;
+
+  // Rx window
+  std::map<uint32_t, rlc_umd_pdu_t>  rx_window;
+  uint32_t                           rx_window_size;
+  uint32_t                           rx_mod; // Rx counter modulus
+  uint32_t                           tx_mod; // Tx counter modulus
+
+  // RX SDU buffers
+  msg_queue            rx_sdu_queue;
+  srsue_byte_buffer_t *rx_sdu;
+
+  // Mutexes
+  boost::mutex        mutex;
+
+  /****************************************************************************
+   * Configurable parameters
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+
+  int32_t           t_reordering;       // Timer used by rx to detect PDU loss  (ms)
+  rlc_umd_sn_size_t tx_sn_field_length; // Number of bits used for tx (UL) sequence number
+  rlc_umd_sn_size_t rx_sn_field_length; // Number of bits used for rx (DL) sequence number
+
+  /****************************************************************************
+   * State variables and counters
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+
+  // Tx state variables
+  uint32_t vt_us;    // Send state. SN to be assigned for next PDU.
+
+  // Rx state variables
+  uint32_t vr_ur;  // Receive state. SN of earliest PDU still considered for reordering.
+  uint32_t vr_ux;  // t_reordering state. SN following PDU which triggered t_reordering.
+  uint32_t vr_uh;  // Highest rx state. SN following PDU with highest SN among rxed PDUs.
+
+  /****************************************************************************
+   * Timers
+   * Ref: 3GPP TS 36.322 v10.0.0 Section 7
+   ***************************************************************************/
+  timeout reordering_timeout;
+  static const int reordering_timeout_id = 1;
+
+  int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);
+  void handle_data_pdu(uint8_t *payload, uint32_t nof_bytes);
+  void reassemble_rx_sdus();
+  bool inside_reordering_window(uint16_t sn);
+  void debug_state();
 };
+
+/****************************************************************************
+ * Header pack/unpack helper functions
+ * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
+ ***************************************************************************/
+void        rlc_um_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_umd_pdu_header_t *header);
+void        rlc_um_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_umd_pdu_header_t *header);
+void        rlc_um_write_data_pdu_header(rlc_umd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
+
+uint32_t    rlc_um_packed_length(rlc_umd_pdu_header_t *header);
+bool        rlc_um_start_aligned(uint8_t fi);
+bool        rlc_um_end_aligned(uint8_t fi);
 
 } // namespace srsue
 

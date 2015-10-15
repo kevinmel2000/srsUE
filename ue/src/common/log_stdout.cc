@@ -25,11 +25,7 @@
  *
  */
 
-#include <stdint.h>
-#include <string>
-#include <stdarg.h>
-#include <stdio.h>
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "common/log_stdout.h"
 
 
@@ -37,107 +33,224 @@ using namespace std;
 
 namespace srslte {
 
-const char* level_str[4] =  {"[ERROR ",
-                             "[WARN  ",
-                             "[INFO  ",
-                             "[DEBUG "};
+void log_stdout::all_log(srslte::LOG_LEVEL_ENUM level,
+                         uint32_t               tti,
+                         char                  *msg)
+{
+  std::stringstream ss;
 
-void log_stdout::printlog(level_t type, uint32_t tti, string msg, va_list args) {
+  ss << now_time() << " ";
+  ss << "[" <<get_service_name() << "] ";
+  ss << log_level_text[level] << " ";
+  ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+  ss << msg;
 
-  printlog(type, tti, string(), -1, msg, args);
-}
- 
-void log_stdout::printlog(level_t type, uint32_t tti, string file, int line, string msg, va_list args) {
-
-  printf("%s %s",level_str[type], get_service_name().c_str());
-  if (file.length() > 0) {
-    printf("/%-14s", file.substr(file.find_last_of("/")+1,file.find_last_of(".")-1-file.find_last_of("/")).c_str());
-  }
-  if (line >= 0) {
-    printf(" %5d]: ", tti);
-  }
-  vprintf(msg.c_str(), args);
+  cout << ss.str();
 }
 
-void log_stdout::error(string msg, ...)
+void log_stdout::all_log(srslte::LOG_LEVEL_ENUM level,
+                         uint32_t               tti,
+                         char                  *msg,
+                         uint8_t               *hex,
+                         int                    size)
+{
+  std::stringstream ss;
+
+  ss << now_time() << " ";
+  ss << "[" <<get_service_name() << "] ";
+  ss << log_level_text[level] << " ";
+  ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+  ss << msg << std::endl;
+  ss << hex_string(hex, size);
+
+  cout << ss.str();
+}
+
+void log_stdout::all_log_line(srslte::LOG_LEVEL_ENUM level,
+                              uint32_t               tti,
+                              std::string            file,
+                              int                    line,
+                              char                  *msg)
+{
+  std::stringstream ss;
+
+  ss << now_time() << " ";
+  ss << "[" <<get_service_name() << "] ";
+  ss << log_level_text[level] << " ";
+  ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+  ss << msg;
+
+  cout << ss.str();
+}
+
+void log_stdout::error(std::string message, ...) {
+  if (level >= LOG_LEVEL_ERROR) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_ERROR, tti, args_msg);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::warning(std::string message, ...) {
+  if (level >= LOG_LEVEL_WARNING) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_WARNING, tti, args_msg);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::info(std::string message, ...) {
+  if (level >= LOG_LEVEL_INFO) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_INFO, tti, args_msg);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::debug(std::string message, ...) {
+  if (level >= LOG_LEVEL_DEBUG) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_DEBUG, tti, args_msg);
+    va_end(args);
+    free(args_msg);
+  }
+}
+
+void log_stdout::error_hex(uint8_t *hex, int size, std::string message, ...) {
+  if (level >= LOG_LEVEL_ERROR) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_ERROR, tti, args_msg, hex, size);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::warning_hex(uint8_t *hex, int size, std::string message, ...) {
+  if (level >= LOG_LEVEL_WARNING) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_WARNING, tti, args_msg, hex, size);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::info_hex(uint8_t *hex, int size, std::string message, ...) {
+  if (level >= LOG_LEVEL_INFO) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_INFO, tti, args_msg, hex, size);
+    va_end(args);
+    free(args_msg);
+  }
+}
+void log_stdout::debug_hex(uint8_t *hex, int size, std::string message, ...) {
+  if (level >= LOG_LEVEL_DEBUG) {
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log(LOG_LEVEL_DEBUG, tti, args_msg, hex, size);
+    va_end(args);
+    free(args_msg);
+  }
+}
+
+void log_stdout::error_line(std::string file, int line, std::string message, ...)
 {
   if (level >= LOG_LEVEL_ERROR) {
-    va_list args;
-    va_start(args, msg);
-    printlog(ERROR, tti, msg, args);
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log_line(LOG_LEVEL_ERROR, tti, file, line, args_msg);
     va_end(args);
+    free(args_msg);
   }
 }
 
-void log_stdout::info(string msg, ...)
-{
-  if (level >= LOG_LEVEL_INFO) {
-    va_list args;
-    va_start(args, msg);
-    printlog(INFO, tti, msg, args);
-    va_end(args);    
-  }
-}
-
-void log_stdout::debug(string msg, ...)
-{
-  if (level >= LOG_LEVEL_DEBUG) {
-    va_list args;
-    va_start(args, msg);
-    printlog(DEBUG, tti, msg, args);
-    va_end(args);
-  }
-}
-
-void log_stdout::warning(string msg, ...)
+void log_stdout::warning_line(std::string file, int line, std::string message, ...)
 {
   if (level >= LOG_LEVEL_WARNING) {
-    va_list args;
-    va_start(args, msg);
-    printlog(WARNING, tti, msg, args);
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log_line(LOG_LEVEL_WARNING, tti, file, line, args_msg);
     va_end(args);
+    free(args_msg);
   }
 }
 
-
-void log_stdout::error_line(string file, int line, string msg, ...)
-{
-  if (level >= LOG_LEVEL_ERROR) {
-    va_list args;
-    va_start(args, msg);
-    printlog(ERROR, tti, file, line, msg, args);
-    va_end(args);
-  }
-}
-
-void log_stdout::info_line(string file, int line, string msg, ...)
+void log_stdout::info_line(std::string file, int line, std::string message, ...)
 {
   if (level >= LOG_LEVEL_INFO) {
-    va_list args;
-    va_start(args, msg);
-    printlog(INFO, tti, file, line, msg, args);
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log_line(LOG_LEVEL_INFO, tti, file, line, args_msg);
     va_end(args);
+    free(args_msg);
   }
 }
 
-void log_stdout::debug_line(string file, int line, string msg, ...)
+void log_stdout::debug_line(std::string file, int line, std::string message, ...)
 {
   if (level >= LOG_LEVEL_DEBUG) {
-    va_list args;
-    va_start(args, msg);
-    printlog(DEBUG, tti, file, line, msg, args);
+    char     *args_msg;
+    va_list   args;
+    va_start(args, message);
+    if(vasprintf(&args_msg, message.c_str(), args) > 0);
+      all_log_line(LOG_LEVEL_DEBUG, tti, file, line, args_msg);
     va_end(args);
+    free(args_msg);
   }
 }
 
-void log_stdout::warning_line(string file, int line, string msg, ...)
+
+
+std::string log_stdout::now_time()
 {
-  if (level >= LOG_LEVEL_WARNING) {
-    va_list args;
-    va_start(args, msg);
-    printlog(WARNING, tti, file, line, msg, args);
-    va_end(args);
+  using namespace boost::posix_time;
+  return std::string(to_simple_string(microsec_clock::local_time()), 12, 12);
+}
+
+std::string log_stdout::hex_string(uint8_t *hex, int size)
+{
+  std::stringstream ss;
+  int c = 0;
+
+  ss << std::hex << std::setfill('0');
+  if(hex_limit >= 0) {
+    size = (size > hex_limit) ? hex_limit : size;
   }
+  while(c < size) {
+    ss << "             " << std::setw(4) << static_cast<unsigned>(c) << ": ";
+    int tmp = (size-c < 16) ? size-c : 16;
+    for(int i=0;i<tmp;i++) {
+      ss << std::setw(2) << static_cast<unsigned>(hex[c++]) << " ";
+    }
+    ss << "\n";
+  }
+  return ss.str();
 }
 
 }

@@ -55,7 +55,6 @@ struct rlc_amd_tx_pdu_t{
 
 class rlc_am
     :public rlc_entity
-    ,public timeout_callback
 {
 public:
   rlc_am();
@@ -76,9 +75,6 @@ public:
   uint32_t get_buffer_state();
   int      read_pdu(uint8_t *payload, uint32_t nof_bytes);
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
-
-  // Timeout callback interface
-  void timeout_expired(uint32_t timeout_id);
 
 private:
 
@@ -158,6 +154,7 @@ private:
   // Timer checks
   bool status_prohibited();
   bool poll_retx();
+  void check_reordering_timeout();
 
   // Helpers
   bool poll_required();
@@ -172,6 +169,8 @@ private:
 
   void reassemble_rx_sdus();
 
+  bool inside_tx_window(uint16_t sn);
+  bool inside_rx_window(uint16_t sn);
   void debug_state();
 };
 

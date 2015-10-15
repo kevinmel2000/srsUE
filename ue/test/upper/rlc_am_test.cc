@@ -93,6 +93,8 @@ void basic_test()
     rlc1.write_sdu(&sdu_bufs[i]);
   }
 
+  assert(13 == rlc1.get_buffer_state());
+
   // Read 5 PDUs from RLC1 (1 byte each)
   srsue_byte_buffer_t pdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
@@ -101,16 +103,22 @@ void basic_test()
     pdu_bufs[i].N_bytes = len;
   }
 
+  assert(0 == rlc1.get_buffer_state());
+
   // Write 5 PDUs into RLC2
   for(int i=0;i<NBUFS;i++)
   {
     rlc2.write_pdu(pdu_bufs[i].msg, pdu_bufs[i].N_bytes);
   }
 
+  assert(2 == rlc2.get_buffer_state());
+
   // Read status PDU from RLC2
   srsue_byte_buffer_t status_buf;
-  len = rlc2.read_pdu(status_buf.msg, 10); // 10 bytes is enough to hold the status
+  len = rlc2.read_pdu(status_buf.msg, 2);
   status_buf.N_bytes = len;
+
+  assert(0 == rlc2.get_buffer_state());
 
   // Write status PDU to RLC1
   rlc1.write_pdu(status_buf.msg, status_buf.N_bytes);
@@ -162,10 +170,14 @@ void concat_test()
     rlc1.write_sdu(&sdu_bufs[i]);
   }
 
+  assert(13 == rlc1.get_buffer_state());
+
   // Read 1 PDUs from RLC1 containing all 5 SDUs
   srsue_byte_buffer_t pdu_buf;
   len = rlc1.read_pdu(pdu_buf.msg, 13); // 8 bytes for header + payload
   pdu_buf.N_bytes = len;
+
+  assert(0 == rlc1.get_buffer_state());
 
   // Write PDU into RLC2
   rlc2.write_pdu(pdu_buf.msg, pdu_buf.N_bytes);
@@ -221,6 +233,8 @@ void segment_test()
     rlc1.write_sdu(&sdu_bufs[i]);
   }
 
+  assert(58 == rlc1.get_buffer_state());
+
   // Read PDUs from RLC1 (force segmentation)
   srsue_byte_buffer_t pdu_bufs[20];
   int n_pdus = 0;
@@ -229,16 +243,22 @@ void segment_test()
     pdu_bufs[n_pdus++].N_bytes = len;
   }
 
+  assert(0 == rlc1.get_buffer_state());
+
   // Write PDUs into RLC2
   for(int i=0;i<n_pdus;i++)
   {
     rlc2.write_pdu(pdu_bufs[i].msg, pdu_bufs[i].N_bytes);
   }
 
+  assert(2 == rlc2.get_buffer_state());
+
   // Read status PDU from RLC2
   srsue_byte_buffer_t status_buf;
   len = rlc2.read_pdu(status_buf.msg, 10); // 10 bytes is enough to hold the status
   status_buf.N_bytes = len;
+
+  assert(0 == rlc2.get_buffer_state());
 
   // Write status PDU to RLC1
   rlc1.write_pdu(status_buf.msg, status_buf.N_bytes);
@@ -292,6 +312,8 @@ void retx_test()
     rlc1.write_sdu(&sdu_bufs[i]);
   }
 
+  assert(13 == rlc1.get_buffer_state());
+
   // Read 5 PDUs from RLC1 (1 byte each)
   srsue_byte_buffer_t pdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
@@ -299,6 +321,8 @@ void retx_test()
     len = rlc1.read_pdu(pdu_bufs[i].msg, 3); // 3 bytes for header + payload
     pdu_bufs[i].N_bytes = len;
   }
+
+  assert(0 == rlc1.get_buffer_state());
 
   // Write PDUs into RLC2 (skip SN 1)
   for(int i=0;i<NBUFS;i++)
@@ -308,7 +332,9 @@ void retx_test()
   }
 
   // Sleep to let reordering timeout expire
-  usleep(6000);
+  usleep(10000);
+
+  assert(4 == rlc2.get_buffer_state());
 
   // Read status PDU from RLC2
   srsue_byte_buffer_t status_buf;
