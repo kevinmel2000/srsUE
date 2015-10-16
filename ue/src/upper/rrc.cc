@@ -82,6 +82,22 @@ void rrc::write_sdu(uint32_t lcid, byte_buffer_t *sdu)
   }
 }
 
+uint16_t rrc::get_mcc()
+{
+  if(sib1.N_plmn_ids > 0)
+    return sib1.plmn_id[0].id.mcc;
+  else
+    return 0;
+}
+
+uint16_t rrc::get_mnc()
+{
+  if(sib1.N_plmn_ids > 0)
+    return sib1.plmn_id[0].id.mnc;
+  else
+    return 0;
+}
+
 /*******************************************************************************
   PDCP interface
 *******************************************************************************/
@@ -97,7 +113,7 @@ void rrc::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
     break;
   case RB_ID_SRB1:
   case RB_ID_SRB2:
-    parse_dl_dcch(pdu);
+    parse_dl_dcch(lcid, pdu);
     break;
   default:
     rrc_log->error("DL PDU with invalid bearer id: %s", lcid);
@@ -300,7 +316,7 @@ void rrc::parse_dl_ccch(byte_buffer_t *pdu)
   }
 }
 
-void rrc::parse_dl_dcch(byte_buffer_t *pdu)
+void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
 {
   LIBLTE_RRC_DL_DCCH_MSG_STRUCT dl_dcch_msg;
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
@@ -311,7 +327,11 @@ void rrc::parse_dl_dcch(byte_buffer_t *pdu)
   switch(dl_dcch_msg.msg_type)
   {
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_DL_INFO_TRANSFER:
-    rrc_log->error("Not handling DL INFO message\n");
+    rrc_log->info("DL Info Transfer received\n");
+    pdu->reset();
+    memcpy(pdu->msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes);
+    pdu->N_bytes = dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes;
+    nas->write_pdu(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_SECURITY_MODE_COMMAND:
     rrc_log->error("Not handling Security Mode Command\n");

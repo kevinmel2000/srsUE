@@ -113,7 +113,10 @@ void pdcp_entity::write_pdu(byte_buffer_t *pdu)
   case RB_ID_SRB1: // Intentional fall-through
   case RB_ID_SRB2:
     uint32_t sn;
+    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", rb_id_text[lcid]);
     pdcp_unpack_control_pdu(pdu, &sn);
+    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s SDU SN: %d",
+                  rb_id_text[lcid], sn);
     rrc->write_pdu(lcid, pdu);
     break;
   }

@@ -36,6 +36,7 @@
 
 #include "liblte_rrc.h"
 #include "common/common.h"
+#include "upper/usim_data.h"
 #include "mac_interface.h"
 #include "phy_interface.h"
 
@@ -52,7 +53,18 @@ public:
 class usim_interface_nas
 {
 public:
-  virtual void get_imsi_vec(uint8* imsi, uint32 n) = 0;
+  virtual void get_imsi_vec(uint8_t* imsi_, uint32_t n) = 0;
+  virtual void get_imei_vec(uint8_t* imei_, uint32_t n) = 0;
+  virtual void generate_authentication_response(uint8  *rand,
+                                                uint8  *autn_enb,
+                                                uint16  mcc,
+                                                uint16  mnc,
+                                                bool   *net_valid) = 0;
+  virtual auth_vector_t *get_auth_vector() = 0;
+  virtual void generate_nas_keys() = 0;
+  virtual void generate_rrc_keys() = 0;
+  virtual void increment_nas_count_ul() = 0;
+  virtual void increment_nas_count_dl() = 0;
 };
 
 // GW interface for PDCP
@@ -75,6 +87,8 @@ class rrc_interface_nas
 {
 public:
   virtual void write_sdu(uint32_t lcid, byte_buffer_t *sdu) = 0;
+  virtual uint16_t get_mcc() = 0;
+  virtual uint16_t get_mnc() = 0;
 };
 
 // RRC interface for PDCP

@@ -45,13 +45,29 @@ public:
 
   // NAS interface
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
+  void get_imei_vec(uint8_t* imei_, uint32_t n);
+  void generate_authentication_response(uint8  *rand,
+                                        uint8  *autn_enb,
+                                        uint16  mcc,
+                                        uint16  mnc,
+                                        bool   *net_valid);
+  auth_vector_t *get_auth_vector();
+  void generate_nas_keys();
+  void generate_rrc_keys();
+  void increment_nas_count_ul();
+  void increment_nas_count_dl();
+
 
 private:
   srslte::log *usim_log;
+
+  // User data
   uint64_t imsi;
   uint64_t imei;
   uint8_t  k[16];
 
+  auth_vector_t     auth_vec;
+  generated_data_t  gen_data;
 };
 
 } // namespace srsue

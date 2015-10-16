@@ -66,9 +66,6 @@ public:
   void notify_connection_setup();
   void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
 
-  void send_attach_request();
-  void gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg);
-
 private:
   buffer_pool        *pool;
   srslte::log        *nas_log;
@@ -76,6 +73,25 @@ private:
   usim_interface_nas *usim;
 
   emm_state_t        state;
+
+  // Parsers
+  void parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_attach_reject(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_authentication_request(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_authentication_reject(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_identity_request(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_service_reject(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_esm_information_request(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_emm_information(uint32_t lcid, byte_buffer_t *pdu);
+
+  // Senders
+  void send_attach_request();
+  void send_identity_response();
+  void send_service_request();
+  void send_esm_information_response();
+
+  void gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg);
 };
 
 } // namespace srsue

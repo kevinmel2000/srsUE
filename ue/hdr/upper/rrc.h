@@ -93,6 +93,8 @@ private:
 
   // NAS interface
   void write_sdu(uint32_t lcid, byte_buffer_t *sdu);
+  uint16_t get_mcc();
+  uint16_t get_mnc();
 
   // PDCP interface
   void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
@@ -109,7 +111,8 @@ private:
 
   // Parsers
   void parse_dl_ccch(byte_buffer_t *pdu);
-  void parse_dl_dcch(byte_buffer_t *pdu);
+  void parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu);
+  void parse_dl_info_transfer(uint32_t lcid, byte_buffer_t *pdu);
 
   // Helpers
   static void*  start_sib_thread(void *rrc_);
