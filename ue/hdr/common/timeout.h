@@ -52,6 +52,11 @@ class timeout
 {
 public:
   timeout():running(false),callback(NULL){}
+  ~timeout()
+  {
+    if(running && callback)
+      pthread_join(thread, NULL);
+  }
   void start(int duration_msec_, uint32_t timeout_id_=0,timeout_callback *callback_=NULL)
   {
     if(duration_msec_ < 0)

@@ -79,7 +79,7 @@ typedef enum{
   RLC_UMD_SN_SIZE_N_ITEMS,
 }rlc_umd_sn_size_t;
 static const char     rlc_umd_sn_size_text[RLC_UMD_SN_SIZE_N_ITEMS][20] = {"5 bits", "10 bits"};
-static const uint16_t rlc_umd_sn_size_num[RLC_UMD_SN_SIZE_N_ITEMS][20]  = {5, 10};
+static const uint16_t rlc_umd_sn_size_num[RLC_UMD_SN_SIZE_N_ITEMS] = {5, 10};
 
 // UMD PDU Header
 typedef struct{

@@ -52,6 +52,7 @@ class rlc_um
 {
 public:
   rlc_um();
+
   void init(srslte::log        *rlc_entity_log_,
             uint32_t            lcid_,
             pdcp_interface_rlc *pdcp_,
@@ -73,6 +74,8 @@ public:
   // Timeout callback interface
   void timeout_expired(uint32_t timeout_id);
 
+  bool reordering_timeout_running();
+
 private:
 
   buffer_pool        *pool;
@@ -82,8 +85,8 @@ private:
   rrc_interface_rlc  *rrc;
 
   // TX SDU buffers
-  msg_queue            tx_sdu_queue;
-  srsue_byte_buffer_t *tx_sdu;
+  msg_queue                 tx_sdu_queue;
+  srsue_byte_buffer_t      *tx_sdu;
 
   // Rx window
   std::map<uint32_t, rlc_umd_pdu_t>  rx_window;
@@ -92,11 +95,11 @@ private:
   uint32_t                           tx_mod; // Tx counter modulus
 
   // RX SDU buffers
-  msg_queue            rx_sdu_queue;
-  srsue_byte_buffer_t *rx_sdu;
+  msg_queue                 rx_sdu_queue;
+  srsue_byte_buffer_t      *rx_sdu;
 
   // Mutexes
-  boost::mutex        mutex;
+  boost::mutex              mutex;
 
   /****************************************************************************
    * Configurable parameters

@@ -65,30 +65,33 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     t_reordering        = cnfg->dl_um_bi_rlc.t_reordering;
     rx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->dl_um_bi_rlc.sn_field_len;
     rx_window_size      = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 16 : 512;
-    rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 2^5 : 2^10;
+    rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 32 : 1024;
     tx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->ul_um_bi_rlc.sn_field_len;
-    tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 2^5 : 2^10;
+    tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 32 : 1024;
     log->info("%s configured in %s mode: "
-              "t_reordering=%d, rx_sn_field_length=%d, tx_sn_field_length=%d\n",
+              "t_reordering=%d ms, rx_sn_field_length=%u bits, tx_sn_field_length=%u bits\n",
               srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
-              t_reordering, rx_sn_field_length, tx_sn_field_length);
+              liblte_rrc_t_reordering_num[t_reordering],
+              rlc_umd_sn_size_num[rx_sn_field_length],
+              rlc_umd_sn_size_num[tx_sn_field_length]);
     break;
   case LIBLTE_RRC_RLC_MODE_UM_UNI_UL:
     tx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->ul_um_uni_rlc.sn_field_len;
-    tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 2^5 : 2^10;
-    log->info("%s configured in %s mode: tx_sn_field_length=%d\n",
+    tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 32 : 1024;
+    log->info("%s configured in %s mode: tx_sn_field_length=%u bits\n",
               srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
-              tx_sn_field_length);
+              rlc_umd_sn_size_num[tx_sn_field_length]);
     break;
   case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
     t_reordering        = cnfg->dl_um_uni_rlc.t_reordering;
     rx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->dl_um_uni_rlc.sn_field_len;
     rx_window_size      = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 16 : 512;
-    rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 2^5 : 2^10;
+    rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 32 : 1024;
     log->info("%s configured in %s mode: "
-              "t_reordering=%d, rx_sn_field_length=%d\n",
+              "t_reordering=%d ms, rx_sn_field_length=%u bits\n",
               srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
-              t_reordering, rx_sn_field_length);
+              liblte_rrc_t_reordering_num[t_reordering],
+              rlc_umd_sn_size_num[rx_sn_field_length]);
     break;
   default:
     log->error("RLC configuration mode not recognized\n");
@@ -181,15 +184,15 @@ void rlc_um::timeout_expired(uint32_t timeout_id)
     boost::lock_guard<boost::mutex> lock(mutex);
 
     // 36.322 v10 Section 5.1.2.2.4
-    log->debug("%s reordering timeout expiry - updating vr_ur", srsue_rb_id_text[lcid]);
+    log->debug("%s reordering timeout expiry - updating vr_ur\n", srsue_rb_id_text[lcid]);
 
-    reordering_timeout.reset();
     rx_sdu->reset();            // We only get here if we've lost a PDU
     while(RX_MOD_BASE(vr_ur) < RX_MOD_BASE(vr_ux))
     {
       vr_ur = (vr_ur + 1)%rx_mod;
       reassemble_rx_sdus();
     }
+    reordering_timeout.reset();
     if(RX_MOD_BASE(vr_uh) > RX_MOD_BASE(vr_ur))
     {
       reordering_timeout.start(t_reordering, reordering_timeout_id, this);
@@ -198,6 +201,11 @@ void rlc_um::timeout_expired(uint32_t timeout_id)
 
     debug_state();
   }
+}
+
+bool rlc_um::reordering_timeout_running()
+{
+  return reordering_timeout.is_running();
 }
 
 /****************************************************************************
@@ -358,39 +366,37 @@ void rlc_um::reassemble_rx_sdus()
     rx_sdu = pool->allocate();
 
   // First catch up with lower edge of reordering window
-  if(!inside_reordering_window(vr_ur))
+  while(!inside_reordering_window(vr_ur))
   {
-    while(RX_MOD_BASE(vr_ur) < RX_MOD_BASE(vr_uh-rx_window_size))
+    if(rx_window.end() == rx_window.find(vr_ur))
     {
-      if(rx_window.end() != rx_window.find(vr_ur))
+      rx_sdu->reset();
+    }else{
+      // Handle any SDU segments (TODO: If the previous PDU was missing and first segment is not start aligned, discard)
+      for(int i=0; i<rx_window[vr_ur].header.N_li; i++)
       {
-        rx_sdu->reset();
-      }else{
-        // Handle any SDU segments
-        for(int i=0; i<rx_window[vr_ur].header.N_li; i++)
-        {
-          int len = rx_window[vr_ur].header.li[i];
-          memcpy(&rx_sdu->msg[rx_sdu->N_bytes], rx_window[vr_ur].buf->msg, len);
-          rx_sdu->N_bytes += len;
-          rx_window[vr_ur].buf->msg += len;
-          rx_window[vr_ur].buf->N_bytes -= len;
-          rx_sdu_queue.write(rx_sdu);
-          rx_sdu = pool->allocate();
-        }
-
-        // Handle last segment
-        memcpy(&rx_sdu->msg[rx_sdu->N_bytes], rx_window[vr_ur].buf->msg, rx_window[vr_ur].buf->N_bytes);
-        rx_sdu->N_bytes += rx_window[vr_ur].buf->N_bytes;
-        if(rlc_um_end_aligned(rx_window[vr_ur].header.fi))
-        {
-          rx_sdu_queue.write(rx_sdu);
-          rx_sdu = pool->allocate();
-        }
+        int len = rx_window[vr_ur].header.li[i];
+        memcpy(&rx_sdu->msg[rx_sdu->N_bytes], rx_window[vr_ur].buf->msg, len);
+        rx_sdu->N_bytes += len;
+        rx_window[vr_ur].buf->msg += len;
+        rx_window[vr_ur].buf->N_bytes -= len;
+        rx_sdu_queue.write(rx_sdu);
+        rx_sdu = pool->allocate();
       }
 
-      vr_ur = (vr_ur + 1)%rx_mod;
+      // Handle last segment
+      memcpy(&rx_sdu->msg[rx_sdu->N_bytes], rx_window[vr_ur].buf->msg, rx_window[vr_ur].buf->N_bytes);
+      rx_sdu->N_bytes += rx_window[vr_ur].buf->N_bytes;
+      if(rlc_um_end_aligned(rx_window[vr_ur].header.fi))
+      {
+        rx_sdu_queue.write(rx_sdu);
+        rx_sdu = pool->allocate();
+      }
     }
+
+    vr_ur = (vr_ur + 1)%rx_mod;
   }
+
 
   // Now update vr_ur until we reach an SN we haven't yet received
   while(rx_window.end() != rx_window.find(vr_ur))

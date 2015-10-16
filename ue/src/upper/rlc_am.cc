@@ -527,7 +527,7 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
 
 void rlc_am::handle_control_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  log->info_hex(payload, nof_bytes, "%s Rx control PDU\n", srsue_rb_id_text[lcid]);
+  log->info_hex(payload, nof_bytes, "%s Rx control PDU", srsue_rb_id_text[lcid]);
 
   rlc_status_pdu_t status;
   rlc_am_read_status_pdu(payload, nof_bytes, &status);

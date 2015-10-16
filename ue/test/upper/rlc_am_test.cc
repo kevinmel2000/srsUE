@@ -60,6 +60,10 @@ void basic_test()
 {
   srslte::log_stdout log1("RLC_AM_1");
   srslte::log_stdout log2("RLC_AM_2");
+  log1.set_level(srslte::LOG_LEVEL_DEBUG);
+  log2.set_level(srslte::LOG_LEVEL_DEBUG);
+  log1.set_hex_limit(-1);
+  log2.set_hex_limit(-1);
   rlc_am_tester      tester;
 
   rlc_am rlc1;
@@ -137,6 +141,10 @@ void concat_test()
 {
   srslte::log_stdout log1("RLC_AM_1");
   srslte::log_stdout log2("RLC_AM_2");
+  log1.set_level(srslte::LOG_LEVEL_DEBUG);
+  log2.set_level(srslte::LOG_LEVEL_DEBUG);
+  log1.set_hex_limit(-1);
+  log2.set_hex_limit(-1);
   rlc_am_tester      tester;
 
   rlc_am rlc1;
@@ -199,6 +207,10 @@ void segment_test()
 {
   srslte::log_stdout log1("RLC_AM_1");
   srslte::log_stdout log2("RLC_AM_2");
+  log1.set_level(srslte::LOG_LEVEL_DEBUG);
+  log2.set_level(srslte::LOG_LEVEL_DEBUG);
+  log1.set_hex_limit(-1);
+  log2.set_hex_limit(-1);
   rlc_am_tester      tester;
 
   rlc_am rlc1;
@@ -279,6 +291,10 @@ void retx_test()
 {
   srslte::log_stdout log1("RLC_AM_1");
   srslte::log_stdout log2("RLC_AM_2");
+  log1.set_level(srslte::LOG_LEVEL_DEBUG);
+  log2.set_level(srslte::LOG_LEVEL_DEBUG);
+  log1.set_hex_limit(-1);
+  log2.set_hex_limit(-1);
   rlc_am_tester      tester;
 
   rlc_am rlc1;
