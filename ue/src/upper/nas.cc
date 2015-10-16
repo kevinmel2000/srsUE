@@ -56,13 +56,13 @@ void nas::notify_connection_setup()
   }
 }
 
-void nas::write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu)
+void nas::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
 {}
 
 void nas::send_attach_request()
 {
   LIBLTE_MME_ATTACH_REQUEST_MSG_STRUCT  attach_req;
-  srsue_byte_buffer_t                  *msg = pool->allocate();
+  byte_buffer_t                  *msg = pool->allocate();
   u_int32_t                             i;
 
   attach_req.eps_attach_type = 1; // EPS Attach
@@ -106,7 +106,7 @@ void nas::send_attach_request()
   liblte_mme_pack_attach_request_msg(&attach_req, (LIBLTE_BYTE_MSG_STRUCT*)msg);
 
   nas_log->info("Sending attach request\n");
-  rrc->write_sdu(SRSUE_RB_ID_SRB1, msg);
+  rrc->write_sdu(RB_ID_SRB1, msg);
 }
 
 void nas::gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg)

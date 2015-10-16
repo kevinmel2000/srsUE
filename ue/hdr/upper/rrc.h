@@ -79,7 +79,7 @@ private:
   pdcp_interface_rrc    *pdcp;
   nas_interface_rrc     *nas;
 
-  srsue_bit_buffer_t    bit_buf;
+  bit_buffer_t    bit_buf;
 
   rrc_state_t           state;
   uint8_t               transaction_id;
@@ -92,24 +92,24 @@ private:
   pthread_t             sib_search_thread;
 
   // NAS interface
-  void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
+  void write_sdu(uint32_t lcid, byte_buffer_t *sdu);
 
   // PDCP interface
-  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
-  void write_pdu_bcch_bch(srsue_byte_buffer_t *pdu);
-  void write_pdu_bcch_dlsch(srsue_byte_buffer_t *pdu);
+  void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
+  void write_pdu_bcch_bch(byte_buffer_t *pdu);
+  void write_pdu_bcch_dlsch(byte_buffer_t *pdu);
 
   // RLC interface
   void max_retx_attempted();
 
   // Senders
   void send_con_request();
-  void send_con_setup_complete(srsue_byte_buffer_t *nas_msg);
-  void send_ul_info_transfer(uint32_t lcid, srsue_byte_buffer_t *sdu);
+  void send_con_setup_complete(byte_buffer_t *nas_msg);
+  void send_ul_info_transfer(uint32_t lcid, byte_buffer_t *sdu);
 
   // Parsers
-  void parse_dl_ccch(srsue_byte_buffer_t *pdu);
-  void parse_dl_dcch(srsue_byte_buffer_t *pdu);
+  void parse_dl_ccch(byte_buffer_t *pdu);
+  void parse_dl_dcch(byte_buffer_t *pdu);
 
   // Helpers
   static void*  start_sib_thread(void *rrc_);

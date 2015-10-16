@@ -70,7 +70,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 32 : 1024;
     log->info("%s configured in %s mode: "
               "t_reordering=%d ms, rx_sn_field_length=%u bits, tx_sn_field_length=%u bits\n",
-              srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
+              rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
               liblte_rrc_t_reordering_num[t_reordering],
               rlc_umd_sn_size_num[rx_sn_field_length],
               rlc_umd_sn_size_num[tx_sn_field_length]);
@@ -79,7 +79,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     tx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->ul_um_uni_rlc.sn_field_len;
     tx_mod              = (RLC_UMD_SN_SIZE_5_BITS == tx_sn_field_length) ? 32 : 1024;
     log->info("%s configured in %s mode: tx_sn_field_length=%u bits\n",
-              srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
+              rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
               rlc_umd_sn_size_num[tx_sn_field_length]);
     break;
   case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
@@ -89,7 +89,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 32 : 1024;
     log->info("%s configured in %s mode: "
               "t_reordering=%d ms, rx_sn_field_length=%u bits\n",
-              srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
+              rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode],
               liblte_rrc_t_reordering_num[t_reordering],
               rlc_umd_sn_size_num[rx_sn_field_length]);
     break;
@@ -112,9 +112,9 @@ uint32_t rlc_um::get_bearer()
  * PDCP interface
  ***************************************************************************/
 
-void rlc_um::write_sdu(srsue_byte_buffer_t *sdu)
+void rlc_um::write_sdu(byte_buffer_t *sdu)
 {
-  log->info_hex(sdu->msg, sdu->N_bytes, "%s Tx SDU", srsue_rb_id_text[lcid]);
+  log->info_hex(sdu->msg, sdu->N_bytes, "%s Tx SDU", rb_id_text[lcid]);
   tx_sdu_queue.write(sdu);
 }
 
@@ -124,11 +124,11 @@ bool rlc_um::read_sdu()
   if(n_sdus == 0)
     return false;
 
-  srsue_byte_buffer_t *sdu;
+  byte_buffer_t *sdu;
   for(int i=0; i<n_sdus; i++)
   {
     rx_sdu_queue.read(&sdu);
-    log->info_hex(sdu->msg, sdu->N_bytes, "%s Rx SDU", srsue_rb_id_text[lcid]);
+    log->info_hex(sdu->msg, sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
     pdcp->write_pdu(lcid, sdu);
   }
 
@@ -184,7 +184,7 @@ void rlc_um::timeout_expired(uint32_t timeout_id)
     boost::lock_guard<boost::mutex> lock(mutex);
 
     // 36.322 v10 Section 5.1.2.2.4
-    log->debug("%s reordering timeout expiry - updating vr_ur\n", srsue_rb_id_text[lcid]);
+    log->debug("%s reordering timeout expiry - updating vr_ur\n", rb_id_text[lcid]);
 
     rx_sdu->reset();            // We only get here if we've lost a PDU
     while(RX_MOD_BASE(vr_ur) < RX_MOD_BASE(vr_ux))
@@ -220,7 +220,7 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
     return 0;
   }
 
-  srsue_byte_buffer_t *pdu = pool->allocate();
+  byte_buffer_t *pdu = pool->allocate();
   rlc_umd_pdu_header_t header;
   header.fi   = RLC_FI_FIELD_START_AND_END_ALIGNED;
   header.sn   = vt_us;
@@ -236,7 +236,7 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   if(pdu_space <= head_len)
   {
     log->warning("%s Cannot build a PDU - %d bytes available, %d bytes required for header\n",
-                 srsue_rb_id_text[lcid], nof_bytes, head_len);
+                 rb_id_text[lcid], nof_bytes, head_len);
     return 0;
   }
 
@@ -303,20 +303,20 @@ void rlc_um::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   rlc_um_read_data_pdu_header(payload, nof_bytes, &header);
 
   log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d",
-                srsue_rb_id_text[lcid], header.sn);
+                rb_id_text[lcid], header.sn);
 
   if(RX_MOD_BASE(header.sn) >= RX_MOD_BASE(vr_uh-rx_window_size) &&
      RX_MOD_BASE(header.sn) <  RX_MOD_BASE(vr_ur))
   {
     log->info("%s SN: %d outside rx window [%d:%d] - discarding\n",
-              srsue_rb_id_text[lcid], header.sn, vr_ur, vr_uh);
+              rb_id_text[lcid], header.sn, vr_ur, vr_uh);
     return;
   }
   it = rx_window.find(header.sn);
   if(rx_window.end() != it)
   {
     log->info("%s Discarding duplicate SN: %d\n",
-              srsue_rb_id_text[lcid], header.sn);
+              rb_id_text[lcid], header.sn);
     return;
   }
 
@@ -440,7 +440,7 @@ bool rlc_um::inside_reordering_window(uint16_t sn)
 void rlc_um::debug_state()
 {
   log->debug("%s vt_us = %d, vr_ur = %d, vr_ux = %d, vr_uh = %d \n",
-             srsue_rb_id_text[lcid], vt_us, vr_ur, vr_ux, vr_uh);
+             rb_id_text[lcid], vt_us, vr_ur, vr_ux, vr_uh);
 
 }
 
@@ -449,7 +449,7 @@ void rlc_um::debug_state()
  * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
  ***************************************************************************/
 
-void rlc_um_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_umd_pdu_header_t *header)
+void rlc_um_read_data_pdu_header(byte_buffer_t *pdu, rlc_umd_pdu_header_t *header)
 {
   rlc_um_read_data_pdu_header(pdu->msg, pdu->N_bytes, header);
 }
@@ -499,7 +499,7 @@ void rlc_um_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_umd_p
   }
 }
 
-void rlc_um_write_data_pdu_header(rlc_umd_pdu_header_t *header, srsue_byte_buffer_t *pdu)
+void rlc_um_write_data_pdu_header(rlc_umd_pdu_header_t *header, byte_buffer_t *pdu)
 {
   uint32_t i;
   uint8_t ext = (header->N_li > 0) ? 1 : 0;

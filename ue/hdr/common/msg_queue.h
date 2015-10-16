@@ -50,7 +50,7 @@ public:
     ,unread_bytes(0)
     ,capacity(capacity_)
   {
-    buf = new srsue_byte_buffer_t*[capacity];
+    buf = new byte_buffer_t*[capacity];
   }
 
   ~msg_queue()
@@ -58,7 +58,7 @@ public:
     delete [] buf;
   }
 
-  void write(srsue_byte_buffer_t *msg)
+  void write(byte_buffer_t *msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_full()) not_full.wait(lock);
@@ -70,7 +70,7 @@ public:
     not_empty.notify_one();
   }
 
-  void read(srsue_byte_buffer_t **msg)
+  void read(byte_buffer_t **msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     while(is_empty()) not_empty.wait(lock);
@@ -82,7 +82,7 @@ public:
     not_full.notify_one();
   }
 
-  bool try_read(srsue_byte_buffer_t **msg)
+  bool try_read(byte_buffer_t **msg)
   {
     boost::mutex::scoped_lock lock(mutex);
     if(is_empty())
@@ -124,7 +124,7 @@ private:
   boost::condition      not_empty;
   boost::condition      not_full;
   boost::mutex          mutex;
-  srsue_byte_buffer_t **buf;
+  byte_buffer_t **buf;
   uint32_t              capacity;
   uint32_t              unread;
   uint32_t              unread_bytes;

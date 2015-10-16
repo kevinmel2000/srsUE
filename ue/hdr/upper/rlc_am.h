@@ -42,13 +42,13 @@ namespace srsue {
 
 struct rlc_amd_rx_pdu_t{
   rlc_amd_pdu_header_t  header;
-  srsue_byte_buffer_t  *buf;
+  byte_buffer_t  *buf;
   bool                  pdu_complete;
 };
 
 struct rlc_amd_tx_pdu_t{
   rlc_amd_pdu_header_t  header;
-  srsue_byte_buffer_t  *buf;
+  byte_buffer_t  *buf;
   uint32_t              retx_count;
   bool                  is_acked;
 };
@@ -68,7 +68,7 @@ public:
   uint32_t      get_bearer();
 
   // PDCP interface
-  void write_sdu(srsue_byte_buffer_t *sdu);
+  void write_sdu(byte_buffer_t *sdu);
   bool read_sdu();
 
   // MAC interface
@@ -86,7 +86,7 @@ private:
 
   // TX SDU buffers
   msg_queue            tx_sdu_queue;
-  srsue_byte_buffer_t *tx_sdu;
+  byte_buffer_t *tx_sdu;
 
   // Tx and Rx windows
   std::map<uint32_t, rlc_amd_tx_pdu_t>  tx_window;
@@ -95,7 +95,7 @@ private:
 
   // RX SDU buffers
   msg_queue            rx_sdu_queue;
-  srsue_byte_buffer_t *rx_sdu;
+  byte_buffer_t *rx_sdu;
 
   // Mutexes
   boost::mutex        mutex;
@@ -178,17 +178,17 @@ private:
  * Header pack/unpack helper functions
  * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
  ***************************************************************************/
-void        rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
+void        rlc_am_read_data_pdu_header(byte_buffer_t *pdu, rlc_amd_pdu_header_t *header);
 void        rlc_am_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_amd_pdu_header_t *header);
-void        rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu);
-void        rlc_am_read_status_pdu(srsue_byte_buffer_t *pdu, rlc_status_pdu_t *status);
+void        rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, byte_buffer_t *pdu);
+void        rlc_am_read_status_pdu(byte_buffer_t *pdu, rlc_status_pdu_t *status);
 void        rlc_am_read_status_pdu(uint8_t *payload, uint32_t nof_bytes, rlc_status_pdu_t *status);
-void        rlc_am_write_status_pdu(rlc_status_pdu_t *status, srsue_byte_buffer_t *pdu );
+void        rlc_am_write_status_pdu(rlc_status_pdu_t *status, byte_buffer_t *pdu );
 int         rlc_am_write_status_pdu(rlc_status_pdu_t *status, uint8_t *payload);
 
 uint32_t    rlc_am_packed_length(rlc_amd_pdu_header_t *header);
 uint32_t    rlc_am_packed_length(rlc_status_pdu_t *status);
-bool        rlc_am_is_control_pdu(srsue_byte_buffer_t *pdu);
+bool        rlc_am_is_control_pdu(byte_buffer_t *pdu);
 bool        rlc_am_is_control_pdu(uint8_t *payload);
 bool        rlc_am_status_has_nack(rlc_status_pdu_t *status, uint32_t sn);
 std::string rlc_am_to_string(rlc_status_pdu_t *status);

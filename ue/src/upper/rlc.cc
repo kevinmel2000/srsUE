@@ -57,7 +57,7 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
   }
 
   rlc_array[0] = new rlc_tm;
-  rlc_array[0]->init(rlc_log, SRSUE_RB_ID_SRB0, pdcp, rrc); // SRB0
+  rlc_array[0]->init(rlc_log, RB_ID_SRB0, pdcp, rrc); // SRB0
 }
 
 void rlc::stop()
@@ -66,7 +66,7 @@ void rlc::stop()
 /*******************************************************************************
   PDCP interface
 *******************************************************************************/
-void rlc::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
+void rlc::write_sdu(uint32_t lcid, byte_buffer_t *sdu)
 {
   if(valid_lcid(lcid)) {
     rlc_array[lcid]->write_sdu(sdu);
@@ -95,7 +95,7 @@ int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
-    rlc_log->info_hex(payload, nof_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
+    rlc_log->info_hex(payload, nof_bytes, "DL %s PDU", rb_id_text[lcid]);
     rlc_array[lcid]->write_pdu(payload, nof_bytes);
     ue->notify();
   }
@@ -104,7 +104,7 @@ void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
 {
   rlc_log->info_hex(payload, nof_bytes, "BCCH BCH message received.");
-  srsue_byte_buffer_t *buf = pool->allocate();
+  byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
   bcch_bch_queue.write(buf);
@@ -114,7 +114,7 @@ void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
 {
   rlc_log->info_hex(payload, nof_bytes, "BCCH DLSCH message received.");
-  srsue_byte_buffer_t *buf = pool->allocate();
+  byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
   bcch_dlsch_queue.write(buf);
@@ -128,7 +128,7 @@ void rlc::add_bearer(uint32_t lcid)
 {
   // No config provided - use defaults for lcid
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
-  if(SRSUE_RB_ID_SRB1 == lcid || SRSUE_RB_ID_SRB2 == lcid)
+  if(RB_ID_SRB1 == lcid || RB_ID_SRB2 == lcid)
   {
     cnfg.rlc_mode                     = LIBLTE_RRC_RLC_MODE_AM;
     cnfg.ul_am_rlc.t_poll_retx        = LIBLTE_RRC_T_POLL_RETRANSMIT_MS45;
@@ -140,7 +140,7 @@ void rlc::add_bearer(uint32_t lcid)
     add_bearer(lcid, &cnfg);
   }else{
     rlc_log->error("Radio bearer %s does not support default RLC configuration.",
-                   srsue_rb_id_text[lcid]);
+                   rb_id_text[lcid]);
   }
 }
 
@@ -151,7 +151,7 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     return;
   }else{
     rlc_log->info("Adding radio bearer %s with mode %s\n",
-                  srsue_rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode]);
+                  rb_id_text[lcid], liblte_rrc_rlc_mode_text[cnfg->rlc_mode]);
   }
 
   switch(cnfg->rlc_mode)
@@ -189,7 +189,7 @@ bool rlc::check_retx_buffers()
 bool rlc::check_dl_buffers()
 {
   bool ret = false;
-  srsue_byte_buffer_t *buf;
+  byte_buffer_t *buf;
 
   if(bcch_bch_queue.try_read(&buf))
   {

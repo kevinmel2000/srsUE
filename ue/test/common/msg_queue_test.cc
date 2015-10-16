@@ -39,7 +39,7 @@ void* write_thread(void *a) {
   args_t *args = (args_t*)a;
   for(uint32_t i=0;i<NMSGS;i++)
   {
-    srsue_byte_buffer_t *b = new srsue_byte_buffer_t;
+    byte_buffer_t *b = new byte_buffer_t;
     memcpy(b->msg, &i, 4);
     b->N_bytes = 4;
     args->q->write(b);
@@ -49,7 +49,7 @@ void* write_thread(void *a) {
 int main(int argc, char **argv) {
   bool                 result;
   msg_queue            q;
-  srsue_byte_buffer_t *b;
+  byte_buffer_t *b;
   pthread_t            thread;
   args_t               args;
   u_int32_t            r;

@@ -64,7 +64,7 @@ public:
 
   // RRC interface
   void notify_connection_setup();
-  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu);
+  void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
 
   void send_attach_request();
   void gen_pdn_connectivity_request(LIBLTE_BYTE_MSG_STRUCT *msg);

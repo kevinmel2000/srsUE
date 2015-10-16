@@ -61,19 +61,19 @@ bool pdcp_entity::is_active()
 }
 
 // RRC interface
-void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
+void pdcp_entity::write_sdu(byte_buffer_t *sdu)
 {
-  log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", srsue_rb_id_text[lcid]);
+  log->info_hex(sdu->msg, sdu->N_bytes, "UL %s SDU", rb_id_text[lcid]);
 
   // Handle SRB messages
   switch(lcid)
   {
-  case SRSUE_RB_ID_SRB0:
+  case RB_ID_SRB0:
     // Simply pass on to RLC
     rlc->write_sdu(lcid, sdu);
     break;
-  case SRSUE_RB_ID_SRB1:  // Intentional fall-through
-  case SRSUE_RB_ID_SRB2:
+  case RB_ID_SRB1:  // Intentional fall-through
+  case RB_ID_SRB2:
     // Pack SDU into a control PDU
     if(do_security)
     {
@@ -93,25 +93,25 @@ void pdcp_entity::write_sdu(srsue_byte_buffer_t *sdu)
   }
 
   // Handle DRB messages
-  if(lcid >= SRSUE_RB_ID_DRB1)
+  if(lcid >= RB_ID_DRB1)
   {
 
   }
 }
 
 // RLC interface
-void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
+void pdcp_entity::write_pdu(byte_buffer_t *pdu)
 {
   // Handle SRB messages
   switch(lcid)
   {
-  case SRSUE_RB_ID_SRB0:
+  case RB_ID_SRB0:
     // Simply pass on to RRC
-    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", srsue_rb_id_text[lcid]);
-    rrc->write_pdu(SRSUE_RB_ID_SRB0, pdu);
+    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU", rb_id_text[lcid]);
+    rrc->write_pdu(RB_ID_SRB0, pdu);
     break;
-  case SRSUE_RB_ID_SRB1: // Intentional fall-through
-  case SRSUE_RB_ID_SRB2:
+  case RB_ID_SRB1: // Intentional fall-through
+  case RB_ID_SRB2:
     uint32_t sn;
     pdcp_unpack_control_pdu(pdu, &sn);
     rrc->write_pdu(lcid, pdu);
@@ -119,7 +119,7 @@ void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
   }
 
   // Handle DRB messages
-  if(lcid >= SRSUE_RB_ID_DRB1)
+  if(lcid >= RB_ID_DRB1)
   {
 
   }
@@ -130,7 +130,7 @@ void pdcp_entity::write_pdu(srsue_byte_buffer_t *pdu)
  * Ref: 3GPP TS 36.323 v10.1.0
  ***************************************************************************/
 
-void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu)
+void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu)
 {
   // Make room and add header
   sdu->msg--;
@@ -145,7 +145,7 @@ void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu)
 
 }
 
-void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid)
+void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid)
 {
   // Make room and add header
   sdu->msg--;
@@ -163,7 +163,7 @@ void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu, uint8_t *key_2
   sdu->N_bytes += 4;
 }
 
-void pdcp_unpack_control_pdu(srsue_byte_buffer_t *pdu, uint32_t *sn)
+void pdcp_unpack_control_pdu(byte_buffer_t *pdu, uint32_t *sn)
 {
   // Strip header
   *sn = *pdu->msg & 0x1F;
@@ -176,7 +176,7 @@ void pdcp_unpack_control_pdu(srsue_byte_buffer_t *pdu, uint32_t *sn)
   // TODO: integrity check MAC
 }
 
-void pdcp_pack_data_pdu_long_sn(uint32_t sn, srsue_byte_buffer_t *sdu)
+void pdcp_pack_data_pdu_long_sn(uint32_t sn, byte_buffer_t *sdu)
 {
   // Make room and add header
   sdu->msg     -= 2;
@@ -185,7 +185,7 @@ void pdcp_pack_data_pdu_long_sn(uint32_t sn, srsue_byte_buffer_t *sdu)
   sdu->msg[1] = sn & 0xFF;
 }
 
-void pdcp_unpack_data_pdu_long_sn(srsue_byte_buffer_t *sdu, uint32_t *sn)
+void pdcp_unpack_data_pdu_long_sn(byte_buffer_t *sdu, uint32_t *sn)
 {
   // Strip header
   *sn  = (sdu->msg[0] & 0x0F) << 8;

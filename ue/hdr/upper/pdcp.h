@@ -46,13 +46,13 @@ public:
   void stop();
 
   // RRC interface
-  void write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
+  void write_sdu(uint32_t lcid, byte_buffer_t *sdu);
   void add_bearer(uint32_t lcid);
 
   // RLC interface
-  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu);
-  void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu);
-  void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu);
+  void write_pdu(uint32_t lcid, byte_buffer_t *sdu);
+  void write_pdu_bcch_bch(byte_buffer_t *sdu);
+  void write_pdu_bcch_dlsch(byte_buffer_t *sdu);
 
 private:
   srslte::log        *pdcp_log;

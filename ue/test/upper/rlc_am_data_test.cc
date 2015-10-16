@@ -44,7 +44,7 @@ using namespace srsue;
 
 int main(int argc, char **argv) {
   rlc_amd_pdu_header_t h;
-  srsue_byte_buffer_t b1,b2;
+  byte_buffer_t b1,b2;
 
   memcpy(b1.msg, &pdu1[0], PDU1_LEN);
   b1.N_bytes = PDU1_LEN;

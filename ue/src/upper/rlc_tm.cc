@@ -63,14 +63,14 @@ uint32_t rlc_tm::get_bearer()
 }
 
 // PDCP interface
-void rlc_tm::write_sdu(srsue_byte_buffer_t *sdu)
+void rlc_tm::write_sdu(byte_buffer_t *sdu)
 {
   ul_queue.write(sdu);
 }
 
 bool rlc_tm::read_sdu()
 {
-  srsue_byte_buffer_t *sdu;
+  byte_buffer_t *sdu;
   if(dl_queue.try_read(&sdu))
   {
     pdcp->write_pdu(lcid, sdu);
@@ -90,22 +90,22 @@ int rlc_tm::read_pdu(uint8_t *payload, uint32_t nof_bytes)
   uint32_t pdu_size = ul_queue.size_tail_bytes();
   if(pdu_size > nof_bytes)
   {
-    log->error("UL %s PDU size larger than MAC opportunity\n", srsue_rb_id_text[lcid]);
+    log->error("UL %s PDU size larger than MAC opportunity\n", rb_id_text[lcid]);
     return 0;
   }
 
-  srsue_byte_buffer_t *buf;
+  byte_buffer_t *buf;
   ul_queue.read(&buf);
   pdu_size = buf->N_bytes;
   memcpy(payload, buf->msg, buf->N_bytes);
   pool->deallocate(buf);
-  log->info_hex(payload, pdu_size, "UL %s, %s PDU", srsue_rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
+  log->info_hex(payload, pdu_size, "UL %s, %s PDU", rb_id_text[lcid], rlc_mode_text[RLC_MODE_TM]);
   return pdu_size;
 }
 
 void rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  srsue_byte_buffer_t *buf = pool->allocate();
+  byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
   dl_queue.write(buf);

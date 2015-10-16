@@ -40,7 +40,7 @@ using namespace srsue;
 
 int main(int argc, char **argv) {
   rlc_umd_pdu_header_t h;
-  srsue_byte_buffer_t  b1,b2;
+  byte_buffer_t  b1,b2;
 
   h.sn_size = RLC_UMD_SN_SIZE_10_BITS;
   memcpy(b1.msg, &pdu1[0], PDU1_LEN);

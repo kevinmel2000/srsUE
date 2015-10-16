@@ -41,18 +41,18 @@ public:
   rlc_um_tester(){n_sdus = 0;}
 
   // PDCP interface
-  void write_pdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
+  void write_pdu(uint32_t lcid, byte_buffer_t *sdu)
   {
     assert(lcid == 3);
     sdus[n_sdus++] = sdu;
   }
-  void write_pdu_bcch_bch(srsue_byte_buffer_t *sdu) {}
-  void write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu) {}
+  void write_pdu_bcch_bch(byte_buffer_t *sdu) {}
+  void write_pdu_bcch_dlsch(byte_buffer_t *sdu) {}
 
   // RRC interface
   void max_retx_attempted(){}
 
-  srsue_byte_buffer_t *sdus[5];
+  byte_buffer_t *sdus[5];
   int n_sdus;
 };
 
@@ -87,7 +87,7 @@ void basic_test()
   rlc2.configure(&cnfg);
 
   // Push 5 SDUs into RLC1
-  srsue_byte_buffer_t sdu_bufs[NBUFS];
+  byte_buffer_t sdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
   {
     *sdu_bufs[i].msg    = i; // Write the index into the buffer
@@ -98,7 +98,7 @@ void basic_test()
   assert(13 == rlc1.get_buffer_state());
 
   // Read 5 PDUs from RLC1 (1 byte each)
-  srsue_byte_buffer_t pdu_bufs[NBUFS];
+  byte_buffer_t pdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
   {
     len = rlc1.read_pdu(pdu_bufs[i].msg, 3); // 3 bytes for header + payload
@@ -157,7 +157,7 @@ void loss_test()
   rlc2.configure(&cnfg);
 
   // Push 5 SDUs into RLC1
-  srsue_byte_buffer_t sdu_bufs[NBUFS];
+  byte_buffer_t sdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
   {
     *sdu_bufs[i].msg    = i; // Write the index into the buffer
@@ -168,7 +168,7 @@ void loss_test()
   assert(13 == rlc1.get_buffer_state());
 
   // Read 5 PDUs from RLC1 (1 byte each)
-  srsue_byte_buffer_t pdu_bufs[NBUFS];
+  byte_buffer_t pdu_bufs[NBUFS];
   for(int i=0;i<NBUFS;i++)
   {
     len = rlc1.read_pdu(pdu_bufs[i].msg, 3); // 3 bytes for header + payload

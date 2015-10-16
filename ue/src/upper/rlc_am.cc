@@ -82,7 +82,7 @@ void rlc_am::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 
   log->info("%s configured: t_poll_retx=%d, poll_pdu=%d, poll_byte=%d, max_retx_thresh=%d, "
             "t_reordering=%d, t_status_prohibit=%d\n",
-            srsue_rb_id_text[lcid], t_poll_retx, poll_pdu, poll_byte, max_retx_thresh,
+            rb_id_text[lcid], t_poll_retx, poll_pdu, poll_byte, max_retx_thresh,
             t_reordering, t_status_prohibit);
 }
 
@@ -100,9 +100,9 @@ uint32_t rlc_am::get_bearer()
  * PDCP interface
  ***************************************************************************/
 
-void rlc_am::write_sdu(srsue_byte_buffer_t *sdu)
+void rlc_am::write_sdu(byte_buffer_t *sdu)
 {
-  log->info_hex(sdu->msg, sdu->N_bytes, "%s Tx SDU", srsue_rb_id_text[lcid]);
+  log->info_hex(sdu->msg, sdu->N_bytes, "%s Tx SDU", rb_id_text[lcid]);
   tx_sdu_queue.write(sdu);
 }
 
@@ -112,11 +112,11 @@ bool rlc_am::read_sdu()
   if(n_sdus == 0)
     return false;
 
-  srsue_byte_buffer_t *sdu;
+  byte_buffer_t *sdu;
   for(int i=0; i<n_sdus; i++)
   {
     rx_sdu_queue.read(&sdu);
-    log->info_hex(sdu->msg, sdu->N_bytes, "%s Rx SDU", srsue_rb_id_text[lcid]);
+    log->info_hex(sdu->msg, sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
     pdcp->write_pdu(lcid, sdu);
   }
 
@@ -209,7 +209,7 @@ void rlc_am::check_reordering_timeout()
   if(reordering_timeout.is_running() && reordering_timeout.expired())
   {
     reordering_timeout.reset();
-    log->debug("%s reordering timeout expiry - updating vr_ms\n", srsue_rb_id_text[lcid]);
+    log->debug("%s reordering timeout expiry - updating vr_ms\n", rb_id_text[lcid]);
 
     // 36.322 v10 Section 5.1.3.2.4
     vr_ms = vr_x;
@@ -269,7 +269,7 @@ int  rlc_am::build_status_pdu(uint8_t *payload, uint32_t nof_bytes)
   if(nof_bytes >= pdu_len)
   {
     log->info("%s Tx status PDU - %s\n",
-              srsue_rb_id_text[lcid], rlc_am_to_string(&status).c_str());
+              rb_id_text[lcid], rlc_am_to_string(&status).c_str());
 
     do_status     = false;
     poll_received = false;
@@ -280,7 +280,7 @@ int  rlc_am::build_status_pdu(uint8_t *payload, uint32_t nof_bytes)
     return rlc_am_write_status_pdu(&status, payload);
   }else{
     log->warning("%s Cannot tx status PDU - %d bytes available, %d bytes required\n",
-                 srsue_rb_id_text[lcid], nof_bytes, pdu_len);
+                 rb_id_text[lcid], nof_bytes, pdu_len);
     return 0;
   }
 }
@@ -308,13 +308,13 @@ int  rlc_am::build_retx_pdu(uint8_t *payload, uint32_t nof_bytes)
     if(tx_window[sn].retx_count >= max_retx_thresh)
       rrc->max_retx_attempted();
     log->info("%s Retx SN %d, retx count: %d\n",
-              srsue_rb_id_text[lcid], sn, tx_window[sn].retx_count);
+              rb_id_text[lcid], sn, tx_window[sn].retx_count);
     debug_state();
     return tx_window[sn].buf->N_bytes;
   }else{
     //TODO: implement PDU resegmentation
     log->warning("%s Cannot retx SN %d - %d bytes available, %d bytes required\n",
-                 srsue_rb_id_text[lcid], sn, nof_bytes, tx_window[sn].buf->N_bytes);
+                 rb_id_text[lcid], sn, nof_bytes, tx_window[sn].buf->N_bytes);
     return 0;
   }
 }
@@ -327,7 +327,7 @@ int  rlc_am::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
     return 0;
   }
 
-  srsue_byte_buffer_t *pdu = pool->allocate();
+  byte_buffer_t *pdu = pool->allocate();
   rlc_amd_pdu_header_t header;
   header.dc   = RLC_DC_FIELD_DATA_PDU;
   header.rf   = 0;
@@ -347,7 +347,7 @@ int  rlc_am::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   if(pdu_space <= head_len)
   {
     log->warning("%s Cannot build a PDU - %d bytes available, %d bytes required for header\n",
-                 srsue_rb_id_text[lcid], nof_bytes, head_len);
+                 rb_id_text[lcid], nof_bytes, head_len);
     return 0;
   }
 
@@ -430,17 +430,17 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   rlc_am_read_data_pdu_header(payload, nof_bytes, &header);
 
   log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d",
-                srsue_rb_id_text[lcid], header.sn);
+                rb_id_text[lcid], header.sn);
 
   if(!inside_rx_window(header.sn))
   {
     if(header.p)
     {
-      log->info("%s Status packet requested through polling bit\n", srsue_rb_id_text[lcid]);
+      log->info("%s Status packet requested through polling bit\n", rb_id_text[lcid]);
       do_status = true;
     }
     log->info("%s SN: %d outside rx window [%d:%d] - discarding\n",
-              srsue_rb_id_text[lcid], header.sn, vr_r, vr_mr);
+              rb_id_text[lcid], header.sn, vr_r, vr_mr);
     return;
   }
   it = rx_window.find(header.sn);
@@ -448,11 +448,11 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   {
     if(header.p)
     {
-      log->info("%s Status packet requested through polling bit\n", srsue_rb_id_text[lcid]);
+      log->info("%s Status packet requested through polling bit\n", rb_id_text[lcid]);
       do_status = true;
     }
     log->info("%s Discarding duplicate SN: %d\n",
-              srsue_rb_id_text[lcid], header.sn);
+              rb_id_text[lcid], header.sn);
     return;
   }
 
@@ -485,7 +485,7 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   // Check poll bit
   if(header.p)
   {
-    log->info("%s Status packet requested through polling bit\n", srsue_rb_id_text[lcid]);
+    log->info("%s Status packet requested through polling bit\n", rb_id_text[lcid]);
     poll_received = true;
 
     // 36.322 v10 Section 5.2.3
@@ -527,12 +527,12 @@ void rlc_am::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
 
 void rlc_am::handle_control_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
-  log->info_hex(payload, nof_bytes, "%s Rx control PDU", srsue_rb_id_text[lcid]);
+  log->info_hex(payload, nof_bytes, "%s Rx control PDU", rb_id_text[lcid]);
 
   rlc_status_pdu_t status;
   rlc_am_read_status_pdu(payload, nof_bytes, &status);
 
-  log->info("%s Rx Status PDU: %s\n", srsue_rb_id_text[lcid], rlc_am_to_string(&status).c_str());
+  log->info("%s Rx Status PDU: %s\n", rb_id_text[lcid], rlc_am_to_string(&status).c_str());
 
   poll_retx_timeout.reset();
 
@@ -634,7 +634,7 @@ void rlc_am::debug_state()
 {
   log->debug("%s vt_a = %d, vt_ms = %d, vt_s = %d, poll_sn = %d \n"
              "vr_r = %d, vr_mr = %d, vr_x = %d, vr_ms = %d, vr_h = %d\n",
-             srsue_rb_id_text[lcid], vt_a, vt_ms, vt_s, poll_sn,
+             rb_id_text[lcid], vt_a, vt_ms, vt_s, poll_sn,
              vr_r, vr_mr, vr_x, vr_ms, vr_h);
 
 }
@@ -644,7 +644,7 @@ void rlc_am::debug_state()
  * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
  ***************************************************************************/
 
-void rlc_am_read_data_pdu_header(srsue_byte_buffer_t *pdu, rlc_amd_pdu_header_t *header)
+void rlc_am_read_data_pdu_header(byte_buffer_t *pdu, rlc_amd_pdu_header_t *header)
 {
   rlc_am_read_data_pdu_header(pdu->msg, pdu->N_bytes, header);
 }
@@ -702,7 +702,7 @@ void rlc_am_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_amd_p
   }
 }
 
-void rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffer_t *pdu)
+void rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, byte_buffer_t *pdu)
 {
   uint32_t i;
   uint8_t ext = (header->N_li > 0) ? 1 : 0;
@@ -762,7 +762,7 @@ void rlc_am_write_data_pdu_header(rlc_amd_pdu_header_t *header, srsue_byte_buffe
   pdu->N_bytes += ptr-pdu->msg;
 }
 
-void rlc_am_read_status_pdu(srsue_byte_buffer_t *pdu, rlc_status_pdu_t *status)
+void rlc_am_read_status_pdu(byte_buffer_t *pdu, rlc_status_pdu_t *status)
 {
   rlc_am_read_status_pdu(pdu->msg, pdu->N_bytes, status);
 }
@@ -771,7 +771,7 @@ void rlc_am_read_status_pdu(uint8_t *payload, uint32_t nof_bytes, rlc_status_pdu
 {
   uint32_t i;
   uint8_t  ext1, ext2;
-  srsue_bit_buffer_t tmp;
+  bit_buffer_t tmp;
   uint8_t *ptr = tmp.msg;
 
   srslte_bit_unpack_vector(payload, tmp.msg, nof_bytes*8);
@@ -802,7 +802,7 @@ void rlc_am_read_status_pdu(uint8_t *payload, uint32_t nof_bytes, rlc_status_pdu
   }
 }
 
-void rlc_am_write_status_pdu(rlc_status_pdu_t *status, srsue_byte_buffer_t *pdu )
+void rlc_am_write_status_pdu(rlc_status_pdu_t *status, byte_buffer_t *pdu )
 {
   pdu->N_bytes = rlc_am_write_status_pdu(status, pdu->msg);
 }
@@ -811,7 +811,7 @@ int rlc_am_write_status_pdu(rlc_status_pdu_t *status, uint8_t *payload)
 {
   uint32_t i;
   uint8_t ext1;
-  srsue_bit_buffer_t tmp;
+  bit_buffer_t tmp;
   uint8_t *ptr = tmp.msg;
 
   srslte_bit_unpack(RLC_DC_FIELD_CONTROL_PDU, &ptr, 1);  // D/C
@@ -854,7 +854,7 @@ uint32_t rlc_am_packed_length(rlc_status_pdu_t *status)
   return (len_bits+7)/8;                  // Convert to bytes - integer rounding up
 }
 
-bool rlc_am_is_control_pdu(srsue_byte_buffer_t *pdu)
+bool rlc_am_is_control_pdu(byte_buffer_t *pdu)
 {
   return rlc_am_is_control_pdu(pdu->msg);
 }

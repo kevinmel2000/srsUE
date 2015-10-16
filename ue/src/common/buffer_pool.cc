@@ -53,7 +53,7 @@ void buffer_pool::cleanup(void)
 
 buffer_pool::buffer_pool()
 {
-  pool = new srsue_byte_buffer_t[POOL_SIZE];
+  pool = new byte_buffer_t[POOL_SIZE];
   first_available = &pool[0];
   for(int i=0;i<POOL_SIZE-1;i++)
   {
@@ -63,7 +63,7 @@ buffer_pool::buffer_pool()
   allocated = 0;
 }
 
-srsue_byte_buffer_t* buffer_pool::allocate()
+byte_buffer_t* buffer_pool::allocate()
 {
   boost::lock_guard<boost::mutex> lock(mutex);
 
@@ -74,14 +74,14 @@ srsue_byte_buffer_t* buffer_pool::allocate()
   }
 
   // Remove from available list
-  srsue_byte_buffer_t* b = first_available;
+  byte_buffer_t* b = first_available;
   first_available = b->get_next();
   allocated++;
 
   return b;
 }
 
-void buffer_pool::deallocate(srsue_byte_buffer_t *b)
+void buffer_pool::deallocate(byte_buffer_t *b)
 {
   boost::lock_guard<boost::mutex> lock(mutex);
 

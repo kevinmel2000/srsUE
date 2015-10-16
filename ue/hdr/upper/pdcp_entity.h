@@ -69,10 +69,10 @@ public:
   bool is_active();
 
   // RRC interface
-  void write_sdu(srsue_byte_buffer_t *sdu);
+  void write_sdu(byte_buffer_t *sdu);
 
   // RLC interface
-  void write_pdu(srsue_byte_buffer_t *pdu);
+  void write_pdu(byte_buffer_t *pdu);
 
 private:
   buffer_pool        *pool;
@@ -101,12 +101,12 @@ private:
  * Ref: 3GPP TS 36.323 v10.1.0
  ***************************************************************************/
 
-void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu);
-void pdcp_pack_control_pdu(uint32_t sn, srsue_byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid);
-void pdcp_unpack_control_pdu(srsue_byte_buffer_t *sdu, uint32_t *sn);
+void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu);
+void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid);
+void pdcp_unpack_control_pdu(byte_buffer_t *sdu, uint32_t *sn);
 
-void pdcp_pack_data_pdu_long_sn(uint32_t sn, srsue_byte_buffer_t *sdu);
-void pdcp_unpack_data_pdu_long_sn(srsue_byte_buffer_t *sdu, uint32_t *sn);
+void pdcp_pack_data_pdu_long_sn(uint32_t sn, byte_buffer_t *sdu);
+void pdcp_unpack_data_pdu_long_sn(byte_buffer_t *sdu, uint32_t *sn);
 
 } // namespace srsue
 

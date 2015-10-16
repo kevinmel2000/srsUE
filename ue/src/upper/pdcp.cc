@@ -41,7 +41,7 @@ void pdcp::init(rlc_interface_pdcp *rlc_, rrc_interface_pdcp *rrc_, gw_interface
   gw        = gw_;
   pdcp_log  = pdcp_log_;
 
-  pdcp_array[0].init(rlc, rrc, gw, pdcp_log, SRSUE_RB_ID_SRB0); // SRB0
+  pdcp_array[0].init(rlc, rrc, gw, pdcp_log, RB_ID_SRB0); // SRB0
 }
 
 void pdcp::stop()
@@ -50,7 +50,7 @@ void pdcp::stop()
 /*******************************************************************************
   RRC interface
 *******************************************************************************/
-void pdcp::write_sdu(uint32_t lcid, srsue_byte_buffer_t *sdu)
+void pdcp::write_sdu(uint32_t lcid, byte_buffer_t *sdu)
 {
   if(valid_lcid(lcid))
     pdcp_array[lcid].write_sdu(sdu);
@@ -63,23 +63,23 @@ void pdcp::add_bearer(uint32_t lcid)
     return;
   }
   pdcp_array[lcid].init(rlc, rrc, gw, pdcp_log, lcid);
-  pdcp_log->info("Added bearer %s\n", srsue_rb_id_text[lcid]);
+  pdcp_log->info("Added bearer %s\n", rb_id_text[lcid]);
 }
 
 /*******************************************************************************
   RLC interface
 *******************************************************************************/
-void pdcp::write_pdu(uint32_t lcid, srsue_byte_buffer_t *pdu)
+void pdcp::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
 {
   if(valid_lcid(lcid))
     pdcp_array[lcid].write_pdu(pdu);
 }
 
-void pdcp::write_pdu_bcch_bch(srsue_byte_buffer_t *sdu)
+void pdcp::write_pdu_bcch_bch(byte_buffer_t *sdu)
 {
   rrc->write_pdu_bcch_bch(sdu);
 }
-void pdcp::write_pdu_bcch_dlsch(srsue_byte_buffer_t *sdu)
+void pdcp::write_pdu_bcch_dlsch(byte_buffer_t *sdu)
 {
   rrc->write_pdu_bcch_dlsch(sdu);
 }
