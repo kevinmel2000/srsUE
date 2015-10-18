@@ -69,6 +69,11 @@ int radio_recv_wrapper_cs(void *h, void *data, uint32_t nsamples, srslte_timesta
 {
   srslte::radio *radio_h = (srslte::radio*) h;
   if (radio_h->rx_now(data, nsamples, rx_time)) {
+#ifdef CONTINUOUS_TX
+    if (abs(nsamples-radio_h->get_tti_len())<10) {
+      radio_h->tx_offset(nsamples-radio_h->get_tti_len());
+    }
+#endif
     return nsamples;
   } else {
     return -1;
@@ -97,6 +102,7 @@ bool phch_recv::init_cell() {
           return false; 
         }
       }
+      radio_h->set_tti_len(SRSLTE_SF_LEN_PRB(cell.nof_prb));
       if (do_agc) {
         srslte_ue_sync_start_agc(&ue_sync, callback_set_rx_gain, last_gain);    
       }

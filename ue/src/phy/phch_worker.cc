@@ -37,6 +37,7 @@
 
 //#define DO_UL_POWER_CONTROL
 
+
 namespace srsue {
 
 phch_worker::phch_worker() : tr_exec(10240)
@@ -69,7 +70,6 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Allocating memory\n");
     return false; 
   }
-      
   if (srslte_ue_dl_init(&ue_dl, cell)) {    
     Error("Initiating UE DL\n");
     return false; 
@@ -79,7 +79,6 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Initiating UE UL\n");
     return false; 
   }
-
 #ifdef DO_UL_POWER_CONTROL
   srslte_ue_ul_set_normalization(&ue_ul, false); 
 #else
@@ -297,7 +296,6 @@ bool phch_worker::extract_fft_and_pdcch_llr() {
       return false; 
     }        
   }
-  
   if (decode_pdcch) { /* and not in DRX mode */ 
     if (srslte_pdcch_extract_llr(&ue_dl.pdcch, ue_dl.sf_symbols, ue_dl.ce, 0, tti%10, cfi)) {
       Error("Extracting PDCCH LLR\n");
@@ -379,33 +377,20 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
   if (!srslte_ue_dl_cfg_grant(&ue_dl, grant, cfi, tti%10, rv)) {
     if (ue_dl.pdsch_cfg.grant.mcs.mod > 0 && ue_dl.pdsch_cfg.grant.mcs.tbs >= 0) {
       
+      float noise_estimate = 0.01;//1./srslte_chest_dl_get_snr(&ue_dl.chest)/4;
+      
 #ifdef LOG_EXECTIME
       struct timeval t[3];
       gettimeofday(&t[1], NULL);
 #endif
       
       bool ack = srslte_pdsch_decode_rnti(&ue_dl.pdsch, &ue_dl.pdsch_cfg, softbuffer, ue_dl.sf_symbols, 
-                                    ue_dl.ce, 0, rnti, payload) == 0;
+                                    ue_dl.ce, noise_estimate, rnti, payload) == 0;
 #ifdef LOG_EXECTIME
       gettimeofday(&t[2], NULL);
       get_time_interval(t);
       snprintf(timestr, 64, ", dec_time=%4d us", (int) t[0].tv_usec);
 #endif
-      
-      if (!ack && grant->nof_prb==100 && grant->mcs.idx==27 && (tti%10)==1 && rv==0 && 10*log10(srslte_chest_dl_get_snr(&ue_dl.chest))>20) {
-        printf("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
-             grant->nof_prb, harq_pid, 
-             grant->mcs.tbs/8, grant->mcs.idx, rv, 
-             ack?"ok":"ko", 
-             10*log10(srslte_chest_dl_get_snr(&ue_dl.chest)), 
-             srslte_pdsch_last_noi(&ue_dl.pdsch),
-             timestr);
-        printf("cfi=%d, sf=%d, rnti=%d\n", cfi, tti%10, rnti);
-        srslte_vec_save_file("signal", signal_buffer,23040*sizeof(cf_t));
-        srslte_vec_save_file("eq_symbols", ue_dl.pdsch.d,ue_dl.pdsch_cfg.nbits.nof_re*sizeof(cf_t));
-        srslte_vec_save_file("llr", ue_dl.pdsch.d,ue_dl.pdsch_cfg.nbits.nof_bits*sizeof(int16_t));
-        exit(-1);
-      }
       
       Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
              grant->nof_prb, harq_pid, 
