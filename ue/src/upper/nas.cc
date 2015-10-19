@@ -26,7 +26,6 @@
  */
 
 #include "upper/nas.h"
-#include "liblte_mme.h"
 #include "liblte_security.h"
 
 using namespace srslte;
@@ -35,13 +34,20 @@ namespace srsue{
 
 nas::nas()
   :state(EMM_STATE_DEREGISTERED)
+  ,is_guti_set(false)
+  ,ip_addr(0)
+  ,eps_bearer_id(0)
 {}
 
-void nas::init(usim_interface_nas *usim_, rrc_interface_nas *rrc_, srslte::log *nas_log_)
+void nas::init(usim_interface_nas *usim_,
+               rrc_interface_nas  *rrc_,
+               gw_interface_nas   *gw_,
+               srslte::log        *nas_log_)
 {
   pool    = buffer_pool::get_instance();
   usim    = usim_;
   rrc     = rrc_;
+  gw      = gw_;
   nas_log = nas_log_;
 }
 
@@ -113,8 +119,140 @@ void nas::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
   Parsers
 *******************************************************************************/
 
-void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_attach_accept\n");}
-void nas::parse_attach_reject(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_attach_reject\n");}
+void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
+{
+  LIBLTE_MME_ATTACH_ACCEPT_MSG_STRUCT                                attach_accept;
+  LIBLTE_MME_ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_REQUEST_MSG_STRUCT  act_def_eps_bearer_context_req;
+  LIBLTE_MME_ATTACH_COMPLETE_MSG_STRUCT                              attach_complete;
+  LIBLTE_MME_ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_ACCEPT_MSG_STRUCT   act_def_eps_bearer_context_accept;
+
+  nas_log->info("Received Attach Accept\n");
+
+  liblte_mme_unpack_attach_accept_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &attach_accept);
+
+  if(1 == attach_accept.eps_attach_result) // EPS Attach
+  {
+    //FIXME: Handle t3412.unit
+    //FIXME: Handle tai_list
+    if(attach_accept.guti_present)
+    {
+      memcpy(&guti, &attach_accept.guti.guti, sizeof(LIBLTE_MME_EPS_MOBILE_ID_GUTI_STRUCT));
+      is_guti_set = true;
+      // TODO: log message to console
+    }
+    if(attach_accept.lai_present)
+    {
+    }
+    if(attach_accept.ms_id_present)
+    {}
+    if(attach_accept.emm_cause_present)
+    {}
+    if(attach_accept.t3402_present)
+    {}
+    if(attach_accept.t3423_present)
+    {}
+    if(attach_accept.equivalent_plmns_present)
+    {}
+    if(attach_accept.emerg_num_list_present)
+    {}
+    if(attach_accept.eps_network_feature_support_present)
+    {}
+    if(attach_accept.additional_update_result_present)
+    {}
+    if(attach_accept.t3412_ext_present)
+    {}
+
+    liblte_mme_unpack_activate_default_eps_bearer_context_request_msg(&attach_accept.esm_msg, &act_def_eps_bearer_context_req);
+
+    if(LIBLTE_MME_PDN_TYPE_IPV4 == act_def_eps_bearer_context_req.pdn_addr.pdn_type)
+    {
+      ip_addr |= act_def_eps_bearer_context_req.pdn_addr.addr[0] << 24;
+      ip_addr |= act_def_eps_bearer_context_req.pdn_addr.addr[1] << 16;
+      ip_addr |= act_def_eps_bearer_context_req.pdn_addr.addr[2] << 8;
+      ip_addr |= act_def_eps_bearer_context_req.pdn_addr.addr[3];
+
+      nas_log->info("IP allocated by network %u.%u.%u.%u\n",
+                    act_def_eps_bearer_context_req.pdn_addr.addr[0],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[1],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[2],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[3]);
+
+      // TODO: log message to console
+//        ue->send_ctrl_info_msg("IP allocated by network %u.%u.%u.%u",
+//                                act_def_eps_bearer_context_req.pdn_addr.addr[0],
+//                                act_def_eps_bearer_context_req.pdn_addr.addr[1],
+//                                act_def_eps_bearer_context_req.pdn_addr.addr[2],
+//                                act_def_eps_bearer_context_req.pdn_addr.addr[3]);
+
+      // Setup GW
+      char *err_str;
+      if(gw->setup_if_addr(ip_addr, err_str))
+      {
+        nas_log->error("Failed to set gateway address - %s\n", err_str);
+      }
+    }
+    else
+    {
+      nas_log->info("Not handling IPV6 or IPV4V6");
+    }
+    eps_bearer_id = act_def_eps_bearer_context_req.eps_bearer_id;
+    if(act_def_eps_bearer_context_req.transaction_id_present)
+    {
+        transaction_id = act_def_eps_bearer_context_req.proc_transaction_id;
+    }
+
+    //FIXME: Handle the following parameters
+//    act_def_eps_bearer_context_req.eps_qos.qci
+//    act_def_eps_bearer_context_req.eps_qos.br_present
+//    act_def_eps_bearer_context_req.eps_qos.br_ext_present
+//    act_def_eps_bearer_context_req.apn.apn
+//    act_def_eps_bearer_context_req.negotiated_qos_present
+//    act_def_eps_bearer_context_req.llc_sapi_present
+//    act_def_eps_bearer_context_req.radio_prio_present
+//    act_def_eps_bearer_context_req.packet_flow_id_present
+//    act_def_eps_bearer_context_req.apn_ambr_present
+//    act_def_eps_bearer_context_req.protocol_cnfg_opts_present
+//    act_def_eps_bearer_context_req.connectivity_type_present
+
+    // FIXME: Setup the default EPS bearer context
+
+    state = EMM_STATE_REGISTERED;
+
+    // Send EPS bearer context accept and attach complete
+    act_def_eps_bearer_context_accept.eps_bearer_id                 = eps_bearer_id;
+    act_def_eps_bearer_context_accept.proc_transaction_id           = transaction_id;
+    act_def_eps_bearer_context_accept.protocol_cnfg_opts_present    = false;
+    liblte_mme_pack_activate_default_eps_bearer_context_accept_msg(&act_def_eps_bearer_context_accept, &attach_complete.esm_msg);
+    liblte_mme_pack_attach_complete_msg(&attach_complete,
+                                        LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_AND_CIPHERED,
+                                        usim->get_auth_vector()->k_nas_int,
+                                        usim->get_auth_vector()->nas_count_ul,
+                                        LIBLTE_SECURITY_DIRECTION_UPLINK,
+                                        lcid-1,
+                                        (LIBLTE_BYTE_MSG_STRUCT*)pdu);
+
+    nas_log->info("Sending Attach Complete\n");
+    usim->increment_nas_count_ul();
+    rrc->write_sdu(lcid, pdu);
+  }
+  else
+  {
+    nas_log->info("Not handling attach type %u\n", attach_accept.eps_attach_result);
+    state = EMM_STATE_DEREGISTERED;
+  }
+}
+
+void nas::parse_attach_reject(uint32_t lcid, byte_buffer_t *pdu)
+{
+  LIBLTE_MME_ATTACH_REJECT_MSG_STRUCT attach_rej;
+
+  nas_log->warning("Received Attach Reject\n");
+  liblte_mme_unpack_attach_reject_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &attach_rej);
+  nas_log->info("Attach reject cause = %02X\n", attach_rej.emm_cause);
+  state = EMM_STATE_DEREGISTERED;
+  pool->deallocate(pdu);
+  // FIXME: Command RRC to release?
+}
 
 void nas::parse_authentication_request(uint32_t lcid, byte_buffer_t *pdu)
 {
@@ -160,7 +298,14 @@ void nas::parse_authentication_request(uint32_t lcid, byte_buffer_t *pdu)
   }
 }
 
-void nas::parse_authentication_reject(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_authentication_reject\n");}
+void nas::parse_authentication_reject(uint32_t lcid, byte_buffer_t *pdu)
+{
+  nas_log->warning("Received Authentication Reject\n");
+  pool->deallocate(pdu);
+  state = EMM_STATE_DEREGISTERED;
+  // FIXME: Command RRC to release?
+}
+
 void nas::parse_identity_request(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_identity_request\n");}
 
 void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
@@ -192,8 +337,7 @@ void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
     // Send security mode complete
 
     // Generate NAS encryption key and integrity protection key
-    usim->generate_nas_keys();
-    usim->generate_rrc_keys();
+    usim->generate_nas_keys(); //TODO: NAS should hold keys, not USIM
 
     if(sec_mode_cmd.imeisv_req_present && LIBLTE_MME_IMEISV_REQUESTED == sec_mode_cmd.imeisv_req)
     {

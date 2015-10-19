@@ -207,21 +207,26 @@ void usim::generate_nas_keys()
                                    LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
                                    auth_vec.k_nas_enc,
                                    auth_vec.k_nas_int);
-}
 
-void usim::generate_rrc_keys()
-{
     // Generate K_enb
     liblte_security_generate_k_enb(gen_data.k_asme,
                                    auth_vec.nas_count_ul,
                                    gen_data.k_enb);
+}
 
+void usim::generate_rrc_keys()
+{
     // Generate K_rrc_enc and K_rrc_int
     liblte_security_generate_k_rrc(gen_data.k_enb,
                                    LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
                                    LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
                                    auth_vec.k_rrc_enc,
                                    auth_vec.k_rrc_int);
+}
+
+auth_vector_t *usim::get_auth_vector()
+{
+  return &auth_vec;
 }
 
 void usim::increment_nas_count_ul()
@@ -232,11 +237,6 @@ void usim::increment_nas_count_ul()
 void usim::increment_nas_count_dl()
 {
     auth_vec.nas_count_dl++;
-}
-
-auth_vector_t *usim::get_auth_vector()
-{
-  return &auth_vec;
 }
 
 } // namespace srsue

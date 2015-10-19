@@ -48,7 +48,7 @@ void pdcp::stop()
 {}
 
 /*******************************************************************************
-  RRC interface
+  RRC/GW interface
 *******************************************************************************/
 void pdcp::write_sdu(uint32_t lcid, byte_buffer_t *sdu)
 {
@@ -56,14 +56,20 @@ void pdcp::write_sdu(uint32_t lcid, byte_buffer_t *sdu)
     pdcp_array[lcid].write_sdu(sdu);
 }
 
-void pdcp::add_bearer(uint32_t lcid)
+void pdcp::add_bearer(uint32_t lcid, LIBLTE_RRC_PDCP_CONFIG_STRUCT *cnfg)
 {
   if(lcid < 0 || lcid >= SRSUE_N_RADIO_BEARERS) {
     pdcp_log->error("Radio bearer id must be in [0:%d] - %d\n", SRSUE_N_RADIO_BEARERS, lcid);
     return;
   }
-  pdcp_array[lcid].init(rlc, rrc, gw, pdcp_log, lcid);
+  pdcp_array[lcid].init(rlc, rrc, gw, pdcp_log, lcid, cnfg);
   pdcp_log->info("Added bearer %s\n", rb_id_text[lcid]);
+}
+
+void pdcp::config_security(uint32_t lcid, uint8_t *k_rrc_enc, uint8_t *k_rrc_int)
+{
+  if(valid_lcid(lcid))
+    pdcp_array[lcid].config_security(k_rrc_enc, k_rrc_int);
 }
 
 /*******************************************************************************

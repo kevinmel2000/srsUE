@@ -61,15 +61,17 @@ class pdcp_entity
 {
 public:
   pdcp_entity();
-  void init(rlc_interface_pdcp *rlc_,
-            rrc_interface_pdcp *rrc_,
-            gw_interface_pdcp  *gw_,
-            srslte::log        *log_,
-            uint32_t            lcid_);
+  void init(rlc_interface_pdcp            *rlc_,
+            rrc_interface_pdcp            *rrc_,
+            gw_interface_pdcp             *gw_,
+            srslte::log                   *log_,
+            uint32_t                       lcid_,
+            LIBLTE_RRC_PDCP_CONFIG_STRUCT *cnfg = NULL);
   bool is_active();
 
   // RRC interface
   void write_sdu(byte_buffer_t *sdu);
+  void config_security(uint8_t *k_rrc_enc_, uint8_t *k_rrc_int_);
 
   // RLC interface
   void write_pdu(byte_buffer_t *pdu);
@@ -91,8 +93,10 @@ private:
   // bool do_rohc;
   // PDCP_SN_LENGTH sn_len;
 
-  uint32              rx_sn;
-  uint32              tx_sn;
+  uint32_t            rx_count;
+  uint32_t            tx_count;
+  uint8_t             k_rrc_enc[32];
+  uint8_t             k_rrc_int[32];
 
 };
 

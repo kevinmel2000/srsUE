@@ -58,18 +58,33 @@
 namespace srsue {
 
 typedef enum{
-    RB_ID_SRB0 = 0,
-    RB_ID_SRB1,
-    RB_ID_SRB2,
-    RB_ID_DRB1,
-    RB_ID_DRB2,
-    RB_ID_DRB3,
-    RB_ID_DRB4,
-    RB_ID_DRB5,
-    RB_ID_DRB6,
-    RB_ID_DRB7,
-    RB_ID_DRB8,
-    RB_ID_N_ITEMS,
+  ERROR_NONE = 0,
+  ERROR_INVALID_COMMAND,
+  ERROR_INVALID_PARAM,
+  ERROR_OUT_OF_BOUNDS,
+  ERROR_CANT_START,
+  ERROR_ALREADY_STARTED,
+  ERROR_N_ITEMS,
+}error_t;
+static const char error_text[ERROR_N_ITEMS][20] = { "None",
+                                                    "Invalid command",
+                                                    "Out of bounds",
+                                                    "Can't start",
+                                                    "Already started"};
+
+typedef enum{
+  RB_ID_SRB0 = 0,
+  RB_ID_SRB1,
+  RB_ID_SRB2,
+  RB_ID_DRB1,
+  RB_ID_DRB2,
+  RB_ID_DRB3,
+  RB_ID_DRB4,
+  RB_ID_DRB5,
+  RB_ID_DRB6,
+  RB_ID_DRB7,
+  RB_ID_DRB8,
+  RB_ID_N_ITEMS,
 }rb_id_t;
 static const char rb_id_text[RB_ID_N_ITEMS][20] = { "SRB0",
                                                     "SRB1",

@@ -28,14 +28,19 @@
 #ifndef GW_H
 #define GW_H
 
+#include "common/buffer_pool.h"
 #include "common/log.h"
 #include "common/common.h"
+#include "common/msg_queue.h"
 #include "common/interfaces.h"
+
+#include <linux/if.h>
 
 namespace srsue {
 
 class gw
     :public gw_interface_pdcp
+    ,public gw_interface_nas
 {
 public:
   gw();
@@ -45,10 +50,27 @@ public:
   // UE interface
   bool check_ul_buffers();
 
+  // PDCP interface
+  void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
+
+  // NAS interface
+  error_t setup_if_addr(uint32_t ip_addr, char *err_str);
+
 private:
-  srslte::log       *gw_log;
-  pdcp_interface_gw *pdcp;
-  ue_interface      *ue;
+  buffer_pool        *pool;
+  srslte::log        *gw_log;
+  pdcp_interface_gw  *pdcp;
+  ue_interface       *ue;
+  bool                running;
+  int32               tun_fd;
+  struct ifreq        ifr;
+  int32               sock;
+  bool                if_up;
+  pthread_t           rx_thread;
+  msg_queue           rx_sdu_queue;
+
+  static void*        receive_thread(void *inputs);
+  error_t             init_if(char *err_str);
 };
 
 } // namespace srsue

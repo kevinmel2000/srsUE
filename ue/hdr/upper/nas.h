@@ -32,6 +32,7 @@
 #include "common/log.h"
 #include "common/common.h"
 #include "common/interfaces.h"
+#include "liblte_mme.h"
 
 namespace srsue {
 
@@ -59,7 +60,10 @@ class nas
 {
 public:
   nas();
-  void init(usim_interface_nas *usim_, rrc_interface_nas *rrc_, srslte::log *nas_log_);
+  void init(usim_interface_nas  *usim_,
+            rrc_interface_nas   *rrc_,
+            gw_interface_nas    *gw_,
+            srslte::log         *nas_log_);
   void stop();
 
   // RRC interface
@@ -71,8 +75,17 @@ private:
   srslte::log        *nas_log;
   rrc_interface_nas  *rrc;
   usim_interface_nas *usim;
+  gw_interface_nas   *gw;
 
   emm_state_t        state;
+
+  LIBLTE_MME_EPS_MOBILE_ID_GUTI_STRUCT guti;
+  bool                                 is_guti_set;
+
+  uint32_t ip_addr;
+  uint8_t  eps_bearer_id;
+
+  uint8_t  transaction_id;
 
   // Parsers
   void parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu);

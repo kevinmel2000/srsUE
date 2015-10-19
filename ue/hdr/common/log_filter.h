@@ -47,7 +47,7 @@ class log_filter : public srslte::log
 {
 public:
 
-  log_filter(std::string layer, logger *logger_);
+  log_filter(std::string layer, logger *logger_, bool tti=false);
 
   void error(std::string message, ...);
   void warning(std::string message, ...);
@@ -66,6 +66,7 @@ public:
 
 private:
   logger *logger_h;
+  bool    do_tti;
 
   void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg);
   void all_log(srslte::LOG_LEVEL_ENUM level, uint32_t tti, char *msg, uint8_t *hex, int size);

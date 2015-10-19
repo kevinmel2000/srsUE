@@ -18,6 +18,7 @@ rlc_level = debug
 pdcp_level = debug
 rrc_level = debug
 nas_level = debug
+gw_level = debug
 all_level = warning
 all_hex_limit = -1
 filename = /tmp/ue.log

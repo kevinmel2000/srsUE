@@ -32,9 +32,10 @@ using namespace srslte;
 
 namespace srsue{
 
-log_filter::log_filter(std::string layer, logger *logger_)
+log_filter::log_filter(std::string layer, logger *logger_, bool tti)
   :log(layer)
   ,logger_h(logger_)
+  ,do_tti(tti)
 {}
 
 void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
@@ -47,7 +48,8 @@ void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
     ss << now_time() << " ";
     ss << "[" <<get_service_name() << "] ";
     ss << log_level_text[level] << " ";
-    ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+    if(do_tti)
+      ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
     ss << msg;
 
     str_ptr s_ptr(new std::string(ss.str()));
@@ -67,7 +69,8 @@ void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
     ss << now_time() << " ";
     ss << "[" <<get_service_name() << "] ";
     ss << log_level_text[level] << " ";
-    ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+    if(do_tti)
+      ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
     ss << msg << std::endl;
     ss << hex_string(hex, size);
 
@@ -88,7 +91,8 @@ void log_filter::all_log_line(srslte::LOG_LEVEL_ENUM level,
     ss << now_time() << " ";
     ss << "[" <<get_service_name() << "] ";
     ss << log_level_text[level] << " ";
-    ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
+    if(do_tti)
+      ss << "[" << std::setfill('0') << std::setw(5) << tti << "] ";
     ss << msg;
 
     str_ptr s_ptr(new std::string(ss.str()));

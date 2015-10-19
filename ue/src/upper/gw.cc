@@ -27,29 +27,214 @@
 
 #include "upper/gw.h"
 
+#include <fcntl.h>
+#include <arpa/inet.h>
+#include <linux/ip.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+
+
 using namespace srslte;
 
 namespace srsue{
 
 gw::gw()
+  :rx_sdu_queue(1024)
+  ,if_up(false)
 {}
 
 void gw::init(pdcp_interface_gw *pdcp_, ue_interface *ue_, srslte::log *gw_log_)
 {
+  pool    = buffer_pool::get_instance();
   pdcp    = pdcp_;
   ue      = ue_;
   gw_log  = gw_log_;
+  running = true;
 }
 
 void gw::stop()
-{}
+{
+  if(running)
+  {
+    running = false;
+    if(if_up)
+    {
+      pthread_cancel(rx_thread);
+      pthread_join(rx_thread, NULL);
+    }
+
+    // TODO: tear down TUN device?
+  }
+}
 
 /*******************************************************************************
   UE interface
 *******************************************************************************/
 bool gw::check_ul_buffers()
 {
-  return false;
+  byte_buffer_t *sdu;
+  int n_sdus = rx_sdu_queue.size();
+  for(int i=0;i<n_sdus;i++)
+  {
+    rx_sdu_queue.read(&sdu);
+    pdcp->write_sdu(RB_ID_DRB1, sdu);
+  }
+  return (n_sdus > 0);
+}
+
+/*******************************************************************************
+  PDCP interface
+*******************************************************************************/
+void gw::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
+{
+  gw_log->info_hex(pdu->msg, pdu->N_bytes, "DL PDU");
+  if(!if_up)
+  {
+    gw_log->warning("TUN/TAP not up - dropping gw DL message\n");
+  }else{
+    if(pdu->N_bytes != write(tun_fd, pdu->msg, pdu->N_bytes))
+    {
+      gw_log->error("DL TUN/TAP write failure\n");
+    }
+  }
+  pool->deallocate(pdu);
+}
+
+/*******************************************************************************
+  NAS interface
+*******************************************************************************/
+error_t gw::setup_if_addr(uint32_t ip_addr, char *err_str)
+{
+  if(!if_up)
+  {
+      if(init_if(err_str))
+      {
+        gw_log->error("init_if failed\n");
+        return(ERROR_CANT_START);
+      }
+  }
+
+  // Setup the IP address
+  sock                                                   = socket(AF_INET, SOCK_DGRAM, 0);
+  ifr.ifr_addr.sa_family                                 = AF_INET;
+  ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr = htonl(ip_addr);
+  if(0 > ioctl(sock, SIOCSIFADDR, &ifr))
+  {
+      err_str = strerror(errno);
+      gw_log->debug("Failed to set socket address: %s\n", err_str);
+      close(tun_fd);
+      return(ERROR_CANT_START);
+  }
+  ifr.ifr_netmask.sa_family                                 = AF_INET;
+  ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr = inet_addr("255.255.255.0");
+  if(0 > ioctl(sock, SIOCSIFNETMASK, &ifr))
+  {
+      err_str = strerror(errno);
+      gw_log->debug("Failed to set socket netmask: %s\n", err_str);
+      close(tun_fd);
+      return(ERROR_CANT_START);
+  }
+
+  // Setup a thread to receive packets from the TUN device
+  pthread_create(&rx_thread, NULL, &receive_thread, this);
+
+  return(ERROR_NONE);
+}
+
+error_t gw::init_if(char *err_str)
+{
+    if(if_up)
+    {
+      return(ERROR_ALREADY_STARTED);
+    }
+
+    char dev[IFNAMSIZ] = "tun_srsue";
+
+    // Construct the TUN device
+    tun_fd = open("/dev/net/tun", O_RDWR);
+    gw_log->info("TUN file descriptor = %d\n", tun_fd);
+    if(0 > tun_fd)
+    {
+        err_str = strerror(errno);
+        gw_log->debug("Failed to open TUN device: %s\n", err_str);
+        return(ERROR_CANT_START);
+    }
+    memset(&ifr, 0, sizeof(ifr));
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+    strncpy(ifr.ifr_ifrn.ifrn_name, dev, IFNAMSIZ);
+    if(0 > ioctl(tun_fd, TUNSETIFF, &ifr))
+    {
+        err_str = strerror(errno);
+        gw_log->debug("Failed to set TUN device name: %s\n", err_str);
+        close(tun_fd);
+        return(ERROR_CANT_START);
+    }
+
+    // Bring up the interface
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if(0 > ioctl(sock, SIOCGIFFLAGS, &ifr))
+    {
+        err_str = strerror(errno);
+        gw_log->debug("Failed to bring up socket: %s\n", err_str);
+        close(tun_fd);
+        return(ERROR_CANT_START);
+    }
+    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
+    if(0 > ioctl(sock, SIOCSIFFLAGS, &ifr))
+    {
+        err_str = strerror(errno);
+        gw_log->debug("Failed to set socket flags: %s\n", err_str);
+        close(tun_fd);
+        return(ERROR_CANT_START);
+    }
+
+    if_up = true;
+
+    return(ERROR_NONE);
+}
+
+/********************/
+/*    GW Receive    */
+/********************/
+void* gw::receive_thread(void *inputs)
+{
+    gw             *g    = (gw *)inputs;
+    struct iphdr   *ip_pkt;
+    uint32          idx = 0;
+    int32           N_bytes;
+    byte_buffer_t  *pdu = g->pool->allocate();
+
+    g->gw_log->info("GW IP packet receiver thread running\n");
+
+    while(g->running)
+    {
+        N_bytes = read(g->tun_fd, &pdu->msg[idx], SRSUE_MAX_BUFFER_SIZE_BYTES-SRSUE_BUFFER_HEADER_OFFSET);
+        g->gw_log->debug("Read %d bytes from TUN fd=%d\n", N_bytes, g->tun_fd);
+        if(N_bytes > 0)
+        {
+            pdu->N_bytes = idx + N_bytes;
+            ip_pkt       = (struct iphdr*)pdu->msg;
+
+            // Check if entire packet was received
+            if(ntohs(ip_pkt->tot_len) == pdu->N_bytes)
+            {
+              g->gw_log->info_hex(pdu->msg, pdu->N_bytes, "UL PDU");
+              g->rx_sdu_queue.write(pdu);
+              g->ue->notify();
+              pdu = g->pool->allocate();
+              idx = 0;
+            }else{
+              idx += N_bytes;
+            }
+        }else{
+            g->gw_log->error("Failed to read from TUN interface - gw receive thread exiting.\n");
+            break;
+        }
+    }
+
+    g->gw_log->info("GW IP receiver thread exiting.\n");
 }
 
 } // namespace srsue

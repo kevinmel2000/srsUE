@@ -43,6 +43,7 @@ void rrc::init(phy_interface_rrc     *phy_,
                rlc_interface_rrc     *rlc_,
                pdcp_interface_rrc    *pdcp_,
                nas_interface_rrc     *nas_,
+               usim_interface_rrc    *usim_,
                srslte::log           *rrc_log_)
 {
   pool    = buffer_pool::get_instance();
@@ -51,6 +52,7 @@ void rrc::init(phy_interface_rrc     *phy_,
   rlc     = rlc_;
   pdcp    = pdcp_;
   nas     = nas_;
+  usim    = usim_;
   rrc_log = rrc_log_;
 
   transaction_id = 0;
@@ -264,6 +266,10 @@ void rrc::send_ul_info_transfer(uint32_t lcid, byte_buffer_t *sdu)
   ul_dcch_msg.msg.ul_info_transfer.dedicated_info.N_bytes = sdu->N_bytes;
   liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
 
+  // Reset and reuse sdu buffer
+  byte_buffer_t *pdu = sdu;
+  pdu->reset();
+
   // Byte align and pack the message bits for PDCP
   if((bit_buf.N_bits % 8) != 0)
   {
@@ -271,12 +277,134 @@ void rrc::send_ul_info_transfer(uint32_t lcid, byte_buffer_t *sdu)
       bit_buf.msg[bit_buf.N_bits + i] = 0;
     bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
   }
-  byte_buffer_t *pdcp_buf = pool->allocate();
-  srslte_bit_pack_vector(bit_buf.msg, pdcp_buf->msg, bit_buf.N_bits);
-  pdcp_buf->N_bytes = bit_buf.N_bits/8;
+  srslte_bit_pack_vector(bit_buf.msg, pdu->msg, bit_buf.N_bits);
+  pdu->N_bytes = bit_buf.N_bits/8;
 
   rrc_log->info("Sending UL Info Transfer\n");
-  pdcp->write_sdu(lcid, pdcp_buf);
+  pdcp->write_sdu(lcid, pdu);
+}
+
+void rrc::send_security_mode_complete(uint32_t lcid, byte_buffer_t *pdu)
+{
+  rrc_log->debug("Preparing Security Mode Complete\n");
+  LIBLTE_RRC_UL_DCCH_MSG_STRUCT ul_dcch_msg;
+  ul_dcch_msg.msg_type = LIBLTE_RRC_UL_DCCH_MSG_TYPE_SECURITY_MODE_COMPLETE;
+  ul_dcch_msg.msg.security_mode_complete.rrc_transaction_id = transaction_id;
+  liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srslte_bit_pack_vector(bit_buf.msg, pdu->msg, bit_buf.N_bits);
+  pdu->N_bytes = bit_buf.N_bits/8;
+
+  rrc_log->info("Sending Security Mode Complete\n");
+  pdcp->write_sdu(lcid, pdu);
+}
+
+void rrc::send_rrc_con_reconfig_complete(uint32_t lcid, byte_buffer_t *pdu)
+{
+  rrc_log->debug("Preparing RRC Connection Reconfig Complete\n");
+  LIBLTE_RRC_UL_DCCH_MSG_STRUCT ul_dcch_msg;
+
+  ul_dcch_msg.msg_type = LIBLTE_RRC_UL_DCCH_MSG_TYPE_RRC_CON_RECONFIG_COMPLETE;
+  ul_dcch_msg.msg.rrc_con_reconfig_complete.rrc_transaction_id = transaction_id;
+  liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srslte_bit_pack_vector(bit_buf.msg, pdu->msg, bit_buf.N_bits);
+  pdu->N_bytes = bit_buf.N_bits/8;
+
+  rrc_log->info("Sending RRC Connection Reconfig Complete\n");
+  pdcp->write_sdu(lcid, pdu);
+}
+
+void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
+{
+  rrc_log->debug("Preparing UE Capability Info\n");
+  LIBLTE_RRC_UL_DCCH_MSG_STRUCT ul_dcch_msg;
+
+  ul_dcch_msg.msg_type = LIBLTE_RRC_UL_DCCH_MSG_TYPE_UE_CAPABILITY_INFO;
+  ul_dcch_msg.msg.ue_capability_info.rrc_transaction_id = transaction_id;
+
+  LIBLTE_RRC_UE_CAPABILITY_INFORMATION_STRUCT *info = &ul_dcch_msg.msg.ue_capability_info;
+  info->N_ue_caps = 0; // Sending an empty array for testing
+  info->ue_capability_rat[0].rat_type = LIBLTE_RRC_RAT_TYPE_EUTRA;
+
+  LIBLTE_RRC_UE_EUTRA_CAPABILITY_STRUCT *cap = &info->ue_capability_rat[0].eutra_capability;
+  cap->access_stratum_release = LIBLTE_RRC_ACCESS_STRATUM_RELEASE_REL9;
+  cap->ue_category = 3;
+
+  cap->pdcp_params.max_rohc_ctxts_present = false;
+  cap->pdcp_params.supported_rohc_profiles[0] = false;
+  cap->pdcp_params.supported_rohc_profiles[1] = false;
+  cap->pdcp_params.supported_rohc_profiles[2] = false;
+  cap->pdcp_params.supported_rohc_profiles[3] = false;
+  cap->pdcp_params.supported_rohc_profiles[4] = false;
+  cap->pdcp_params.supported_rohc_profiles[5] = false;
+  cap->pdcp_params.supported_rohc_profiles[6] = false;
+  cap->pdcp_params.supported_rohc_profiles[7] = false;
+  cap->pdcp_params.supported_rohc_profiles[8] = false;
+
+  cap->phy_params.specific_ref_sigs_supported = false;
+  cap->phy_params.tx_antenna_selection_supported = false;
+
+  //TODO: Generate this from user input?
+  cap->rf_params.N_supported_band_eutras = 3;
+  cap->rf_params.supported_band_eutra[0].band_eutra = 3;
+  cap->rf_params.supported_band_eutra[0].half_duplex = false;
+  cap->rf_params.supported_band_eutra[1].band_eutra = 7;
+  cap->rf_params.supported_band_eutra[1].half_duplex = false;
+  cap->rf_params.supported_band_eutra[2].band_eutra = 20;
+  cap->rf_params.supported_band_eutra[2].half_duplex = false;
+
+  cap->meas_params.N_band_list_eutra = 3;
+  cap->meas_params.band_list_eutra[0].N_inter_freq_need_for_gaps = 3;
+  cap->meas_params.band_list_eutra[0].inter_freq_need_for_gaps[0] = true;
+  cap->meas_params.band_list_eutra[0].inter_freq_need_for_gaps[1] = true;
+  cap->meas_params.band_list_eutra[0].inter_freq_need_for_gaps[2] = true;
+  cap->meas_params.band_list_eutra[1].N_inter_freq_need_for_gaps = 3;
+  cap->meas_params.band_list_eutra[1].inter_freq_need_for_gaps[0] = true;
+  cap->meas_params.band_list_eutra[1].inter_freq_need_for_gaps[1] = true;
+  cap->meas_params.band_list_eutra[1].inter_freq_need_for_gaps[2] = true;
+  cap->meas_params.band_list_eutra[2].N_inter_freq_need_for_gaps = 3;
+  cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[0] = true;
+  cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[1] = true;
+  cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[2] = true;
+
+  cap->feature_group_indicator_present         = false;
+  cap->inter_rat_params.utra_fdd_present       = false;
+  cap->inter_rat_params.utra_tdd128_present    = false;
+  cap->inter_rat_params.utra_tdd384_present    = false;
+  cap->inter_rat_params.utra_tdd768_present    = false;
+  cap->inter_rat_params.geran_present          = false;
+  cap->inter_rat_params.cdma2000_hrpd_present  = false;
+  cap->inter_rat_params.cdma2000_1xrtt_present = false;
+
+  liblte_rrc_pack_ul_dcch_msg(&ul_dcch_msg, (LIBLTE_BIT_MSG_STRUCT*)&bit_buf);
+
+  // Byte align and pack the message bits for PDCP
+  if((bit_buf.N_bits % 8) != 0)
+  {
+    for(int i=0; i<8-(bit_buf.N_bits % 8); i++)
+      bit_buf.msg[bit_buf.N_bits + i] = 0;
+    bit_buf.N_bits += 8 - (bit_buf.N_bits % 8);
+  }
+  srslte_bit_pack_vector(bit_buf.msg, pdu->msg, bit_buf.N_bits);
+  pdu->N_bytes = bit_buf.N_bits/8;
+
+  rrc_log->info("Sending UE Capability Info\n");
+  pdcp->write_sdu(lcid, pdu);
 }
 
 /*******************************************************************************
@@ -285,11 +413,13 @@ void rrc::send_ul_info_transfer(uint32_t lcid, byte_buffer_t *sdu)
 
 void rrc::parse_dl_ccch(byte_buffer_t *pdu)
 {
-  LIBLTE_RRC_DL_CCCH_MSG_STRUCT dl_ccch_msg;
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
   bit_buf.N_bits = pdu->N_bytes*8;
   pool->deallocate(pdu);
   liblte_rrc_unpack_dl_ccch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dl_ccch_msg);
+
+  rrc_log->info("SRB0 - Received %s\n",
+                liblte_rrc_dl_ccch_msg_type_text[dl_ccch_msg.msg_type]);
 
   switch(dl_ccch_msg.msg_type)
   {
@@ -318,29 +448,56 @@ void rrc::parse_dl_ccch(byte_buffer_t *pdu)
 
 void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
 {
-  LIBLTE_RRC_DL_DCCH_MSG_STRUCT dl_dcch_msg;
   srslte_bit_unpack_vector(pdu->msg, bit_buf.msg, pdu->N_bytes*8);
   bit_buf.N_bits = pdu->N_bytes*8;
-  pool->deallocate(pdu);
   liblte_rrc_unpack_dl_dcch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &dl_dcch_msg);
+
+  rrc_log->info("%s - Received %s\n",
+                rb_id_text[lcid],
+                liblte_rrc_dl_dcch_msg_type_text[dl_dcch_msg.msg_type]);
+
+  // Reset and reuse pdu buffer if possible
+  pdu->reset();
 
   switch(dl_dcch_msg.msg_type)
   {
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_DL_INFO_TRANSFER:
     rrc_log->info("DL Info Transfer received\n");
-    pdu->reset();
     memcpy(pdu->msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes);
     pdu->N_bytes = dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes;
     nas->write_pdu(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_SECURITY_MODE_COMMAND:
-    rrc_log->error("Not handling Security Mode Command\n");
+    rrc_log->info("DL Security Mode Command received\n");
+    transaction_id =  dl_dcch_msg.msg.security_mode_cmd.rrc_transaction_id;
+
+    // TODO: Set algorithms correctly in PDCP
+    // TODO: We currently only support EEA0 and EIA2 & they're hardcoded in PDCP
+    //LIBLTE_RRC_CIPHERING_ALGORITHM_ENUM ciph        = dl_dcch_msg.msg.security_mode_cmd.sec_algs.cipher_alg;
+    //LIBLTE_RRC_INTEGRITY_PROT_ALGORITHM_ENUM integ  = dl_dcch_msg.msg.security_mode_cmd.sec_algs.int_alg;
+
+    // Configure PDCP for security
+    usim->generate_rrc_keys(); // TODO: RRC should hold the keys, not USIM
+    pdcp->config_security(lcid, usim->get_auth_vector()->k_rrc_enc, usim->get_auth_vector()->k_rrc_int);
+    send_security_mode_complete(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RECONFIG:
-    rrc_log->error("Not handling RRC Connection Reconfiguration\n");
+    rrc_log->info("RRC Connection Reconfiguration received\n");
+    transaction_id = dl_dcch_msg.msg.security_mode_cmd.rrc_transaction_id;
+    handle_rrc_con_reconfig(lcid, &dl_dcch_msg.msg.rrc_con_reconfig);
+    send_rrc_con_reconfig_complete(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_UE_CAPABILITY_ENQUIRY:
-    rrc_log->error("Not handling UE Capability Enquiry\n");
+    rrc_log->info("UE Capability Enquiry received\n");
+    transaction_id = dl_dcch_msg.msg.ue_cap_enquiry.rrc_transaction_id;
+    for(int i=0; i<dl_dcch_msg.msg.ue_cap_enquiry.N_ue_cap_reqs; i++)
+    {
+      if(LIBLTE_RRC_RAT_TYPE_EUTRA == dl_dcch_msg.msg.ue_cap_enquiry.ue_capability_request[i])
+      {
+        send_rrc_ue_cap_info(lcid, pdu);
+        break;
+      }
+    }
     break;
   default:
     break;
@@ -704,11 +861,57 @@ void rrc::handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup)
   }
   for(int i=0; i<setup->rr_cnfg.srb_to_add_mod_list_size; i++)
   {
+    // TODO: handle SRB modification
     add_srb(&setup->rr_cnfg.srb_to_add_mod_list[i]);
   }
   for(int i=0; i<setup->rr_cnfg.drb_to_add_mod_list_size; i++)
   {
+    // TODO: handle DRB modification
     add_drb(&setup->rr_cnfg.drb_to_add_mod_list[i]);
+  }
+}
+
+void rrc::handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig)
+{
+  uint32_t i;
+
+  if(reconfig->meas_cnfg_present)
+  {
+    //TODO: handle meas_cnfg
+  }
+  if(reconfig->mob_ctrl_info_present)
+  {
+    //TODO: handle mob_ctrl_info
+  }
+
+  if(reconfig->rr_cnfg_ded_present)
+  {
+    uint32_t n_srb = reconfig->rr_cnfg_ded.srb_to_add_mod_list_size;
+    for(i=0; i<n_srb; i++)
+    {
+      add_srb(&reconfig->rr_cnfg_ded.srb_to_add_mod_list[i]);
+    }
+
+    uint32_t n_drb_rel = reconfig->rr_cnfg_ded.drb_to_release_list_size;
+    for(i=0; i<n_drb_rel; i++)
+    {
+      release_drb(reconfig->rr_cnfg_ded.drb_to_release_list[i]);
+    }
+
+    uint32_t n_drb = reconfig->rr_cnfg_ded.drb_to_add_mod_list_size;
+    for(i=0; i<n_drb; i++)
+    {
+      add_drb(&reconfig->rr_cnfg_ded.drb_to_add_mod_list[i]);
+    }
+  }
+
+  byte_buffer_t *pdu;
+  for(i=0;i<reconfig->N_ded_info_nas;i++)
+  {
+    pdu = pool->allocate();
+    memcpy(pdu->msg, &reconfig->ded_info_nas_list[i].msg, reconfig->ded_info_nas_list[i].N_bytes);
+    pdu->N_bytes = reconfig->ded_info_nas_list[i].N_bytes;
+    nas->write_pdu(lcid, pdu);
   }
 }
 
@@ -758,10 +961,53 @@ void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
     mac->setup_lcid(srb_cnfg->srb_id, log_chan_group, priority, prioritized_bit_rate, bucket_size_duration);
   }
 
+  srbs[srb_cnfg->srb_id] = *srb_cnfg;
   rrc_log->info("Added radio bearer %s\n", rb_id_text[srb_cnfg->srb_id]);
 }
 
 void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)
-{}
+{
+
+  if(!drb_cnfg->pdcp_cnfg_present ||
+     !drb_cnfg->rlc_cnfg_present  ||
+     !drb_cnfg->lc_cnfg_present)
+  {
+    rrc_log->error("Cannot add DRB - incomplete configuration\n");
+    return;
+  }
+
+  uint32_t lcid = RB_ID_SRB2 + drb_cnfg->drb_id;
+
+  // Setup PDCP
+  pdcp->add_bearer(lcid, &drb_cnfg->pdcp_cnfg);
+
+  // Setup RLC
+  rlc->add_bearer(lcid, &drb_cnfg->rlc_cnfg);
+
+  // Setup MAC
+  uint8_t  log_chan_group       =  0;
+  uint8_t  priority             =  1;
+  int      prioritized_bit_rate = -1;
+  int      bucket_size_duration = -1;
+  if(drb_cnfg->lc_cnfg.ul_specific_params_present)
+  {
+    if(drb_cnfg->lc_cnfg.ul_specific_params.log_chan_group_present)
+      log_chan_group      = drb_cnfg->lc_cnfg.ul_specific_params.log_chan_group;
+
+    priority              = drb_cnfg->lc_cnfg.ul_specific_params.priority;
+    prioritized_bit_rate  = liblte_rrc_prioritized_bit_rate_num[drb_cnfg->lc_cnfg.ul_specific_params.prioritized_bit_rate];
+    bucket_size_duration  = liblte_rrc_bucket_size_duration_num[drb_cnfg->lc_cnfg.ul_specific_params.bucket_size_duration];
+  }
+  //mac->setup_lcid(lcid, log_chan_group, priority, prioritized_bit_rate, bucket_size_duration);
+  mac->setup_lcid(lcid, 3, 2, prioritized_bit_rate, bucket_size_duration);
+
+  drbs[lcid] = *drb_cnfg;
+  rrc_log->info("Added radio bearer %s\n", rb_id_text[lcid]);
+}
+
+void rrc::release_drb(uint8_t lcid)
+{
+  // TODO
+}
 
 } // namespace srsue

@@ -34,18 +34,19 @@ namespace srsue{
 
 pdcp_entity::pdcp_entity()
   :active(false)
-  ,tx_sn(0)
-  ,rx_sn(0)
+  ,tx_count(0)
+  ,rx_count(0)
   ,do_security(false)
 {
   pool = buffer_pool::get_instance();
 }
 
-void pdcp_entity::init(rlc_interface_pdcp *rlc_,
-                       rrc_interface_pdcp *rrc_,
-                       gw_interface_pdcp  *gw_,
-                       srslte::log        *log_,
-                       uint32_t            lcid_)
+void pdcp_entity::init(rlc_interface_pdcp            *rlc_,
+                       rrc_interface_pdcp            *rrc_,
+                       gw_interface_pdcp             *gw_,
+                       srslte::log                   *log_,
+                       uint32_t                       lcid_,
+                       LIBLTE_RRC_PDCP_CONFIG_STRUCT *cnfg)
 {
   rlc     = rlc_;
   rrc     = rrc_;
@@ -53,6 +54,8 @@ void pdcp_entity::init(rlc_interface_pdcp *rlc_,
   log     = log_;
   lcid    = lcid_;
   active  = true;
+
+  // TODO: handle cnfg
 }
 
 bool pdcp_entity::is_active()
@@ -69,24 +72,21 @@ void pdcp_entity::write_sdu(byte_buffer_t *sdu)
   switch(lcid)
   {
   case RB_ID_SRB0:
-    // Simply pass on to RLC
     rlc->write_sdu(lcid, sdu);
     break;
   case RB_ID_SRB1:  // Intentional fall-through
   case RB_ID_SRB2:
-    // Pack SDU into a control PDU
     if(do_security)
     {
-      /*pdcp_pack_control_pdu(&control,
-                             (LIBLTE_BYTE_MSG_STRUCT*)sdu,
-                             user->get_k_rrc_int(),
-                             LIBLTE_SECURITY_DIRECTION_UPLINK,
-                             lcid-1,
-                             (LIBLTE_BYTE_MSG_STRUCT*)&pdu);*/
+      pdcp_pack_control_pdu(tx_count,
+                            sdu,
+                            k_rrc_int,
+                            LIBLTE_SECURITY_DIRECTION_UPLINK,
+                            lcid-1);
     }else{
-      pdcp_pack_control_pdu(tx_sn, sdu);
+      pdcp_pack_control_pdu(tx_count, sdu);
     }
-    tx_sn++;
+    tx_count++;
     rlc->write_sdu(lcid, sdu);
 
     break;
@@ -95,7 +95,18 @@ void pdcp_entity::write_sdu(byte_buffer_t *sdu)
   // Handle DRB messages
   if(lcid >= RB_ID_DRB1)
   {
+    pdcp_pack_data_pdu_long_sn(tx_count, sdu);
+    rlc->write_sdu(lcid, sdu);
+  }
+}
 
+void pdcp_entity::config_security(uint8_t *k_rrc_enc_, uint8_t *k_rrc_int_)
+{
+  do_security = true;
+  for(int i=0; i<32; i++)
+  {
+    k_rrc_enc[i] = k_rrc_enc_[i];
+    k_rrc_int[i] = k_rrc_int_[i];
   }
 }
 

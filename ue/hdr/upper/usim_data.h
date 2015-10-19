@@ -33,29 +33,29 @@
 namespace srsue {
 
 typedef struct{
-  uint32 nas_count_ul;
-  uint32 nas_count_dl;
-  uint8  rand[16];
-  uint8  res[8];
-  uint8  ck[16];
-  uint8  ik[16];
-  uint8  autn[16];
-  uint8  k_nas_enc[32];
-  uint8  k_nas_int[32];
-  uint8  k_rrc_enc[32];
-  uint8  k_rrc_int[32];
+  uint32_t nas_count_ul;
+  uint32_t nas_count_dl;
+  uint8_t  rand[16];
+  uint8_t  res[8];
+  uint8_t  ck[16];
+  uint8_t  ik[16];
+  uint8_t  autn[16];
+  uint8_t  k_nas_enc[32];
+  uint8_t  k_nas_int[32];
+  uint8_t  k_rrc_enc[32];
+  uint8_t  k_rrc_int[32];
 }auth_vector_t;
 
 typedef struct{
-  uint64 sqn_he;
-  uint64 seq_he;
-  uint8  ak[6];
-  uint8  mac[8];
-  uint8  k_asme[32];
-  uint8  k_enb[32];
-  uint8  k_up_enc[32];
-  uint8  k_up_int[32];
-  uint8  ind_he;
+  uint64_t sqn_he;
+  uint64_t seq_he;
+  uint8_t  ak[6];
+  uint8_t  mac[8];
+  uint8_t  k_asme[32];
+  uint8_t  k_enb[32];
+  uint8_t  k_up_enc[32];
+  uint8_t  k_up_int[32];
+  uint8_t  ind_he;
 }generated_data_t;
 
 } // namespace srsue

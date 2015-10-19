@@ -35,6 +35,8 @@
 #include "common/common.h"
 #include "common/interfaces.h"
 
+#include <map>
+
 namespace srsue {
 
 // RRC states (3GPP 36.331 v10.0.0)
@@ -67,27 +69,34 @@ public:
             rlc_interface_rrc     *rlc_,
             pdcp_interface_rrc    *pdcp_,
             nas_interface_rrc     *nas_,
+            usim_interface_rrc    *usim_,
             srslte::log           *rrc_log_);
   void stop();
 
 private:
-  buffer_pool           *pool;
-  srslte::log           *rrc_log;
-  phy_interface_rrc     *phy;
-  mac_interface_rrc     *mac;
-  rlc_interface_rrc     *rlc;
-  pdcp_interface_rrc    *pdcp;
-  nas_interface_rrc     *nas;
+  buffer_pool          *pool;
+  srslte::log          *rrc_log;
+  phy_interface_rrc    *phy;
+  mac_interface_rrc    *mac;
+  rlc_interface_rrc    *rlc;
+  pdcp_interface_rrc   *pdcp;
+  nas_interface_rrc    *nas;
+  usim_interface_rrc   *usim;
 
-  bit_buffer_t    bit_buf;
+  bit_buffer_t          bit_buf;
 
   rrc_state_t           state;
   uint8_t               transaction_id;
 
-  LIBLTE_RRC_MIB_STRUCT mib;
+  LIBLTE_RRC_MIB_STRUCT                   mib;
   LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_1_STRUCT sib1;
   LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT sib2;
 
+  std::map<uint32_t, LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT> srbs;
+  std::map<uint32_t, LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT> drbs;
+
+  LIBLTE_RRC_DL_CCCH_MSG_STRUCT dl_ccch_msg;
+  LIBLTE_RRC_DL_DCCH_MSG_STRUCT dl_dcch_msg;
 
   pthread_t             sib_search_thread;
 
@@ -108,6 +117,9 @@ private:
   void send_con_request();
   void send_con_setup_complete(byte_buffer_t *nas_msg);
   void send_ul_info_transfer(uint32_t lcid, byte_buffer_t *sdu);
+  void send_security_mode_complete(uint32_t lcid, byte_buffer_t *pdu);
+  void send_rrc_con_reconfig_complete(uint32_t lcid, byte_buffer_t *pdu);
+  void send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu);
 
   // Parsers
   void parse_dl_ccch(byte_buffer_t *pdu);
@@ -120,9 +132,10 @@ private:
   uint32_t      sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
   void          apply_sib2_configs();
   void          handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup);
+  void          handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig);
   void          add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg);
   void          add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg);
-
+  void          release_drb(uint8_t lcid);
 };
 
 } // namespace srsue

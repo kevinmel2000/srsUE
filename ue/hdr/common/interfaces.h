@@ -62,16 +62,30 @@ public:
                                                 bool   *net_valid) = 0;
   virtual auth_vector_t *get_auth_vector() = 0;
   virtual void generate_nas_keys() = 0;
-  virtual void generate_rrc_keys() = 0;
   virtual void increment_nas_count_ul() = 0;
   virtual void increment_nas_count_dl() = 0;
+};
+
+// USIM interface for RRC
+class usim_interface_rrc
+{
+public:
+  virtual auth_vector_t *get_auth_vector() = 0;
+  virtual void generate_rrc_keys() = 0;
+};
+
+// GW interface for NAS
+class gw_interface_nas
+{
+public:
+  virtual error_t setup_if_addr(uint32_t ip_addr, char *err_str) = 0;
 };
 
 // GW interface for PDCP
 class gw_interface_pdcp
 {
 public:
-  //virtual void write_sdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes) = 0;
+  virtual void write_pdu(uint32_t lcid, byte_buffer_t *pdu) = 0;
 };
 
 // NAS interface for RRC
@@ -119,7 +133,8 @@ class pdcp_interface_rrc
 {
 public:
   virtual void write_sdu(uint32_t lcid, byte_buffer_t *sdu) = 0;
-  virtual void add_bearer(uint32_t lcid) = 0;
+  virtual void add_bearer(uint32_t lcid, LIBLTE_RRC_PDCP_CONFIG_STRUCT *cnfg=NULL) = 0;
+  virtual void config_security(uint32_t lcid, uint8_t *k_rrc_enc, uint8_t *k_rrc_int) = 0;
 };
 
 // PDCP interface for RLC

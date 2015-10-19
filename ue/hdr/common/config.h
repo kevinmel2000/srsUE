@@ -52,12 +52,6 @@
   #define SRSAPPS_IMPORT
 #endif
 
-
-// Common error codes
-#define SRSUE_SUCCESS                 0
-#define SRSUE_ERROR                  -1
-#define SRSUE_ERROR_INVALID_INPUTS   -2
-
 // cf_t definition
 typedef _Complex float cf_t;
 

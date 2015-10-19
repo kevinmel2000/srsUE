@@ -37,23 +37,26 @@ namespace srsue {
 
 class usim
     :public usim_interface_nas
+    ,public usim_interface_rrc
 {
 public:
   usim();
   void init(std::string imsi_, std::string imei_, std::string k_, srslte::log *usim_log_);
   void stop();
 
-  // NAS interface
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
   void get_imei_vec(uint8_t* imei_, uint32_t n);
+
   void generate_authentication_response(uint8  *rand,
                                         uint8  *autn_enb,
                                         uint16  mcc,
                                         uint16  mnc,
                                         bool   *net_valid);
-  auth_vector_t *get_auth_vector();
   void generate_nas_keys();
   void generate_rrc_keys();
+
+  auth_vector_t *get_auth_vector();
+
   void increment_nas_count_ul();
   void increment_nas_count_dl();
 

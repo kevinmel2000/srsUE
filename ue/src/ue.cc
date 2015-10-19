@@ -39,8 +39,8 @@ ue::ue(all_args_t *args_)
   pool      = buffer_pool::get_instance();
 
   logger    = new srsue::logger(args_->log.filename);
-  phy_log   = new srsue::log_filter("PHY ", logger);
-  mac_log   = new srsue::log_filter("MAC ", logger);
+  phy_log   = new srsue::log_filter("PHY ", logger, true);
+  mac_log   = new srsue::log_filter("MAC ", logger, true);
   rlc_log   = new srsue::log_filter("RLC ", logger);
   pdcp_log  = new srsue::log_filter("PDCP", logger);
   rrc_log   = new srsue::log_filter("RRC ", logger);
@@ -126,12 +126,13 @@ void ue::init()
   radio_uhd->set_tx_rx_gain_offset(15);
   radio_uhd->set_rx_freq(args->rf.dl_freq);
   radio_uhd->set_tx_freq(args->rf.ul_freq);
+
   phy->init_agc(radio_uhd, mac, phy_log);
   mac->init(phy, rlc, mac_log);
   rlc->init(pdcp, rrc, this, rlc_log);
   pdcp->init(rlc, rrc, gw, pdcp_log);
-  rrc->init(phy, mac, rlc, pdcp, nas, rrc_log);
-  nas->init(usim, rrc, nas_log);
+  rrc->init(phy, mac, rlc, pdcp, nas, usim, rrc_log);
+  nas->init(usim, rrc, gw, nas_log);
   gw->init(pdcp, this, gw_log);
   usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
 
