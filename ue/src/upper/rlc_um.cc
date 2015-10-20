@@ -244,6 +244,8 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   if(tx_sdu)
   {
     to_move = ((pdu_space-head_len) >= tx_sdu->N_bytes) ? tx_sdu->N_bytes : pdu_space-head_len;
+    log->debug("%s adding remainder of SDU segment - %d bytes of %d remaining\n",
+               rb_id_text[lcid], to_move, tx_sdu->N_bytes);
     memcpy(pdu_ptr, tx_sdu->msg, to_move);
     last_li          = to_move;
     pdu_ptr         += to_move;
@@ -267,6 +269,8 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
     head_len = rlc_um_packed_length(&header);
     tx_sdu_queue.read(&tx_sdu);
     to_move = ((pdu_space-head_len) >= tx_sdu->N_bytes) ? tx_sdu->N_bytes : pdu_space-head_len;
+    log->debug("%s adding new SDU segment - %d bytes of %d remaining\n",
+               rb_id_text[lcid], to_move, tx_sdu->N_bytes);
     memcpy(pdu_ptr, tx_sdu->msg, to_move);
     last_li          = to_move;
     pdu_ptr         += to_move;
@@ -300,9 +304,9 @@ void rlc_um::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
 {
   std::map<uint32_t, rlc_umd_pdu_t>::iterator it;
   rlc_umd_pdu_header_t header;
-  rlc_um_read_data_pdu_header(payload, nof_bytes, &header);
+  rlc_um_read_data_pdu_header(payload, nof_bytes, rx_sn_field_length, &header);
 
-  log->info_hex(payload, nof_bytes, "%s Rx data PDU SN: %d",
+  log->info_hex(payload, nof_bytes, "DL %s Rx data PDU SN: %d",
                 rb_id_text[lcid], header.sn);
 
   if(RX_MOD_BASE(header.sn) >= RX_MOD_BASE(vr_uh-rx_window_size) &&
@@ -449,18 +453,18 @@ void rlc_um::debug_state()
  * Ref: 3GPP TS 36.322 v10.0.0 Section 6.2.1
  ***************************************************************************/
 
-void rlc_um_read_data_pdu_header(byte_buffer_t *pdu, rlc_umd_pdu_header_t *header)
+void rlc_um_read_data_pdu_header(byte_buffer_t *pdu, rlc_umd_sn_size_t sn_size, rlc_umd_pdu_header_t *header)
 {
-  rlc_um_read_data_pdu_header(pdu->msg, pdu->N_bytes, header);
+  rlc_um_read_data_pdu_header(pdu->msg, pdu->N_bytes, sn_size, header);
 }
 
-void rlc_um_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_umd_pdu_header_t *header)
+void rlc_um_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_umd_sn_size_t sn_size, rlc_umd_pdu_header_t *header)
 {
   uint8_t  ext;
   uint8_t *ptr = payload;
 
   // Fixed part
-  if(RLC_UMD_SN_SIZE_5_BITS == header->sn_size)
+  if(RLC_UMD_SN_SIZE_5_BITS == sn_size)
   {
     header->fi = (rlc_fi_field_t)((*ptr >> 6) & 0x03);  // 2 bits FI
     ext        =                 ((*ptr >> 5) & 0x01);  // 1 bit EXT
@@ -474,6 +478,8 @@ void rlc_um_read_data_pdu_header(uint8_t *payload, uint32_t nof_bytes, rlc_umd_p
     header->sn |=                (*ptr & 0xFF);         // 8 bits SN
     ptr++;
   }
+
+  header->sn_size = sn_size;
 
   // Extension part
   header->N_li = 0;

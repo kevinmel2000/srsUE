@@ -42,10 +42,9 @@ int main(int argc, char **argv) {
   rlc_umd_pdu_header_t h;
   byte_buffer_t  b1,b2;
 
-  h.sn_size = RLC_UMD_SN_SIZE_10_BITS;
   memcpy(b1.msg, &pdu1[0], PDU1_LEN);
   b1.N_bytes = PDU1_LEN;
-  rlc_um_read_data_pdu_header(&b1, &h);
+  rlc_um_read_data_pdu_header(&b1, RLC_UMD_SN_SIZE_10_BITS, &h);
   assert(0x03 == h.fi);
   assert(0    == h.N_li);
   assert(226  == h.sn);
@@ -58,10 +57,9 @@ int main(int argc, char **argv) {
   b2.reset();
   memset(&h, 0, sizeof(rlc_umd_pdu_header_t));
 
-  h.sn_size = RLC_UMD_SN_SIZE_10_BITS;
   memcpy(b1.msg, &pdu2[0], PDU2_LEN);
   b1.N_bytes = PDU2_LEN;
-  rlc_um_read_data_pdu_header(&b1, &h);
+  rlc_um_read_data_pdu_header(&b1, RLC_UMD_SN_SIZE_10_BITS, &h);
   assert(0x03 == h.fi);
   assert(225  == h.sn);
   assert(1    == h.N_li);
