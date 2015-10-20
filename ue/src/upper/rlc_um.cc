@@ -295,9 +295,11 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   // Add header and TX
   rlc_um_write_data_pdu_header(&header, pdu);
   memcpy(payload, pdu->msg, pdu->N_bytes);
+  uint32_t ret = pdu->N_bytes;
+  pool->deallocate(pdu);
 
   debug_state();
-  return pdu->N_bytes;
+  return ret;
 }
 
 void rlc_um::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
@@ -396,6 +398,10 @@ void rlc_um::reassemble_rx_sdus()
         rx_sdu_queue.write(rx_sdu);
         rx_sdu = pool->allocate();
       }
+
+      // Clean up rx_window
+      pool->deallocate(rx_window[vr_ur].buf);
+      rx_window.erase(vr_ur);
     }
 
     vr_ur = (vr_ur + 1)%rx_mod;
@@ -425,6 +431,10 @@ void rlc_um::reassemble_rx_sdus()
       rx_sdu_queue.write(rx_sdu);
       rx_sdu = pool->allocate();
     }
+
+    // Clean up rx_window
+    pool->deallocate(rx_window[vr_ur].buf);
+    rx_window.erase(vr_ur);
 
     vr_ur = (vr_ur + 1)%rx_mod;
   }

@@ -85,7 +85,7 @@ private:
   rrc_interface_rlc  *rrc;
 
   // TX SDU buffers
-  msg_queue                 tx_sdu_queue;
+  msg_queue           tx_sdu_queue;
   byte_buffer_t      *tx_sdu;
 
   // Rx window
@@ -95,11 +95,11 @@ private:
   uint32_t                           tx_mod; // Tx counter modulus
 
   // RX SDU buffers
-  msg_queue                 rx_sdu_queue;
+  msg_queue           rx_sdu_queue;
   byte_buffer_t      *rx_sdu;
 
   // Mutexes
-  boost::mutex              mutex;
+  boost::mutex        mutex;
 
   /****************************************************************************
    * Configurable parameters

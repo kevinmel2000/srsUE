@@ -111,7 +111,7 @@ public:
   
 private:
     
-  const static int NOF_WORKERS         = 2; 
+  const static int NOF_WORKERS         = 1;
   const static int SF_RECV_THREAD_PRIO = 1;
   const static int WORKERS_THREAD_PRIO = 0; 
   
