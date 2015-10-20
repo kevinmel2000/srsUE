@@ -88,6 +88,11 @@ private:
   rrc_state_t           state;
   uint8_t               transaction_id;
 
+  uint8_t               k_rrc_enc[32];
+  uint8_t               k_rrc_int[32];
+  uint8_t               k_up_enc[32];
+  uint8_t               k_up_int[32];   // Not used: only for relay nodes (3GPP 33.401 Annex A.7)
+
   LIBLTE_RRC_MIB_STRUCT                   mib;
   LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_1_STRUCT sib1;
   LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT sib2;
@@ -132,7 +137,7 @@ private:
   uint32_t      sib_start_tti(uint32_t tti, uint32_t period, uint32_t x);
   void          apply_sib2_configs();
   void          handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup);
-  void          handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig);
+  void          handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig, byte_buffer_t *pdu);
   void          add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg);
   void          add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg);
   void          release_drb(uint8_t lcid);

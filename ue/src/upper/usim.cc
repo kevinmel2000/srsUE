@@ -33,10 +33,7 @@ using namespace srslte;
 namespace srsue{
 
 usim::usim()
-{
-  auth_vec.nas_count_dl = 0;
-  auth_vec.nas_count_ul = 0;
-}
+{}
 
 void usim::init(std::string imsi_, std::string imei_, std::string k_, srslte::log *usim_log_)
 {
@@ -51,40 +48,40 @@ void usim::init(std::string imsi_, std::string imei_, std::string k_, srslte::lo
      15   == imei_.length() &&
      32   == k_.length())
   {
-      imsi = 0;
-      for(i=0; i<15; i++)
+    imsi = 0;
+    for(i=0; i<15; i++)
+    {
+      imsi *= 10;
+      imsi += imsi_str[i] - '0';
+    }
+
+    imei = 0;
+    for(i=0; i<15; i++)
+    {
+      imei *= 10;
+      imei += imei_str[i] - '0';
+    }
+
+    for(i=0; i<16; i++)
+    {
+      if(k_str[i*2+0] >= '0' && k_str[i*2+0] <= '9')
       {
-          imsi *= 10;
-          imsi += imsi_str[i] - '0';
+        k[i] = (k_str[i*2+0] - '0') << 4;
+      }else if(k_str[i*2+0] >= 'A' && k_str[i*2+0] <= 'F'){
+        k[i] = ((k_str[i*2+0] - 'A') + 0xA) << 4;
+      }else{
+        k[i] = ((k_str[i*2+0] - 'a') + 0xA) << 4;
       }
 
-      imei = 0;
-      for(i=0; i<15; i++)
+      if(k_str[i*2+1] >= '0' && k_str[i*2+1] <= '9')
       {
-          imei *= 10;
-          imei += imei_str[i] - '0';
+        k[i] |= k_str[i*2+1] - '0';
+      }else if(k_str[i*2+1] >= 'A' && k_str[i*2+1] <= 'F'){
+        k[i] |= (k_str[i*2+1] - 'A') + 0xA;
+      }else{
+        k[i] |= (k_str[i*2+1] - 'a') + 0xA;
       }
-
-      for(i=0; i<16; i++)
-      {
-          if(k_str[i*2+0] >= '0' && k_str[i*2+0] <= '9')
-          {
-              k[i] = (k_str[i*2+0] - '0') << 4;
-          }else if(k_str[i*2+0] >= 'A' && k_str[i*2+0] <= 'F'){
-              k[i] = ((k_str[i*2+0] - 'A') + 0xA) << 4;
-          }else{
-              k[i] = ((k_str[i*2+0] - 'a') + 0xA) << 4;
-          }
-
-          if(k_str[i*2+1] >= '0' && k_str[i*2+1] <= '9')
-          {
-              k[i] |= k_str[i*2+1] - '0';
-          }else if(k_str[i*2+1] >= 'A' && k_str[i*2+1] <= 'F'){
-              k[i] |= (k_str[i*2+1] - 'A') + 0xA;
-          }else{
-              k[i] |= (k_str[i*2+1] - 'a') + 0xA;
-          }
-      }
+    }
   }
 }
 
@@ -127,116 +124,102 @@ void usim::get_imei_vec(uint8_t* imei_, uint32_t n)
   }
 }
 
-void usim::generate_authentication_response(uint8  *rand,
-                                            uint8  *autn_enb,
-                                            uint16  mcc,
-                                            uint16  mnc,
-                                            bool   *net_valid)
+void usim::generate_authentication_response(uint8_t  *rand,
+                                            uint8_t  *autn_enb,
+                                            uint16_t  mcc,
+                                            uint16_t  mnc,
+                                            bool     *net_valid,
+                                            uint8_t  *res)
 {
-    uint32 i;
-    *net_valid = true;
-    uint8  sqn[6];
-    uint8  amf[2] = {0x80, 0x00}; // 3GPP 33.102 v10.0.0 Annex H
+  uint32 i;
+  *net_valid = true;
+  uint8  sqn[6];
+  uint8  amf[2] = {0x80, 0x00}; // 3GPP 33.102 v10.0.0 Annex H
 
-    // Use RAND and K to compute RES, CK, IK and AK
-    liblte_security_milenage_f2345(k,
-                                   rand,
-                                   auth_vec.res,
-                                   auth_vec.ck,
-                                   auth_vec.ik,
-                                   gen_data.ak);
+  // Use RAND and K to compute RES, CK, IK and AK
+  liblte_security_milenage_f2345(k,
+                                 rand,
+                                 res,
+                                 ck,
+                                 ik,
+                                 ak);
 
-    // Extract sqn from autn
-    for(i=0;i<6;i++)
+  // Extract sqn from autn
+  for(i=0;i<6;i++)
+  {
+    sqn[i] = autn_enb[i] ^ ak[i];
+  }
+
+  // Generate MAC
+  liblte_security_milenage_f1(k,
+                              rand,
+                              sqn,
+                              amf,
+                              mac);
+
+  // Construct AUTN
+  for(i=0; i<6; i++)
+  {
+    autn[i] = sqn[i] ^ ak[i];
+  }
+  for(i=0; i<2; i++)
+  {
+    autn[6+i] = amf[i];
+  }
+  for(i=0; i<8; i++)
+  {
+    autn[8+i] = mac[i];
+  }
+
+  // Compare AUTNs
+  for(i=0; i<16; i++)
+  {
+    if(autn[i] != autn_enb[i])
     {
-        sqn[i] = autn_enb[i] ^ gen_data.ak[i];
+      *net_valid = false;
     }
+  }
 
-    // Generate MAC
-    liblte_security_milenage_f1(k,
-                                rand,
-                                sqn,
-                                amf,
-                                gen_data.mac);
-
-    // Construct AUTN
-    for(i=0; i<6; i++)
-    {
-        auth_vec.autn[i] = sqn[i] ^ gen_data.ak[i];
-    }
-    for(i=0; i<2; i++)
-    {
-        auth_vec.autn[6+i] = amf[i];
-    }
-    for(i=0; i<8; i++)
-    {
-        auth_vec.autn[8+i] = gen_data.mac[i];
-    }
-
-    // Compare AUTNs
-    for(i=0; i<16; i++)
-    {
-        if(auth_vec.autn[i] != autn_enb[i])
-        {
-            *net_valid = false;
-        }
-    }
-
-    // Generate K_asme
-    liblte_security_generate_k_asme(auth_vec.ck,
-                                    auth_vec.ik,
-                                    gen_data.ak,
-                                    sqn,
-                                    mcc,
-                                    mnc,
-                                    gen_data.k_asme);
-
-    // Generate K_nas_enc and K_nas_int
-    liblte_security_generate_k_nas(gen_data.k_asme,
-                                   LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                   LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                   auth_vec.k_nas_enc,
-                                   auth_vec.k_nas_int);
+  // Generate K_asme
+  liblte_security_generate_k_asme(ck,
+                                  ik,
+                                  ak,
+                                  sqn,
+                                  mcc,
+                                  mnc,
+                                  k_asme);
 }
 
-void usim::generate_nas_keys()
+void usim::generate_nas_keys(uint8_t *k_nas_enc, uint8_t *k_nas_int)
 {
-    // Generate K_nas_enc and K_nas_int
-    liblte_security_generate_k_nas(gen_data.k_asme,
-                                   LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                   LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                   auth_vec.k_nas_enc,
-                                   auth_vec.k_nas_int);
-
-    // Generate K_enb
-    liblte_security_generate_k_enb(gen_data.k_asme,
-                                   auth_vec.nas_count_ul,
-                                   gen_data.k_enb);
+  // Generate K_nas_enc and K_nas_int
+  liblte_security_generate_k_nas(k_asme,
+                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                 k_nas_enc,
+                                 k_nas_int);
 }
 
-void usim::generate_rrc_keys()
+void usim::generate_as_keys(uint32_t count_ul, uint8_t *k_rrc_enc, uint8_t *k_rrc_int, uint8_t *k_up_enc, uint8_t *k_up_int)
 {
-    // Generate K_rrc_enc and K_rrc_int
-    liblte_security_generate_k_rrc(gen_data.k_enb,
-                                   LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                   LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                   auth_vec.k_rrc_enc,
-                                   auth_vec.k_rrc_int);
-}
+  // Generate K_enb
+  liblte_security_generate_k_enb(k_asme,
+                                 count_ul,
+                                 k_enb);
 
-auth_vector_t *usim::get_auth_vector()
-{
-  return &auth_vec;
-}
+  // Generate K_rrc_enc and K_rrc_int
+  liblte_security_generate_k_rrc(k_enb,
+                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                 k_rrc_enc,
+                                 k_rrc_int);
 
-void usim::increment_nas_count_ul()
-{
-    auth_vec.nas_count_ul++;
-}
-
-void usim::increment_nas_count_dl()
-{
-    auth_vec.nas_count_dl++;
+  // Generate K_up_enc and K_up_int
+  liblte_security_generate_k_up(k_enb,
+                                LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                k_up_enc,
+                                k_up_int);
 }
 
 } // namespace srsue

@@ -47,18 +47,21 @@ public:
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
   void get_imei_vec(uint8_t* imei_, uint32_t n);
 
-  void generate_authentication_response(uint8  *rand,
-                                        uint8  *autn_enb,
-                                        uint16  mcc,
-                                        uint16  mnc,
-                                        bool   *net_valid);
-  void generate_nas_keys();
-  void generate_rrc_keys();
+  void generate_authentication_response(uint8_t  *rand,
+                                        uint8_t  *autn_enb,
+                                        uint16_t  mcc,
+                                        uint16_t  mnc,
+                                        bool     *net_valid,
+                                        uint8_t  *res);
 
-  auth_vector_t *get_auth_vector();
+  void generate_nas_keys(uint8_t *k_nas_enc,
+                         uint8_t *k_nas_int);
 
-  void increment_nas_count_ul();
-  void increment_nas_count_dl();
+  void generate_as_keys(uint32_t count_ul,
+                        uint8_t *k_rrc_enc,
+                        uint8_t *k_rrc_int,
+                        uint8_t *k_up_enc,
+                        uint8_t *k_up_int);
 
 
 private:
@@ -69,8 +72,16 @@ private:
   uint64_t imei;
   uint8_t  k[16];
 
-  auth_vector_t     auth_vec;
-  generated_data_t  gen_data;
+  // Security variables
+  uint8_t  rand[16];
+  uint8_t  ck[16];
+  uint8_t  ik[16];
+  uint8_t  ak[6];
+  uint8_t  mac[8];
+  uint8_t  autn[16];
+  uint8_t  k_asme[32];
+  uint8_t  k_enb[32];
+
 };
 
 } // namespace srsue

@@ -36,7 +36,6 @@
 
 #include "liblte_rrc.h"
 #include "common/common.h"
-#include "upper/usim_data.h"
 #include "mac_interface.h"
 #include "phy_interface.h"
 
@@ -55,23 +54,24 @@ class usim_interface_nas
 public:
   virtual void get_imsi_vec(uint8_t* imsi_, uint32_t n) = 0;
   virtual void get_imei_vec(uint8_t* imei_, uint32_t n) = 0;
-  virtual void generate_authentication_response(uint8  *rand,
-                                                uint8  *autn_enb,
-                                                uint16  mcc,
-                                                uint16  mnc,
-                                                bool   *net_valid) = 0;
-  virtual auth_vector_t *get_auth_vector() = 0;
-  virtual void generate_nas_keys() = 0;
-  virtual void increment_nas_count_ul() = 0;
-  virtual void increment_nas_count_dl() = 0;
+  virtual void generate_authentication_response(uint8_t  *rand,
+                                                uint8_t  *autn_enb,
+                                                uint16_t  mcc,
+                                                uint16_t  mnc,
+                                                bool     *net_valid,
+                                                uint8_t  *res) = 0;
+  virtual void generate_nas_keys(uint8_t *k_nas_enc, uint8_t *k_nas_int) = 0;
 };
 
 // USIM interface for RRC
 class usim_interface_rrc
 {
 public:
-  virtual auth_vector_t *get_auth_vector() = 0;
-  virtual void generate_rrc_keys() = 0;
+  virtual void generate_as_keys(uint32_t count_ul,
+                                uint8_t *k_rrc_enc,
+                                uint8_t *k_rrc_int,
+                                uint8_t *k_up_enc,
+                                uint8_t *k_up_int) = 0;
 };
 
 // GW interface for NAS
@@ -92,8 +92,9 @@ public:
 class nas_interface_rrc
 {
 public:
-  virtual void notify_connection_setup() = 0;
-  virtual void write_pdu(uint32_t lcid, byte_buffer_t *pdu) = 0;
+  virtual void      notify_connection_setup() = 0;
+  virtual void      write_pdu(uint32_t lcid, byte_buffer_t *pdu) = 0;
+  virtual uint32_t  get_ul_count() = 0;
 };
 
 // RRC interface for NAS

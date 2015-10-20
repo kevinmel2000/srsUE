@@ -37,6 +37,8 @@ nas::nas()
   ,is_guti_set(false)
   ,ip_addr(0)
   ,eps_bearer_id(0)
+  ,count_ul(0)
+  ,count_dl(0)
 {}
 
 void nas::init(usim_interface_nas *usim_,
@@ -108,10 +110,14 @@ void nas::write_pdu(uint32_t lcid, byte_buffer_t *pdu)
       break;
   default:
       nas_log->error("Not handling NAS message with MSG_TYPE=%02X\n",msg_type);
+      pool->deallocate(pdu);
       break;
   }
+}
 
-  usim->increment_nas_count_dl();
+uint32_t  nas::get_ul_count()
+{
+  return count_ul;
 }
 
 
@@ -127,6 +133,7 @@ void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
   LIBLTE_MME_ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_ACCEPT_MSG_STRUCT   act_def_eps_bearer_context_accept;
 
   nas_log->info("Received Attach Accept\n");
+  count_dl++;
 
   liblte_mme_unpack_attach_accept_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &attach_accept);
 
@@ -193,7 +200,9 @@ void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
     }
     else
     {
-      nas_log->info("Not handling IPV6 or IPV4V6");
+      nas_log->error("Not handling IPV6 or IPV4V6");
+      pool->deallocate(pdu);
+      return;
     }
     eps_bearer_id = act_def_eps_bearer_context_req.eps_bearer_id;
     if(act_def_eps_bearer_context_req.transaction_id_present)
@@ -219,26 +228,27 @@ void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
     state = EMM_STATE_REGISTERED;
 
     // Send EPS bearer context accept and attach complete
+    count_ul++;
     act_def_eps_bearer_context_accept.eps_bearer_id                 = eps_bearer_id;
     act_def_eps_bearer_context_accept.proc_transaction_id           = transaction_id;
     act_def_eps_bearer_context_accept.protocol_cnfg_opts_present    = false;
     liblte_mme_pack_activate_default_eps_bearer_context_accept_msg(&act_def_eps_bearer_context_accept, &attach_complete.esm_msg);
     liblte_mme_pack_attach_complete_msg(&attach_complete,
                                         LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_AND_CIPHERED,
-                                        usim->get_auth_vector()->k_nas_int,
-                                        usim->get_auth_vector()->nas_count_ul,
+                                        k_nas_int,
+                                        count_ul,
                                         LIBLTE_SECURITY_DIRECTION_UPLINK,
                                         lcid-1,
                                         (LIBLTE_BYTE_MSG_STRUCT*)pdu);
 
     nas_log->info("Sending Attach Complete\n");
-    usim->increment_nas_count_ul();
     rrc->write_sdu(lcid, pdu);
   }
   else
   {
     nas_log->info("Not handling attach type %u\n", attach_accept.eps_attach_result);
     state = EMM_STATE_DEREGISTERED;
+    pool->deallocate(pdu);
   }
 }
 
@@ -256,12 +266,11 @@ void nas::parse_attach_reject(uint32_t lcid, byte_buffer_t *pdu)
 
 void nas::parse_authentication_request(uint32_t lcid, byte_buffer_t *pdu)
 {
-  auth_vector_t *auth_vec;
   LIBLTE_MME_AUTHENTICATION_REQUEST_MSG_STRUCT  auth_req;
   LIBLTE_MME_AUTHENTICATION_RESPONSE_MSG_STRUCT auth_res;
 
+  nas_log->info("Received Authentication Request\n");;
   liblte_mme_unpack_authentication_request_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &auth_req);
-  nas_log->info("Received Authentication Request\n");
 
   // Reuse the pdu for the response message
   pdu->reset();
@@ -273,28 +282,26 @@ void nas::parse_authentication_request(uint32_t lcid, byte_buffer_t *pdu)
 
   nas_log->info("MCC=%d, MNC=%d\n", mcc, mnc);
 
-  bool net_valid;
-  usim->generate_authentication_response(auth_req.rand, auth_req.autn, mcc, mnc, &net_valid);
+  bool    net_valid;
+  uint8_t res[8];
+  usim->generate_authentication_response(auth_req.rand, auth_req.autn, mcc, mnc, &net_valid, res);
 
   if(net_valid)
   {
     nas_log->info("Network authentication succesful\n");
-    auth_vec = usim->get_auth_vector();
-    if(NULL != auth_vec)
+    for(int i=0; i<8; i++)
     {
-      for(int i=0; i<8; i++)
-      {
-        auth_res.res[i] = auth_vec->res[i];
-      }
-      liblte_mme_pack_authentication_response_msg(&auth_res, (LIBLTE_BYTE_MSG_STRUCT*)pdu);
-
-      nas_log->info("Sending Authentication Response\n");
-      rrc->write_sdu(lcid, pdu);
+      auth_res.res[i] = res[i];
     }
+    liblte_mme_pack_authentication_response_msg(&auth_res, (LIBLTE_BYTE_MSG_STRUCT*)pdu);
+
+    nas_log->info("Sending Authentication Response\n");
+    rrc->write_sdu(lcid, pdu);
   }
   else
   {
     nas_log->warning("Network authentication failure\n");
+    pool->deallocate(pdu);
   }
 }
 
@@ -306,7 +313,10 @@ void nas::parse_authentication_reject(uint32_t lcid, byte_buffer_t *pdu)
   // FIXME: Command RRC to release?
 }
 
-void nas::parse_identity_request(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_identity_request\n");}
+void nas::parse_identity_request(uint32_t lcid, byte_buffer_t *pdu)
+{
+  nas_log->error("TODO:parse_identity_request\n");
+}
 
 void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
 {
@@ -314,8 +324,8 @@ void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
   LIBLTE_MME_SECURITY_MODE_COMPLETE_MSG_STRUCT sec_mode_comp;
   LIBLTE_MME_SECURITY_MODE_REJECT_MSG_STRUCT   sec_mode_rej;
 
-  liblte_mme_unpack_security_mode_command_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &sec_mode_cmd);
   nas_log->info("Received Security Mode Command\n");
+  liblte_mme_unpack_security_mode_command_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &sec_mode_cmd);
 
   // FIXME: Handle nonce_ue, nonce_mme
   // FIXME: Currently only handling ciphering EEA0 (null) and integrity EIA2
@@ -337,7 +347,7 @@ void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
     // Send security mode complete
 
     // Generate NAS encryption key and integrity protection key
-    usim->generate_nas_keys(); //TODO: NAS should hold keys, not USIM
+    usim->generate_nas_keys(k_nas_enc, k_nas_int);
 
     if(sec_mode_cmd.imeisv_req_present && LIBLTE_MME_IMEISV_REQUESTED == sec_mode_cmd.imeisv_req)
     {
@@ -354,24 +364,31 @@ void nas::parse_security_mode_command(uint32_t lcid, byte_buffer_t *pdu)
 
     liblte_mme_pack_security_mode_complete_msg(&sec_mode_comp,
                                                LIBLTE_MME_SECURITY_HDR_TYPE_INTEGRITY_AND_CIPHERED,
-                                               usim->get_auth_vector()->k_nas_int,
-                                               usim->get_auth_vector()->nas_count_ul,
+                                               k_nas_int,
+                                               count_ul,
                                                LIBLTE_SECURITY_DIRECTION_UPLINK,
                                                lcid-1,
                                                (LIBLTE_BYTE_MSG_STRUCT*)pdu);
     nas_log->info("Sending Security Mode Complete nas_count_ul=%d, RB=%s\n",
-                 usim->get_auth_vector()->nas_count_ul,
+                 count_ul,
                  rb_id_text[lcid]);
-
   }
 
-  usim->increment_nas_count_ul();
   rrc->write_sdu(lcid, pdu);
 }
 
-void nas::parse_service_reject(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_service_reject\n");}
-void nas::parse_esm_information_request(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_esm_information_request\n");}
-void nas::parse_emm_information(uint32_t lcid, byte_buffer_t *pdu){nas_log->error("TODO:parse_emm_information\n");}
+void nas::parse_service_reject(uint32_t lcid, byte_buffer_t *pdu)
+{
+  nas_log->error("TODO:parse_service_reject\n");
+}
+void nas::parse_esm_information_request(uint32_t lcid, byte_buffer_t *pdu)
+{
+  nas_log->error("TODO:parse_esm_information_request\n");
+}
+void nas::parse_emm_information(uint32_t lcid, byte_buffer_t *pdu)
+{
+  nas_log->error("TODO:parse_emm_information\n");
+}
 
 /*******************************************************************************
   Senders

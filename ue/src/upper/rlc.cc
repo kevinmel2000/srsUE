@@ -95,7 +95,6 @@ int rlc::read_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
-    rlc_log->info_hex(payload, nof_bytes, "DL %s PDU", rb_id_text[lcid]);
     rlc_array[lcid]->write_pdu(payload, nof_bytes);
     ue->notify();
   }

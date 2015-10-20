@@ -67,8 +67,9 @@ public:
   void stop();
 
   // RRC interface
-  void notify_connection_setup();
-  void write_pdu(uint32_t lcid, byte_buffer_t *pdu);
+  void      notify_connection_setup();
+  void      write_pdu(uint32_t lcid, byte_buffer_t *pdu);
+  uint32_t  get_ul_count();
 
 private:
   buffer_pool        *pool;
@@ -86,6 +87,13 @@ private:
   uint8_t  eps_bearer_id;
 
   uint8_t  transaction_id;
+
+  // NAS counters - incremented for each security-protected message recvd/sent
+  uint32_t count_ul;
+  uint32_t count_dl;
+
+  uint8_t  k_nas_enc[32];
+  uint8_t  k_nas_int[32];
 
   // Parsers
   void parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu);

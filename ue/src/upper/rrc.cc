@@ -477,15 +477,14 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
     //LIBLTE_RRC_INTEGRITY_PROT_ALGORITHM_ENUM integ  = dl_dcch_msg.msg.security_mode_cmd.sec_algs.int_alg;
 
     // Configure PDCP for security
-    usim->generate_rrc_keys(); // TODO: RRC should hold the keys, not USIM
-    pdcp->config_security(lcid, usim->get_auth_vector()->k_rrc_enc, usim->get_auth_vector()->k_rrc_int);
+    usim->generate_as_keys(nas->get_ul_count(), k_rrc_enc, k_rrc_int, k_up_enc, k_up_int);
+    pdcp->config_security(lcid, k_rrc_enc, k_rrc_int);
     send_security_mode_complete(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RECONFIG:
     rrc_log->info("RRC Connection Reconfiguration received\n");
     transaction_id = dl_dcch_msg.msg.security_mode_cmd.rrc_transaction_id;
-    handle_rrc_con_reconfig(lcid, &dl_dcch_msg.msg.rrc_con_reconfig);
-    send_rrc_con_reconfig_complete(lcid, pdu);
+    handle_rrc_con_reconfig(lcid, &dl_dcch_msg.msg.rrc_con_reconfig, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_UE_CAPABILITY_ENQUIRY:
     rrc_log->info("UE Capability Enquiry received\n");
@@ -871,7 +870,7 @@ void rrc::handle_con_setup(LIBLTE_RRC_CONNECTION_SETUP_STRUCT *setup)
   }
 }
 
-void rrc::handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig)
+void rrc::handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGURATION_STRUCT *reconfig, byte_buffer_t *pdu)
 {
   uint32_t i;
 
@@ -905,13 +904,15 @@ void rrc::handle_rrc_con_reconfig(uint32_t lcid, LIBLTE_RRC_CONNECTION_RECONFIGU
     }
   }
 
-  byte_buffer_t *pdu;
+  send_rrc_con_reconfig_complete(lcid, pdu);
+
+  byte_buffer_t *nas_sdu;
   for(i=0;i<reconfig->N_ded_info_nas;i++)
   {
-    pdu = pool->allocate();
-    memcpy(pdu->msg, &reconfig->ded_info_nas_list[i].msg, reconfig->ded_info_nas_list[i].N_bytes);
-    pdu->N_bytes = reconfig->ded_info_nas_list[i].N_bytes;
-    nas->write_pdu(lcid, pdu);
+    nas_sdu = pool->allocate();
+    memcpy(nas_sdu->msg, &reconfig->ded_info_nas_list[i].msg, reconfig->ded_info_nas_list[i].N_bytes);
+    nas_sdu->N_bytes = reconfig->ded_info_nas_list[i].N_bytes;
+    nas->write_pdu(lcid, nas_sdu);
   }
 }
 
@@ -919,6 +920,7 @@ void rrc::add_srb(LIBLTE_RRC_SRB_TO_ADD_MOD_STRUCT *srb_cnfg)
 {
   // Setup PDCP
   pdcp->add_bearer(srb_cnfg->srb_id);
+  pdcp->config_security(srb_cnfg->srb_id, k_rrc_enc, k_rrc_int);
 
   // Setup RLC
   if(srb_cnfg->rlc_cnfg_present)
@@ -980,6 +982,7 @@ void rrc::add_drb(LIBLTE_RRC_DRB_TO_ADD_MOD_STRUCT *drb_cnfg)
 
   // Setup PDCP
   pdcp->add_bearer(lcid, &drb_cnfg->pdcp_cnfg);
+  // TODO: setup PDCP security (using k_up_enc)
 
   // Setup RLC
   rlc->add_bearer(lcid, &drb_cnfg->rlc_cnfg);
