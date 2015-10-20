@@ -37,6 +37,7 @@
 
 //#define DO_UL_POWER_CONTROL
 
+
 namespace srsue {
 
 phch_worker::phch_worker() : tr_exec(10240)
@@ -69,7 +70,6 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Allocating memory\n");
     return false; 
   }
-      
   if (srslte_ue_dl_init(&ue_dl, cell)) {    
     Error("Initiating UE DL\n");
     return false; 
@@ -79,7 +79,6 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Initiating UE UL\n");
     return false; 
   }
-
 #ifdef DO_UL_POWER_CONTROL
   srslte_ue_ul_set_normalization(&ue_ul, false); 
 #else
@@ -297,7 +296,6 @@ bool phch_worker::extract_fft_and_pdcch_llr() {
       return false; 
     }        
   }
-  
   if (decode_pdcch) { /* and not in DRX mode */ 
     if (srslte_pdcch_extract_llr(&ue_dl.pdcch, ue_dl.sf_symbols, ue_dl.ce, 0, tti%10, cfi)) {
       Error("Extracting PDCCH LLR\n");
@@ -379,29 +377,20 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
   if (!srslte_ue_dl_cfg_grant(&ue_dl, grant, cfi, tti%10, rv)) {
     if (ue_dl.pdsch_cfg.grant.mcs.mod > 0 && ue_dl.pdsch_cfg.grant.mcs.tbs >= 0) {
       
+      float noise_estimate = 0.01;//1./srslte_chest_dl_get_snr(&ue_dl.chest)/4;
+      
 #ifdef LOG_EXECTIME
       struct timeval t[3];
       gettimeofday(&t[1], NULL);
 #endif
       
       bool ack = srslte_pdsch_decode_rnti(&ue_dl.pdsch, &ue_dl.pdsch_cfg, softbuffer, ue_dl.sf_symbols, 
-                                    ue_dl.ce, 0, rnti, payload) == 0;
+                                    ue_dl.ce, noise_estimate, rnti, payload) == 0;
 #ifdef LOG_EXECTIME
       gettimeofday(&t[2], NULL);
       get_time_interval(t);
       snprintf(timestr, 64, ", dec_time=%4d us", (int) t[0].tv_usec);
 #endif
-      
-      /*
-      if (grant->nof_prb == 50 && grant->mcs.idx == 20 && rv == 0 && !ack) {
-        srslte_vec_save_file("signal", signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb)*sizeof(cf_t));
-        srslte_vec_save_file("symbols", ue_dl.sf_symbols, SRSLTE_SF_LEN_RE(cell.nof_prb, cell.cp)*sizeof(cf_t));
-        srslte_vec_save_file("ce", ue_dl.ce[0], SRSLTE_SF_LEN_RE(cell.nof_prb, cell.cp)*sizeof(cf_t));
-        srslte_vec_save_file("llr", ue_dl.pdsch.e, ue_dl.pdsch_cfg.nbits.nof_re*sizeof(float));
-        printf("Saved signal for sf_idx=%d, rnti=%d, cfi=%d\n", tti%10, rnti, cfi);
-        exit(0);
-      }
-      */
       
       Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
              grant->nof_prb, harq_pid, 
@@ -455,6 +444,7 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
   
   bool ret = false; 
   if (phy->get_pending_rar(tti, &rar_grant)) {
+
     Info("Pending RAR UL grant\n");
     if (srslte_dci_rar_to_ul_grant(&rar_grant, cell.nof_prb, pusch_hopping.hopping_offset, 
       &dci_unpacked, &grant->phy_grant.ul)) 
@@ -550,9 +540,6 @@ void phch_worker::set_uci_periodic_cqi()
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
-        if (cqi_report.wideband.wideband_cqi > 12) {
-          cqi_report.wideband.wideband_cqi = 12; 
-        } 
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
       rar_cqi_request = false; 

@@ -37,6 +37,9 @@
 #include "common/log.h"
 #include "phy/phy_params.h"
 
+#define CONTINUOUS_TX
+
+
 namespace srsue {
 
 /* Subclass that manages variables common to all workers */

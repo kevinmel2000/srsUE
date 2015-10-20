@@ -69,6 +69,11 @@ int radio_recv_wrapper_cs(void *h, void *data, uint32_t nsamples, srslte_timesta
 {
   srslte::radio *radio_h = (srslte::radio*) h;
   if (radio_h->rx_now(data, nsamples, rx_time)) {
+#ifdef CONTINUOUS_TX
+    if (abs(nsamples-radio_h->get_tti_len())<10) {
+      radio_h->tx_offset(nsamples-radio_h->get_tti_len());
+    }
+#endif
     return nsamples;
   } else {
     return -1;
@@ -97,6 +102,7 @@ bool phch_recv::init_cell() {
           return false; 
         }
       }
+      radio_h->set_tti_len(SRSLTE_SF_LEN_PRB(cell.nof_prb));
       if (do_agc) {
         srslte_ue_sync_start_agc(&ue_sync, callback_set_rx_gain, last_gain);    
       }
@@ -147,8 +153,8 @@ bool phch_recv::cell_search(int force_N_id_2)
   srslte_ue_cellsearch_set_threshold(&cs, (float) 
     worker_com->params_db->get_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD)/10);
 
-  radio_h->set_master_clock_rate(30.72e6);
-  radio_h->set_rx_srate(1920000.0);
+  radio_h->set_master_clock_rate(30.72e6);        
+  radio_h->set_rx_srate(1.92e6);
   radio_h->start_rx();
   
   /* Find a cell in the given N_id_2 or go through the 3 of them to find the strongest */

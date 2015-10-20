@@ -56,6 +56,11 @@ void radio_uhd::set_tx_rx_gain_offset(float offset) {
   cuhd_set_tx_rx_gain_offset(uhd, offset);  
 }
 
+void radio_uhd::tx_offset(int offset_)
+{
+  offset = offset_; 
+}
+
 bool radio_uhd::init_agc(char *args)
 {
   printf("Opening UHD device with threaded RX Gain control ...\n");
@@ -143,11 +148,22 @@ bool radio_uhd::tx(void* buffer, uint32_t nof_samples, srslte_timestamp_t tx_tim
   srslte_timestamp_add(&end_of_burst_time, 0, (double) nof_samples/cur_tx_srate); 
   
   save_trace(0, &tx_time);
-  if (cuhd_send_timed2(uhd, buffer, nof_samples, tx_time.full_secs, tx_time.frac_secs, false, false) > 0) {
+  if (cuhd_send_timed2(uhd, buffer, nof_samples+offset, tx_time.full_secs, tx_time.frac_secs, false, false) > 0) {
+    offset = 0; 
     return true; 
   } else {
     return false; 
   }
+}
+
+uint32_t radio_uhd::get_tti_len()
+{
+  return sf_len; 
+}
+
+void radio_uhd::set_tti_len(uint32_t sf_len_)
+{
+  sf_len = sf_len_; 
 }
 
 bool radio_uhd::tx_end()

@@ -50,6 +50,19 @@ IF( ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STR
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-write-strings -Wno-format-extra-args -Winline -Wno-unused-result -Wno-format -std=c99 -D_GNU_SOURCE -g")
 ENDIF( ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") )
 
+IF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+ELSE(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  FIND_PACKAGE(SSE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+  IF(HAVE_AVX) 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -mfpmath=sse -mavx -DLV_HAVE_AVX -DLV_HAVE_SSE")      
+  ELSEIF(HAVE_SSE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -mfpmath=sse -msse4.1 -DLV_HAVE_SSE")
+  ENDIF(HAVE_AVX)    
+ENDIF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+
+
 ########################################################################
 # Find boost
 ########################################################################

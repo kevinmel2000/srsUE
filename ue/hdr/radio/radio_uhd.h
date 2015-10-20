@@ -43,7 +43,7 @@ namespace srslte {
   class radio_uhd : public radio
   {
     public: 
-      radio_uhd() : tr_local_time(1024*10), tr_usrp_time(1024*10), tr_tx_time(1024*10), tr_is_eob(1024*10) {};
+      radio_uhd() : tr_local_time(1024*10), tr_usrp_time(1024*10), tr_tx_time(1024*10), tr_is_eob(1024*10) {sf_len=0;};
       bool init();
       bool init(char *args);
       bool init_agc();
@@ -81,6 +81,9 @@ namespace srslte {
       void stop_rx();
       
       void set_tti(uint32_t tti);
+      void tx_offset(int offset);
+      void set_tti_len(uint32_t sf_len);
+      uint32_t get_tti_len();     
       
     private:
       
@@ -106,6 +109,8 @@ namespace srslte {
       bool trace_enabled;
       uint32_t tti;
       bool agc_enabled;
+      int offset;
+      uint32_t sf_len;
   }; 
 }
 

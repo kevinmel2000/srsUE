@@ -663,7 +663,7 @@ uint32_t rar_subh::get_rapid()
 }
 void rar_subh::get_sched_grant(uint8_t grant_[RAR_GRANT_LEN])
 {
-  memcpy(grant_, &grant, sizeof(uint8_t)*RAR_GRANT_LEN);
+  memcpy(grant_, grant, sizeof(uint8_t)*RAR_GRANT_LEN);
 }
 uint32_t rar_subh::get_ta_cmd()
 {
@@ -679,7 +679,7 @@ void rar_subh::set_rapid(uint32_t rapid)
 }
 void rar_subh::set_sched_grant(uint8_t grant_[RAR_GRANT_LEN])
 {
-  memcpy(&grant, grant_, sizeof(uint8_t)*RAR_GRANT_LEN);
+  memcpy(grant, grant_, sizeof(uint8_t)*RAR_GRANT_LEN);
 }
 void rar_subh::set_ta_cmd(uint32_t ta_)
 {
@@ -711,10 +711,10 @@ void rar_subh::write_payload(uint8_t** ptr)
 void rar_subh::read_payload(uint8_t** ptr)
 {
   ta = ((uint32_t) *(*ptr + 0)&0x7f)<<4 | (*(*ptr + 1)&0xf0)>>4;
-  grant[0] = *(*ptr + 1)&0x8;
-  grant[1] = *(*ptr + 1)&0x4;
-  grant[2] = *(*ptr + 1)&0x2;
-  grant[3] = *(*ptr + 1)&0x1;
+  grant[0] = *(*ptr + 1)&0x8?1:0;
+  grant[1] = *(*ptr + 1)&0x4?1:0;
+  grant[2] = *(*ptr + 1)&0x2?1:0;
+  grant[3] = *(*ptr + 1)&0x1?1:0;
   uint8_t *x = &grant[4];
   srslte_bit_unpack(*(*ptr+2), &x, 8);
   srslte_bit_unpack(*(*ptr+3), &x, 8);
@@ -724,8 +724,8 @@ void rar_subh::read_payload(uint8_t** ptr)
 
 bool rar_subh::read_subheader(uint8_t** ptr)
 {
-  bool e_bit = *(*ptr) & 0x80;
-  bool type  = *(*ptr) & 0x40;
+  bool e_bit = *(*ptr) & 0x80?true:false;
+  bool type  = *(*ptr) & 0x40?true:false;
   if (type) {
     preamble = *(*ptr) & 0x3f;
   } else {

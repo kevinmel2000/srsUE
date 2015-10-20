@@ -181,7 +181,7 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
 
 #ifdef DO_UL_POWER_CONTROL  
   // restore gain (this will be controled by PUSCH power control)
-  radio_handler->set_tx_gain(70);
+  radio_handler->set_tx_gain(60);
 #endif
   
 }
