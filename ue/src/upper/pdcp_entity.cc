@@ -95,7 +95,7 @@ void pdcp_entity::write_sdu(byte_buffer_t *sdu)
   // Handle DRB messages
   if(lcid >= RB_ID_DRB1)
   {
-    pdcp_pack_data_pdu_long_sn(tx_count, sdu);
+    pdcp_pack_data_pdu_long_sn(tx_count++, sdu);
     rlc->write_sdu(lcid, sdu);
   }
 }
