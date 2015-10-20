@@ -135,7 +135,10 @@ void pdcp_entity::write_pdu(byte_buffer_t *pdu)
   // Handle DRB messages
   if(lcid >= RB_ID_DRB1)
   {
-
+    uint32_t sn;
+    pdcp_unpack_data_pdu_long_sn(pdu, &sn);
+    log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU: %d", rb_id_text[lcid], sn);
+    gw->write_pdu(lcid, pdu);
   }
 }
 
