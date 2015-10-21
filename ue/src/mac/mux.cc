@@ -228,10 +228,10 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     bsr_subh->set_bsr(bsr.buff_size, bsr_format_convert(bsr.format), bsr_payload_sz?false:true);    
   }
 
-  Debug("Assembled MAC PDU msg size %d/%d bytes\n", pdu_msg.size(), pdu_sz);
+  Debug("Assembled MAC PDU msg size %d/%d bytes\n", pdu_msg.get_pdu_len()-pdu_msg.rem_size(), pdu_sz);
 
   /* Generate MAC PDU and save to buffer */
-  uint8_t *ret = pdu_msg.write_packet();   
+  uint8_t *ret = pdu_msg.write_packet(log_h);   
   
   pthread_mutex_unlock(&mutex);
 
@@ -251,9 +251,13 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, bool *is_first)
 {
   return allocate_sdu(lcid, pdu_msg, -1, NULL, is_first);
 }
-bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t *sdu_sz, bool *is_first) 
+bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t *sdu_sz, bool *is_first_ptr) 
 {
-  
+ 
+  bool is_first = false; 
+  if (is_first_ptr) {
+    is_first = *is_first_ptr;
+  }
   // Get n-th pending SDU pointer and length
   int sdu_len = rlc->get_buffer_state(lcid); 
   
@@ -262,35 +266,30 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t
     if (sdu_len > max_sdu_sz && max_sdu_sz >= 0) {
       sdu_len = max_sdu_sz;
     }
-    if (sdu_len > pdu_msg->rem_size() - 3) {
-      sdu_len = pdu_msg->rem_size() - 3;
+    if (is_first) {
+      if (sdu_len > pdu_msg->rem_size() - 1) {
+        sdu_len = pdu_msg->rem_size() - 1;
+      }        
+    } else {
+      if (sdu_len > pdu_msg->rem_size() - 3) {
+        sdu_len = pdu_msg->rem_size() - 3;
+      }        
     }
     if (sdu_len > MIN_RLC_SDU_LEN) {
       if (pdu_msg->new_subh()) { // there is space for a new subheader
         pdu_msg->next();
         int sdu_len2 = sdu_len; 
-        sdu_len = pdu_msg->get()->set_sdu(lcid, sdu_len, rlc, is_first?*is_first:false);
+        sdu_len = pdu_msg->get()->set_sdu(lcid, sdu_len, rlc, is_first);
         if (sdu_len > 0) { // new SDU could be added
-          if (is_first) {
-            *is_first = false;           
+          if (is_first_ptr) {
+            *is_first_ptr = false;           
           }
           if (sdu_sz) {
             *sdu_sz = sdu_len; 
           }
-                    
-          Info("Allocated SDU lcid=%d nbytes=%d, buffer_state=%d\n", lcid, sdu_len, buffer_state);
-          /*
-          char str[64];
-          int len = 10; 
-          if (len > sdu_len) {
-            len = sdu_len; 
-          }
-          uint8_t *x=pdu_msg->get()->get_sdu_ptr();
-          for (int i=0;i<len;i++) {
-            sprintf(str, "0x%x, ", x[i]);
-          }
-          Info("Payload: %s\n", str);
-          */
+          
+          Info("Allocated SDU lcid=%d nbytes=%d, buffer_state=%d, grant_size=%d, remaining_size=%d\n", 
+                 lcid, sdu_len, buffer_state, pdu_msg->get_pdu_len(), pdu_msg->rem_size());
           return true;               
         } else {
           Info("Could not add SDU rem_size=%d, sdu_len_available=%d, sdu_len_read=%d\n",

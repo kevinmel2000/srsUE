@@ -264,7 +264,7 @@ uint32_t bsr_proc::need_to_send_bsr_on_ul_grant(uint32_t grant_size)
     /* Check if grant + MAC SDU headers is enough to accomodate all pending data */
     uint32_t total_data = 0; 
     for (int i=0;i<MAX_LCID && total_data < grant_size;i++) {
-      total_data += sch_pdu::size_plus_header_sdu(rlc->get_buffer_state(i));      
+      total_data += sch_pdu::size_header_sdu(rlc->get_buffer_state(i))+rlc->get_buffer_state(i);      
     }
     total_data--; // Because last SDU has no size header 
     

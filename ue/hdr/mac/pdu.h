@@ -32,6 +32,7 @@
 #include "common/log.h"
 #include "common/mac_interface.h"
 #include "common/interfaces.h"
+#include "common/log.h"
 #include <vector>
 #include <stdio.h>
 
@@ -211,13 +212,14 @@ public:
   // Reading functions
   bool     is_sdu();
   cetype   ce_type();
-  uint32_t  size_plus_header();
+  uint32_t size_plus_header();
   void     set_payload_size(uint32_t size);
   
   bool     read_subheader(uint8_t** ptr);
   void     read_payload(uint8_t **ptr);
   uint32_t get_sdu_lcid();
-  uint32_t get_sdu_nbytes();
+  uint32_t get_payload_size();
+  uint32_t get_header_size(bool is_last);
   uint8_t* get_sdu_ptr();
   
   uint16_t get_c_rnti();
@@ -228,6 +230,7 @@ public:
   // Writing functions
   void     write_subheader(uint8_t** ptr, bool is_last);
   void     write_payload(uint8_t **ptr);
+  int      set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload, bool is_first);
   int      set_sdu(uint32_t lcid, uint32_t requested_bytes, rlc_interface_mac *rlc);
   int      set_sdu(uint32_t lcid, uint32_t requested_bytes, rlc_interface_mac *rlc, bool is_first);
   bool     set_c_rnti(uint16_t crnti);
@@ -261,12 +264,14 @@ public:
 
   void      parse_packet(uint8_t *ptr);
   uint8_t*  write_packet();
+  uint8_t*  write_packet(srslte::log *log_h);
   bool      has_space_ce(uint32_t nbytes);  
   bool      has_space_sdu(uint32_t nbytes);  
   bool      has_space_sdu(uint32_t nbytes, bool is_first);  
-  uint32_t  size();
+  uint32_t  get_pdu_len();
   uint32_t  rem_size(); 
-  static uint32_t size_plus_header_sdu(uint32_t nbytes);
+  
+  static uint32_t size_header_sdu(uint32_t nbytes);
   bool      update_space_ce(uint32_t nbytes);  
   bool      update_space_sdu(uint32_t nbytes);  
   bool      update_space_sdu(uint32_t nbytes, bool is_first);  

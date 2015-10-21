@@ -99,13 +99,18 @@ uint8_t* demux::request_buffer(uint32_t len)
   uint8_t idx=0;
   if(find_unused_queue(&idx)) {
     if (idx > 0) {
-      //printf("Using queue %d for MAC PDU\n", idx);
+      printf("Using queue %d for MAC PDU\n", idx);
     }
     used_q[idx] = true; 
     uint8_t *buff = (uint8_t*) pdu_q[idx].request();
-    buff_header_t *head = (buff_header_t*) buff;
-    head->idx = idx;   
-    return &buff[sizeof(buff_header_t)]; 
+    if (buff) {
+      buff_header_t *head = (buff_header_t*) buff;
+      head->idx = idx;   
+      return &buff[sizeof(buff_header_t)];
+    } else {
+      Error("Requested buffer from DL Queue %d but no buffers available\n");
+      return NULL; 
+    }
   } else {
     Error("All DL buffers are full. Packet will be lost\n");
     return NULL; 
@@ -215,8 +220,8 @@ void demux::process_sch_pdu(sch_pdu *pdu_msg)
   while(pdu_msg->next()) {
     if (pdu_msg->get()->is_sdu()) {
       // Route logical channel 
-      Info("Delivering PDU for lcid=%d, %d bytes\n", pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_nbytes());
-      rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_sdu_nbytes());
+      Info("Delivering PDU for lcid=%d, %d bytes\n", pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_payload_size());
+      rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_payload_size());
     } else {
       // Process MAC Control Element
       if (!process_ce(pdu_msg->get())) {
@@ -237,7 +242,7 @@ bool demux::process_ce(sch_subh *subh) {
       // Start or restart timeAlignmentTimer
       timers_db->get(mac::TIME_ALIGNMENT)->reset();
       timers_db->get(mac::TIME_ALIGNMENT)->run();
-      Debug("Set TimeAdvance Command %d\n", subh->get_ta_cmd());
+      Info("Received time advance command %d\n", subh->get_ta_cmd());
       break;
     case sch_subh::PADDING:
       break;
