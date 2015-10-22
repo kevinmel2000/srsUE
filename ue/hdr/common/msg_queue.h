@@ -43,7 +43,7 @@ namespace srsue {
 class msg_queue
 {
 public:
-  msg_queue(uint32_t capacity_ = 10)
+  msg_queue(uint32_t capacity_ = 128)
     :head(0)
     ,tail(0)
     ,unread(0)

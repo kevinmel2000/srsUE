@@ -54,7 +54,7 @@ public:
   static buffer_pool*   get_instance(void);
   static void           cleanup(void);
 
-  byte_buffer_t*  allocate();
+  byte_buffer_t*        allocate();
   void                  deallocate(byte_buffer_t *b);
 
 private:
@@ -63,9 +63,9 @@ private:
   buffer_pool(buffer_pool const&);    // Disabled
   void operator=(buffer_pool const&); // Disabled
 
-  static const int      POOL_SIZE = 1024;
-  byte_buffer_t  *pool;
-  byte_buffer_t  *first_available;
+  static const int      POOL_SIZE = 2048;
+  byte_buffer_t        *pool;
+  byte_buffer_t        *first_available;
   boost::mutex          mutex;
   static boost::mutex   instance_mutex;
   int                   allocated;
