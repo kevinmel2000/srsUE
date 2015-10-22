@@ -180,7 +180,6 @@ void ue::run_thread()
   while(started)
   {
     have_data = false;
-    if(rlc->check_retx_buffers()) have_data = true;
     if(rlc->check_dl_buffers()) have_data = true;
     if(gw->check_ul_buffers()) have_data = true;
     if(!have_data){

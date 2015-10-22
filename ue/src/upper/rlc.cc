@@ -180,11 +180,6 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
 /*******************************************************************************
   UE interface
 *******************************************************************************/
-bool rlc::check_retx_buffers()
-{
-  return false;
-}
-
 bool rlc::check_dl_buffers()
 {
   bool ret = false;

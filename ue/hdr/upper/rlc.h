@@ -71,7 +71,6 @@ public:
   void add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);
 
   // UE interface
-  bool check_retx_buffers();
   bool check_dl_buffers();
 
 private:
