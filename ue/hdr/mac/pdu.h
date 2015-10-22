@@ -268,8 +268,8 @@ public:
   bool      has_space_ce(uint32_t nbytes);  
   bool      has_space_sdu(uint32_t nbytes);  
   bool      has_space_sdu(uint32_t nbytes, bool is_first);  
-  uint32_t  get_pdu_len();
-  uint32_t  rem_size(); 
+  int       get_pdu_len();
+  int       rem_size(); 
   
   static uint32_t size_header_sdu(uint32_t nbytes);
   bool      update_space_ce(uint32_t nbytes);  
