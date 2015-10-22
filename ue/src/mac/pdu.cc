@@ -341,11 +341,11 @@ uint8_t* sch_pdu::write_packet()
 }
 #endif
 
-uint32_t sch_pdu::rem_size() {
+int sch_pdu::rem_size() {
   return rem_len; 
 }
 
-uint32_t sch_pdu::get_pdu_len()
+int sch_pdu::get_pdu_len()
 {
   return pdu_len; 
 }
