@@ -221,17 +221,23 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   }
 
   byte_buffer_t *pdu = pool->allocate();
+  if(!pdu || pdu->N_bytes != 0)
+  {
+    log->error("Failed to allocate PDU buffer\n");
+    return 0;
+  }
   rlc_umd_pdu_header_t header;
   header.fi   = RLC_FI_FIELD_START_AND_END_ALIGNED;
   header.sn   = vt_us;
   header.N_li = 0;
   header.sn_size = tx_sn_field_length;
 
-  uint32_t head_len  = rlc_um_packed_length(&header);
   uint32_t to_move   = 0;
   uint32_t last_li   = 0;
-  uint32_t pdu_space = nof_bytes;
   uint8_t *pdu_ptr   = pdu->msg;
+
+  int head_len  = rlc_um_packed_length(&header);
+  int pdu_space = nof_bytes;
 
   if(pdu_space <= head_len)
   {
@@ -264,6 +270,7 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   // Pull SDUs from queue
   while(pdu_space > head_len && tx_sdu_queue.size() > 0)
   {
+    log->debug("pdu_space=%d, head_len=%d\n", pdu_space, head_len);
     if(last_li > 0)
       header.li[header.N_li++] = last_li;
     head_len = rlc_um_packed_length(&header);
@@ -293,9 +300,11 @@ int  rlc_um::build_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   vt_us = (vt_us + 1)%tx_mod;
 
   // Add header and TX
+  log->debug("%s packing PDU with length %d\n", rb_id_text[lcid], pdu->N_bytes);
   rlc_um_write_data_pdu_header(&header, pdu);
   memcpy(payload, pdu->msg, pdu->N_bytes);
   uint32_t ret = pdu->N_bytes;
+  log->debug("%sreturning length %d\n", rb_id_text[lcid], pdu->N_bytes);
   pool->deallocate(pdu);
 
   debug_state();
