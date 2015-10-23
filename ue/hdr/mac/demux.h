@@ -60,7 +60,7 @@ public:
   bool     get_uecrid_successful();
   
 private:
-  const static int NOF_PDU_Q   = 3; // prevents threads from being locked
+  const static int NOF_PDU_Q   = 8; // prevents threads from being locked
   const static int MAX_PDU_LEN = 128*1024; 
 
   bool (*uecrid_callback) (void*, uint64_t);

@@ -126,6 +126,8 @@ void demux::push_buffer(uint8_t *buff, uint32_t nof_bytes) {
       }
     } 
     used_q[head->idx] = false; 
+  } else {
+    fprintf(stderr, "Fatal error had a buffer of unkown index %d\n", head->idx);
   }
 }
 
@@ -185,9 +187,10 @@ void demux::release_buffer(uint8_t* ptr)
   for (int i=0;i<NOF_PDU_Q;i++) {
     if (pdu_q[i].request() == addr) {
       used_q[i] = false; 
-      break;
+      return;
     }
   }
+  fprintf(stderr, "Fatal Error: Trying to release an unknown buffer\n");
 }
 
 void demux::process_pdus()
@@ -195,11 +198,14 @@ void demux::process_pdus()
   uint32_t len; 
   uint8_t idx=0; 
   while(find_nonempty_queue(&idx)) {
-    uint8_t *mac_pdu = (uint8_t*) pdu_q[idx].pop(&len);
-    if (mac_pdu) {
-      process_pdu(&mac_pdu[sizeof(buff_header_t)], len);
-    }
-    pdu_q[idx].release();
+    uint8_t *mac_pdu = NULL;
+    do {
+      mac_pdu = (uint8_t*) pdu_q[idx].pop(&len);
+      if (mac_pdu) {
+        process_pdu(&mac_pdu[sizeof(buff_header_t)], len);
+        pdu_q[idx].release();
+      }
+    } while(mac_pdu);
     idx++;
   } 
 }
