@@ -521,7 +521,8 @@ int sch_subh::set_sdu(uint32_t lcid_, uint32_t requested_bytes, rlc_interface_ma
     
     if (sdu_sz < 0 || sdu_sz > requested_bytes) {
       return -1;
-    } else if (sdu_sz == 0) {
+    } 
+    if (sdu_sz == 0) {
       return 0; 
     }
 
