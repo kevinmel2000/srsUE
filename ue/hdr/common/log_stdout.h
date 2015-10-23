@@ -48,6 +48,7 @@ public:
 
   log_stdout(std::string service_name_) : log(service_name_) { }
   
+  void console(std::string message, ...);
   void error(std::string message, ...);
   void warning(std::string message, ...);
   void info(std::string message, ...);

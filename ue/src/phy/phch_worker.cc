@@ -798,7 +798,7 @@ void phch_worker::set_ul_params()
   
   
   if (pregen_enabled) { 
-    printf("Pre-generating UL signals\n");
+    Info("Pre-generating UL signals\n");
     srslte_ue_ul_pregen_signals(&ue_ul);
   }
   

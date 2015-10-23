@@ -1090,7 +1090,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_pack_ue_eutra_capability_ie(LIBLTE_RRC_UE_EUTRA_CAP
        msg                   != NULL)
     {
         // Option indicator - featureGroupIndicators
-        liblte_value_2_bits(0, &msg_ptr, 1);
+        liblte_value_2_bits(ue_eutra_capability->feature_group_indicator_present, &msg_ptr, 1);
 
         // Option indicator - nonCriticalExtension
         liblte_value_2_bits(0, &msg_ptr, 1);
@@ -1104,6 +1104,8 @@ LIBLTE_ERROR_ENUM liblte_rrc_pack_ue_eutra_capability_ie(LIBLTE_RRC_UE_EUTRA_CAP
         liblte_rrc_pack_phy_layer_params_ie(&ue_eutra_capability->phy_params, &msg_ptr);
         liblte_rrc_pack_rf_params_ie(&ue_eutra_capability->rf_params,         &msg_ptr);
         liblte_rrc_pack_meas_params_ie(&ue_eutra_capability->meas_params,     &msg_ptr);
+        if(ue_eutra_capability->feature_group_indicator_present)
+          liblte_value_2_bits(ue_eutra_capability->feature_group_indicator, &msg_ptr, 32);
         liblte_rrc_pack_inter_rat_params_ie(&ue_eutra_capability->inter_rat_params, &msg_ptr);
 
         // Fill in the number of bits used
@@ -1123,7 +1125,7 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ue_eutra_capability_ie(uint8                
        ie_ptr                != NULL)
     {
         // Option indicator - featureGroupIndicators
-        liblte_bits_2_value(ie_ptr, 1);
+        ue_eutra_capability->feature_group_indicator_present = liblte_bits_2_value(ie_ptr, 1);
 
         // Option indicator - nonCriticalExtension
         liblte_bits_2_value(ie_ptr, 1);
@@ -1137,6 +1139,8 @@ LIBLTE_ERROR_ENUM liblte_rrc_unpack_ue_eutra_capability_ie(uint8                
         liblte_rrc_unpack_phy_layer_params_ie(ie_ptr, &ue_eutra_capability->phy_params);
         liblte_rrc_unpack_rf_params_ie(ie_ptr, &ue_eutra_capability->rf_params);
         liblte_rrc_unpack_meas_params_ie(ie_ptr, &ue_eutra_capability->meas_params);
+        if(ue_eutra_capability->feature_group_indicator_present)
+          ue_eutra_capability->feature_group_indicator = liblte_bits_2_value(ie_ptr, 32);
         liblte_rrc_unpack_inter_rat_params_ie(ie_ptr, &ue_eutra_capability->inter_rat_params);
 
         err = LIBLTE_SUCCESS;

@@ -100,6 +100,16 @@ void log_filter::all_log_line(srslte::LOG_LEVEL_ENUM level,
   }
 }
 
+void log_filter::console(std::string message, ...) {
+  char     *args_msg;
+  va_list   args;
+  va_start(args, message);
+  if(vasprintf(&args_msg, message.c_str(), args) > 0);
+    printf("%s",args_msg); // Print directly to stdout
+  va_end(args);
+  free(args_msg);
+}
+
 void log_filter::error(std::string message, ...) {
   if (level >= LOG_LEVEL_ERROR) {
     char     *args_msg;

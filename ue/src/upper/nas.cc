@@ -184,12 +184,11 @@ void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
                     act_def_eps_bearer_context_req.pdn_addr.addr[2],
                     act_def_eps_bearer_context_req.pdn_addr.addr[3]);
 
-      // TODO: log message to console
-//        ue->send_ctrl_info_msg("IP allocated by network %u.%u.%u.%u",
-//                                act_def_eps_bearer_context_req.pdn_addr.addr[0],
-//                                act_def_eps_bearer_context_req.pdn_addr.addr[1],
-//                                act_def_eps_bearer_context_req.pdn_addr.addr[2],
-//                                act_def_eps_bearer_context_req.pdn_addr.addr[3]);
+      nas_log->console("Network attach succesful. IP: %u.%u.%u.%u\n",
+                    act_def_eps_bearer_context_req.pdn_addr.addr[0],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[1],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[2],
+                    act_def_eps_bearer_context_req.pdn_addr.addr[3]);
 
       // Setup GW
       char *err_str;

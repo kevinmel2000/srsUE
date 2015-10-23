@@ -49,6 +49,7 @@ public:
 
   log_filter(std::string layer, logger *logger_, bool tti=false);
 
+  void console(std::string message, ...);
   void error(std::string message, ...);
   void warning(std::string message, ...);
   void info(std::string message, ...);

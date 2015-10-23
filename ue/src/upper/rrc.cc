@@ -26,6 +26,7 @@
  */
 
 #include <unistd.h>
+#include <sstream>
 
 #include "upper/rrc.h"
 #include <srslte/utils/bit.h>
@@ -133,6 +134,7 @@ void rrc::write_pdu_bcch_bch(byte_buffer_t *pdu)
   pool->deallocate(pdu);
   liblte_rrc_unpack_bcch_bch_msg((LIBLTE_BIT_MSG_STRUCT*)&bit_buf, &mib);
   rrc_log->info("MIB received BW=%s MHz\n", liblte_rrc_dl_bandwidth_text[mib.dl_bw]);
+  rrc_log->console("MIB received BW=%s MHz\n", liblte_rrc_dl_bandwidth_text[mib.dl_bw]);
 
   // Start the SIB search state machine
   state = RRC_STATE_SIB1_SEARCH;
@@ -156,6 +158,13 @@ void rrc::write_pdu_bcch_dlsch(byte_buffer_t *pdu)
                     sib1.cell_id&0xfff,
                     liblte_rrc_si_window_length_num[sib1.si_window_length],
                     liblte_rrc_si_periodicity_num[sib1.sched_info[0].si_periodicity]);
+      std::stringstream ss;
+      for(int i=0;i<sib1.N_plmn_ids;i++){
+        ss << " PLMN Id: MCC " << sib1.plmn_id[i].id.mcc << " MNC " << sib1.plmn_id[i].id.mnc;
+      }
+      rrc_log->console("SIB1 received, CellID=%d, %s\n",
+                       sib1.cell_id&0xfff,
+                       ss.str().c_str());
       
       state = RRC_STATE_SIB2_SEARCH;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
@@ -164,7 +173,7 @@ void rrc::write_pdu_bcch_dlsch(byte_buffer_t *pdu)
     } else if (LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2 == dlsch_msg.sibs[0].sib_type && RRC_STATE_SIB2_SEARCH == state) {
       // Handle SIB2
       memcpy(&sib2, &dlsch_msg.sibs[0].sib.sib2, sizeof(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT));
-      rrc_log->info("SIB2 received, \n", pdu->N_bytes);
+      rrc_log->info("SIB2 received, \n");
       state = RRC_STATE_WAIT_FOR_CON_SETUP;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       apply_sib2_configs();
@@ -382,7 +391,8 @@ void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
   cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[1] = true;
   cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[2] = true;
 
-  cap->feature_group_indicator_present         = false;
+  cap->feature_group_indicator_present         = true;
+  cap->feature_group_indicator                 = 0x7f0dfcba;
   cap->inter_rat_params.utra_fdd_present       = false;
   cap->inter_rat_params.utra_tdd128_present    = false;
   cap->inter_rat_params.utra_tdd384_present    = false;
@@ -462,13 +472,11 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
   switch(dl_dcch_msg.msg_type)
   {
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_DL_INFO_TRANSFER:
-    rrc_log->info("DL Info Transfer received\n");
     memcpy(pdu->msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.msg, dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes);
     pdu->N_bytes = dl_dcch_msg.msg.dl_info_transfer.dedicated_info.N_bytes;
     nas->write_pdu(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_SECURITY_MODE_COMMAND:
-    rrc_log->info("DL Security Mode Command received\n");
     transaction_id =  dl_dcch_msg.msg.security_mode_cmd.rrc_transaction_id;
 
     // TODO: Set algorithms correctly in PDCP
@@ -482,12 +490,10 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
     send_security_mode_complete(lcid, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RECONFIG:
-    rrc_log->info("RRC Connection Reconfiguration received\n");
     transaction_id = dl_dcch_msg.msg.security_mode_cmd.rrc_transaction_id;
     handle_rrc_con_reconfig(lcid, &dl_dcch_msg.msg.rrc_con_reconfig, pdu);
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_UE_CAPABILITY_ENQUIRY:
-    rrc_log->info("UE Capability Enquiry received\n");
     transaction_id = dl_dcch_msg.msg.ue_cap_enquiry.rrc_transaction_id;
     for(int i=0; i<dl_dcch_msg.msg.ue_cap_enquiry.N_ue_cap_reqs; i++)
     {
@@ -497,6 +503,9 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
         break;
       }
     }
+    break;
+  case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RELEASE:
+    rrc_log->console("RRC Connection released, reconnection not enabled.");
     break;
   default:
     break;

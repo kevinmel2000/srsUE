@@ -88,6 +88,7 @@ public:
   }
 
   // Pure virtual methods for logging
+  virtual void console(std::string message, ...) = 0;
   virtual void error(std::string message, ...)   = 0;
   virtual void warning(std::string message, ...) = 0;
   virtual void info(std::string message, ...)    = 0;
