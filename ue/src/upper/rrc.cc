@@ -505,7 +505,7 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
     }
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RELEASE:
-    rrc_log->console("RRC Connection released, reconnection not enabled.");
+    rrc_log->console("RRC Connection released, reconnection not enabled.\n");
     break;
   default:
     break;
