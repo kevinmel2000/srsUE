@@ -33,8 +33,8 @@
 #endif // __cplusplus
 
   bool threads_new_rt(pthread_t *thread, void *(*start_routine) (void*), void *arg);
-  bool threads_new_rt_prio(pthread_t *thread, void *(*start_routine) (void*), void *arg, uint32_t prio_offset);
-  bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void *arg, int cpu, uint32_t prio_offset);
+  bool threads_new_rt_prio(pthread_t *thread, void *(*start_routine) (void*), void *arg, int prio_offset);
+  bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void *arg, int cpu, int prio_offset);
   void threads_print_self();
 
 #ifdef __cplusplus
@@ -46,10 +46,10 @@
 class thread
 {
 public: 
-  bool start(uint32_t prio = 0) {
+  bool start(int prio = -1) {
     return threads_new_rt_prio(&_thread, thread_function_entry, this, prio);    
   }
-  bool start_cpu(uint32_t prio, int cpu) {
+  bool start_cpu(int prio, int cpu) {
     return threads_new_rt_cpu(&_thread, thread_function_entry, this, cpu, prio);    
   }
   void print_priority() {

@@ -36,30 +36,32 @@
 #include "common/threads.h"
 
 bool threads_new_rt(pthread_t *thread, void *(*start_routine) (void*), void *arg) {
-  return threads_new_rt_prio(thread, start_routine, arg, 0);
+  return threads_new_rt_prio(thread, start_routine, arg, -1);
 }
 
-bool threads_new_rt_prio(pthread_t *thread, void *(*start_routine) (void*), void *arg, uint32_t prio_offset) {
+bool threads_new_rt_prio(pthread_t *thread, void *(*start_routine) (void*), void *arg, int prio_offset) {
   return threads_new_rt_cpu(thread, start_routine, arg, -1, prio_offset);
 }
 
-bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void *arg, int cpu, uint32_t prio_offset) {
+bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void *arg, int cpu, int prio_offset) {
   bool ret = false; 
   
   pthread_attr_t attr;
   struct sched_param param;
-  param.sched_priority = sched_get_priority_max(SCHED_FIFO) - prio_offset;  
 
-  pthread_attr_init(&attr);
-  if (pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED)) {
-    perror("pthread_attr_setinheritsched");
-  }
-  if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO)) {
-    perror("pthread_attr_setschedpolicy");
-  }
-  if (pthread_attr_setschedparam(&attr, &param)) {
-    perror("pthread_attr_setschedparam");
-    fprintf(stderr, "Error not enough privileges to set Scheduling priority\n");
+  if (prio_offset >= 0) {
+    param.sched_priority = sched_get_priority_max(SCHED_FIFO) - prio_offset;  
+    pthread_attr_init(&attr);
+    if (pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED)) {
+      perror("pthread_attr_setinheritsched");
+    }
+    if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO)) {
+      perror("pthread_attr_setschedpolicy");
+    }
+    if (pthread_attr_setschedparam(&attr, &param)) {
+      perror("pthread_attr_setschedparam");
+      fprintf(stderr, "Error not enough privileges to set Scheduling priority\n");
+    }
   }
   if (cpu != -1) {
     cpu_set_t cpuset; 
@@ -70,7 +72,7 @@ bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void 
       perror("pthread_attr_setaffinity_np");
     }
   } 
-  int err = pthread_create(thread, &attr, start_routine, arg);
+  int err = pthread_create(thread, prio_offset >= 0 ? &attr : NULL, start_routine, arg);
   if (err) {
     if (EPERM == err) {
       perror("Failed to create thread - permission error. Running with root permissions?");

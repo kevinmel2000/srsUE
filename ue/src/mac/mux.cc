@@ -142,9 +142,7 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     fprintf(stderr, "Caution pdu_sz=0\n");
   }
   
-  if (pthread_mutex_trylock(&mutex)) {
-    pthread_mutex_lock(&mutex);
-  }
+  pthread_mutex_lock(&mutex);
     
   // Update Bj
   for (int i=0;i<NOF_UL_LCH;i++) {    
