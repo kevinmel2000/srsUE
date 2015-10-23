@@ -39,7 +39,7 @@ namespace srsue {
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {
   for (int i=0;i<NOF_PDU_Q;i++) {
-    pdu_q[i].init(8, MAX_PDU_LEN);
+    pdu_q[i].init(32, MAX_PDU_LEN);
     used_q[i] = false; 
   }
 }
@@ -64,6 +64,7 @@ bool demux::get_uecrid_successful() {
 bool demux::find_unused_queue(uint8_t *idx) {
   for (uint8_t i=0;i<NOF_PDU_Q;i++) {
     if (!used_q[i]) {
+      used_q[i] = true; 
       if (idx) {
         *idx = i; 
       }
@@ -101,7 +102,6 @@ uint8_t* demux::request_buffer(uint32_t len)
     if (idx > 0) {
      // printf("Using queue %d for MAC PDU\n", idx);
     }
-    used_q[idx] = true; 
     uint8_t *buff = (uint8_t*) pdu_q[idx].request();
     if (buff) {
       buff_header_t *head = (buff_header_t*) buff;
