@@ -81,7 +81,9 @@ bool threads_new_rt_cpu(pthread_t *thread, void *(*start_routine) (void*), void 
   } else {
     ret = true; 
   }
-  pthread_attr_destroy(&attr);
+  if (prio_offset >= 0) {
+    pthread_attr_destroy(&attr);
+  }
   return ret; 
 }
 
