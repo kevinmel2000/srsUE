@@ -66,8 +66,6 @@ public:
       
 private:  
   bool     pdu_move_to_msg3(uint32_t pdu_sz);
-  bool     allocate_sdu(uint32_t lcid, sch_pdu *pdu);
-  bool     allocate_sdu(uint32_t lcid, sch_pdu *pdu, bool *is_first);
   bool     allocate_sdu(uint32_t lcid, sch_pdu *pdu, int max_sdu_sz, uint32_t *sdu_sz, bool *is_first);
   
   const static int NOF_UL_LCH = 10; 

@@ -138,6 +138,10 @@ sch_subh::cetype bsr_format_convert(bsr_proc::bsr_format_t format) {
 uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 {
   
+  if (pdu_sz == 0) {
+    fprintf(stderr, "Caution pdu_sz=0\n");
+  }
+  
   if (pthread_mutex_trylock(&mutex)) {
     pthread_mutex_lock(&mutex);
   }
@@ -159,7 +163,7 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 
   // MAC control element for C-RNTI or data from UL-CCCH
   bool is_first = true; 
-  if (!allocate_sdu(0, &pdu_msg, &is_first)) {
+  if (!allocate_sdu(0, &pdu_msg, -1, NULL, &is_first)) {
     if (pending_crnti_ce) {
       if (pdu_msg.new_subh()) {
         pdu_msg.next();
@@ -211,7 +215,7 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 
   // If resources remain, allocate regardless of their Bj value
   for (int i=1;i<NOF_UL_LCH;i++) {
-    while (allocate_sdu(lchid_sorted[i], &pdu_msg));   
+    while (allocate_sdu(lchid_sorted[i], &pdu_msg, -1, NULL, &is_first));   
   }
 
   bool send_bsr = bsr_procedure->generate_bsr_on_ul_grant(pdu_msg.rem_size(), &bsr);
@@ -243,14 +247,6 @@ void mux::append_crnti_ce_next_tx(uint16_t crnti) {
 }
 
 
-bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg) 
-{
-  return allocate_sdu(lcid, pdu_msg, -1, NULL, NULL);
-}
-bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, bool *is_first) 
-{
-  return allocate_sdu(lcid, pdu_msg, -1, NULL, is_first);
-}
 bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t *sdu_sz, bool *is_first_ptr) 
 {
  

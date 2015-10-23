@@ -106,9 +106,9 @@ public:
     if (nof_subheaders > 0) {
       nof_subheaders--;
     }
-    if (cur_idx > 0) {
+    /*if (cur_idx > 0) {
       cur_idx--;
-    }
+    }*/
   }
 
   SubH* get() {
@@ -184,7 +184,6 @@ public:
   virtual void fprint(FILE *stream)                                 = 0;
 
   pdu<SubH>* parent; 
-  
 private: 
   virtual void init() = 0;
 };
@@ -244,6 +243,7 @@ public:
   void     init();
   void     fprint(FILE *stream);
   
+
 private: 
   static const int MAX_CE_PAYLOAD_LEN = 8; 
   uint32_t lcid;
@@ -277,6 +277,7 @@ public:
   bool      update_space_sdu(uint32_t nbytes, bool is_first);  
   void      fprint(FILE *stream);
   
+
 };
 
 class rar_subh : public subh<rar_subh>

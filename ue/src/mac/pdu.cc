@@ -131,7 +131,6 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   uint32_t onetwo_padding = 0; 
   if (rem_len > 2) {
     multibyte_padding = true; 
-    ce_only = false; 
     // Add 1 header for padding 
     rem_len--; 
     // Add the header for the last SDU
@@ -204,7 +203,6 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
     bzero(&pdu_start_ptr[pdu_len-rem_len], rem_len*sizeof(uint8_t));
   }
 
-
   if (log_h) {
     log_h->info("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
@@ -228,118 +226,6 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   
   return pdu_start_ptr; 
 }
-
-    
-#ifdef OLD_WRITE_PACKET
-// Section 6.1.2
-uint8_t* sch_pdu::write_packet()
-{
-  bool last_is_padding = false; 
-
-  // Find last SDU or CE 
-  int last_sh = 0;
-  int last_sdu = nof_subheaders-1; 
-  bool is_sdu = false; 
-  while(last_sdu >= 0 && !is_sdu) {
-    is_sdu = subheaders[last_sdu  printf("Available space: %d\n", pdu.rem_size());
-].is_sdu();
-    if (!is_sdu && last_sdu>=0) {
-      last_sdu--;
-    }
-  }
-  int last_ce = nof_subheaders-1; 
-  is_sdu = true; 
-  while(last_ce >= 0 && is_sdu) {
-    is_sdu = subheaders[last_ce].is_sdu();
-    if (is_sdu && last_ce>=0) {
-      last_ce--;
-    }
-  }
-  if (last_sdu >=0 ) {
-    last_sh = subheaders[last_sdu].is_sdu()?last_sdu:last_ce;  
-  }
-  
-  // Add subheaders and MAC CE before SDU's 
-  uint32_t head_and_ce_sz = pdu_len-total_sdu_len;
-
-  printf("pdu_len=%d, rem_len=%d, head_and_ce_sz=%d\n", pdu_len, rem_len,head_and_ce_sz);
-
-  if (rem_len > 2) {
-    head_and_ce_sz -= rem_len - 2; 
-    printf("then head_and_ce_sz=%d\n", head_and_ce_sz);
-    for (int i=0;i<nof_subheaders;i++) {
-      if (subheaders[i].is_sdu() && subheaders[i].get_sdu_nbytes() > 128) {
-        head_and_ce_sz++; 
-        rem_len++;
-        printf("subheader %d is big, head_and_ce_sz=%d\n", i, head_and_ce_sz);
-      }
-    }
-  }
-  if (head_and_ce_sz >= sdu_offset_start) {
-    fprintf(stderr, "Writting PDU: head_and_ce_sz>=sdu_offset_start (%d>=%d). pdu_len=%d, total_sdu_len=%d\n", 
-            head_and_ce_sz, sdu_offset_start, pdu_len, total_sdu_len);
-    return NULL; 
-  }
-  
-  uint8_t *ptr = &buffer_tx[sdu_offset_start-head_and_ce_sz];
-  uint8_t *pdu_start_ptr = ptr; 
-  
-  //printf("Head + CE size: %d bytes, data start 0x%x, pdu_len=%d, total_sdu_len=%d, rem_len=%d\n", 
-   //      head_and_ce_sz, buffer_tx[sdu_offset_start], pdu_len, total_sdu_len, rem_len);
-  
-
-  // Add multi-byte padding if there are more than 2 bytes or there are 2 bytes 
-  // and there is at least one SDU 
-  if (rem_len > 2) {
-    last_is_padding = true; 
-  } else if (rem_len > 0) {
-    // Add single or two-byte padding if required
-    if (rem_len == 1 || rem_len == 2) {
-      sch_subh padding; 
-      padding.set_padding(); 
-      for (int i=0;i<rem_len;i++) {
-        padding.write_subheader(&ptr, false);  
-      }
-      rem_len = 0;
-    }     
-  }  
-  if (last_is_padding) {
-    last_sh = -1;
-  }
-  // Write subheaders for MAC CE first
-  for (int i=0;i<nof_subheaders;i++) {
-    if (!subheaders[i].is_sdu()) {
-      subheaders[i].write_subheader(&ptr, i==last_sh);
-    }
-  }
-  // Then for SDUs
-  for (int i=0;i<nof_subheaders;i++) {
-    if (subheaders[i].is_sdu()) {
-      subheaders[i].write_subheader(&ptr, i==last_sh);
-    }
-  }
-  // Then for padding
-  if (last_is_padding) {
-    sch_subh padding; 
-    padding.set_padding(rem_len); 
-    padding.write_subheader(&ptr, true);
-    rem_len -= 2; 
-  }
-  // Write CE payloads (SDU payloads already in the buffer)
-  for (int i=0;i<nof_subheaders;i++) {
-    if (!subheaders[i].is_sdu()) {      
-      subheaders[i].write_payload(&ptr);
-    }
-  }
-
-  // Set padding to zeros (if any) 
-  if (rem_len >= 2) {
-    bzero(&pdu_start_ptr[pdu_len-rem_len], rem_len*sizeof(uint8_t));
-  }
-
-  return pdu_start_ptr; 
-}
-#endif
 
 int sch_pdu::rem_size() {
   return rem_len; 
@@ -384,7 +270,7 @@ bool sch_pdu::has_space_sdu(uint32_t nbytes, bool is_first)
 bool sch_pdu::update_space_ce(uint32_t nbytes)
 {
   if (has_space_ce(nbytes)) {
-    rem_len -= nbytes + 1; 
+    rem_len      -= nbytes + 1; 
   }
 }
 bool sch_pdu::update_space_sdu(uint32_t nbytes) {
@@ -395,9 +281,9 @@ bool sch_pdu::update_space_sdu(uint32_t nbytes, bool is_first)
 {
   if (has_space_sdu(nbytes, is_first)) {
     if (is_first) {
-      rem_len -= (nbytes+1);
+      rem_len      -= (nbytes+1);
     } else {
-      rem_len -= size_header_sdu(nbytes) + nbytes;
+      rem_len      -= size_header_sdu(nbytes) + nbytes;
     }
   }
 }
@@ -1009,25 +895,37 @@ int main()
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
   printf("\n");
-  
-  /* Another test */
-  printf("------- Another test ----------\n");
-  uint8_t dlsch_payload3[346];
-  for (int i=0;i<346;i++) {
-    dlsch_payload3[i] = i; 
-  }
+
+  /* CE only */
+  printf("------- CE only ----------\n");
   bzero(buffer, 10240);
-  pdu.init_tx(buffer, 549, true);
+  pdu.init_tx(buffer, 125, true);
   printf("Available space: %d\n", pdu.rem_size());
-  pdu.new_subh(); 
+  pdu.new_subh();
   pdu.next();
-  pdu.get()->set_sdu(3, 346, dlsch_payload3, true);
-  pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::LONG_BSR, true);
+  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
+  printf("\n");
+  
+  /* Another test */
+  printf("------- Another test ----------\n");
+  uint8_t dlsch_payload3[122];
+  for (int i=0;i<122;i++) {
+    dlsch_payload3[i] = i; 
+  }
+  bzero(buffer, 10240);
+  pdu.init_tx(buffer, 125, true);
+  printf("Available space: %d\n", pdu.rem_size());
+  pdu.new_subh(); 
+  pdu.next();
+  pdu.get()->set_sdu(3, 122, dlsch_payload3, true);
+  printf("Remaining space: %d\n", pdu.rem_size());
+  ptr = pdu.write_packet();
+  //srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
+  printf("\n");
+  
   return 0; 
 }
 

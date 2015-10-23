@@ -493,7 +493,11 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
       srslte_ra_pusch_fprint(stdout, &dci_unpacked, cell.nof_prb);
     }
     
-    return true;
+    if (grant->n_bytes) {
+      return true; 
+    } else {
+      return false; 
+    }
   } else {
     return false; 
   }    
