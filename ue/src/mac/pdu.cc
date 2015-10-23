@@ -115,10 +115,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   sch_subh padding; 
   padding.set_padding(); 
     
-  /* Determine if we are transmitting CEs only. If there are CE only, the last subheader 
-   * will be the last subheader in the list. Otherwise the last subheader will be the last
-   * SDU in the list
-   */
+  /* Determine if we are transmitting CEs only. */
   bool ce_only = last_sdu_idx<0?true:false; 
   
   /* Determine if we will need multi-byte padding or 1/2 bytes padding */
@@ -168,7 +165,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   // Then write subheaders for MAC CE
   for (int i=0;i<nof_subheaders;i++) {
     if (!subheaders[i].is_sdu()) {
-      subheaders[i].write_subheader(&ptr, ce_only && i==(nof_subheaders-1));
+      subheaders[i].write_subheader(&ptr, ce_only && !multibyte_padding && i==(nof_subheaders-1));
     }
   }
   // Then for SDUs
@@ -922,9 +919,12 @@ int main()
   pdu.init_tx(buffer, 125, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh();
+  pdu.get()->set_phr(15);  
+  pdu.new_subh();
   pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
+  srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
   printf("\n");
   
   /* Another test */
