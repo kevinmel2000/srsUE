@@ -162,11 +162,9 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   pdu_msg.init_tx(payload, pdu_sz, true);
 
   // MAC control element for C-RNTI or data from UL-CCCH
-  bool is_first = true; 
-  if (!allocate_sdu(0, &pdu_msg, -1, NULL, &is_first)) {
+  if (!allocate_sdu(0, &pdu_msg, -1, NULL)) {
     if (pending_crnti_ce) {
       if (pdu_msg.new_subh()) {
-        pdu_msg.next();
         if (!pdu_msg.get()->set_c_rnti(pending_crnti_ce)) {
           Warning("Pending C-RNTI CE could not be inserted in MAC PDU\n");
         }
@@ -183,7 +181,6 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   if (bsr_payload_sz) {
     Debug("Including BSR CE size %d\n", bsr_payload_sz);
     if (pdu_msg.new_subh()) {
-      pdu_msg.next();
       bsr_subh = pdu_msg.get();
       pdu_msg.update_space_ce(bsr_payload_sz);
     }
@@ -192,7 +189,6 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   float phr_value; 
   if (phr_procedure->generate_phr_on_ul_grant(&phr_value)) {
     if (pdu_msg.new_subh()) {
-      pdu_msg.next();
       pdu_msg.get()->set_phr(phr_value);
     }
   }
@@ -205,7 +201,7 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     if (lcid != 0) {
       bool res = true; 
       while ((Bj[lcid] > 0 || PBR[lcid] < 0) && res) {
-        res = allocate_sdu(lcid, &pdu_msg, (PBR[lcid]<0)?-1:Bj[lcid], &sdu_sz, &is_first);
+        res = allocate_sdu(lcid, &pdu_msg, (PBR[lcid]<0)?-1:Bj[lcid], &sdu_sz);
         if (res && PBR[lcid] >= 0) {
           Bj[lcid] -= sdu_sz;         
         }
@@ -215,14 +211,13 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 
   // If resources remain, allocate regardless of their Bj value
   for (int i=1;i<NOF_UL_LCH;i++) {
-    while (allocate_sdu(lchid_sorted[i], &pdu_msg, -1, NULL, &is_first));   
+    while (allocate_sdu(lchid_sorted[i], &pdu_msg, -1, NULL));   
   }
 
   bool send_bsr = bsr_procedure->generate_bsr_on_ul_grant(pdu_msg.rem_size(), &bsr);
   // Insert Padding BSR if not inserted Regular/Periodic BSR 
   if (!bsr_payload_sz && send_bsr) {
     if (pdu_msg.new_subh()) {
-      pdu_msg.next();
       bsr_subh = pdu_msg.get();
     }    
   }
@@ -247,13 +242,9 @@ void mux::append_crnti_ce_next_tx(uint16_t crnti) {
 }
 
 
-bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t *sdu_sz, bool *is_first_ptr) 
+bool mux::allocate_sdu(uint32_t lcid, srsue::sch_pdu* pdu_msg, int max_sdu_sz, uint32_t* sdu_sz) 
 {
  
-  bool is_first = false; 
-  if (is_first_ptr) {
-    is_first = *is_first_ptr;
-  }
   // Get n-th pending SDU pointer and length
   int sdu_len = rlc->get_buffer_state(lcid); 
   
@@ -262,24 +253,14 @@ bool mux::allocate_sdu(uint32_t lcid, sch_pdu *pdu_msg, int max_sdu_sz, uint32_t
     if (sdu_len > max_sdu_sz && max_sdu_sz >= 0) {
       sdu_len = max_sdu_sz;
     }
-    if (is_first) {
-      if (sdu_len > pdu_msg->rem_size() - 1) {
-        sdu_len = pdu_msg->rem_size() - 1;
-      }        
-    } else {
-      if (sdu_len > pdu_msg->rem_size() - 3) {
-        sdu_len = pdu_msg->rem_size() - 3;
-      }        
-    }
+    if (sdu_len > pdu_msg->get_sdu_space()) {
+      sdu_len = pdu_msg->get_sdu_space();
+    }        
     if (sdu_len > MIN_RLC_SDU_LEN) {
       if (pdu_msg->new_subh()) { // there is space for a new subheader
-        pdu_msg->next();
         int sdu_len2 = sdu_len; 
-        sdu_len = pdu_msg->get()->set_sdu(lcid, sdu_len, rlc, is_first);
+        sdu_len = pdu_msg->get()->set_sdu(lcid, sdu_len, rlc);
         if (sdu_len > 0) { // new SDU could be added
-          if (is_first_ptr) {
-            *is_first_ptr = false;           
-          }
           if (sdu_sz) {
             *sdu_sz = sdu_len; 
           }

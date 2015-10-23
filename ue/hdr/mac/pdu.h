@@ -87,6 +87,7 @@ public:
   bool new_subh() {
     if (nof_subheaders < max_subheaders - 1) {
       nof_subheaders++;
+      next();
       return true; 
     } else {
       return false; 
@@ -106,9 +107,9 @@ public:
     if (nof_subheaders > 0) {
       nof_subheaders--;
     }
-    /*if (cur_idx > 0) {
+    if (cur_idx > 0) {
       cur_idx--;
-    }*/
+    }
   }
 
   SubH* get() {
@@ -153,6 +154,7 @@ protected:
   uint8_t*   buffer_tx; 
   uint32_t   total_sdu_len; 
   uint32_t   sdu_offset_start; 
+  int        last_sdu_idx;
   
 private: 
   
@@ -164,7 +166,8 @@ private:
     pdu_is_ul      = is_ulsch; 
     buffer_tx      = buffer_tx_ptr; 
     sdu_offset_start = max_subheaders*2 + 13; // Assuming worst-case 2 bytes per sdu subheader + all possible CE
-    total_sdu_len = 0; 
+    total_sdu_len  = 0; 
+    last_sdu_idx   = -1;
     reset();
     for (int i=0;i<max_subheaders;i++) {
       subheaders[i].init();
@@ -229,9 +232,8 @@ public:
   // Writing functions
   void     write_subheader(uint8_t** ptr, bool is_last);
   void     write_payload(uint8_t **ptr);
-  int      set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload, bool is_first);
+  int      set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload);
   int      set_sdu(uint32_t lcid, uint32_t requested_bytes, rlc_interface_mac *rlc);
-  int      set_sdu(uint32_t lcid, uint32_t requested_bytes, rlc_interface_mac *rlc, bool is_first);
   bool     set_c_rnti(uint16_t crnti);
   bool     set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool update_size);
   bool     set_con_res_id(uint64_t con_res_id);
@@ -267,17 +269,14 @@ public:
   uint8_t*  write_packet(srslte::log *log_h);
   bool      has_space_ce(uint32_t nbytes);  
   bool      has_space_sdu(uint32_t nbytes);  
-  bool      has_space_sdu(uint32_t nbytes, bool is_first);  
   int       get_pdu_len();
   int       rem_size(); 
+  int       get_sdu_space();
   
   static uint32_t size_header_sdu(uint32_t nbytes);
   bool      update_space_ce(uint32_t nbytes);  
   bool      update_space_sdu(uint32_t nbytes);  
-  bool      update_space_sdu(uint32_t nbytes, bool is_first);  
   void      fprint(FILE *stream);
-  
-
 };
 
 class rar_subh : public subh<rar_subh>

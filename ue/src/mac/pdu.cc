@@ -119,12 +119,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
    * will be the last subheader in the list. Otherwise the last subheader will be the last
    * SDU in the list
    */
-  bool ce_only = true; 
-  int last_sdu = nof_subheaders-1;
-  while(last_sdu>=0 && ce_only) {
-    ce_only = !subheaders[last_sdu].is_sdu();    
-    if (ce_only) last_sdu--;
-  }
+  bool ce_only = last_sdu_idx<0?true:false; 
   
   /* Determine if we will need multi-byte padding or 1/2 bytes padding */
   bool multibyte_padding  = false;
@@ -135,7 +130,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
     rem_len--; 
     // Add the header for the last SDU
     if (!ce_only) {
-      rem_len -= (subheaders[last_sdu].get_header_size(false)-1); // Becuase we were assuming it was the one
+      rem_len -= (subheaders[last_sdu_idx].get_header_size(false)-1); // Becuase we were assuming it was the one
     }
   } else if (rem_len > 0) {
     onetwo_padding = rem_len; 
@@ -146,7 +141,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   uint32_t header_sz     = 0; 
   uint32_t ce_payload_sz = 0; 
   for (int i=0;i<nof_subheaders;i++) {
-    header_sz += subheaders[i].get_header_size(!multibyte_padding && i==last_sdu);
+    header_sz += subheaders[i].get_header_size(!multibyte_padding && i==last_sdu_idx);
     if (!subheaders[i].is_sdu()) {
       ce_payload_sz += subheaders[i].get_payload_size();
     }
@@ -180,7 +175,7 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   if (!ce_only) {
     for (int i=0;i<nof_subheaders;i++) {
       if (subheaders[i].is_sdu()) {
-        subheaders[i].write_subheader(&ptr, !multibyte_padding && i==last_sdu);
+        subheaders[i].write_subheader(&ptr, !multibyte_padding && i==last_sdu_idx);
       }
     }
   }
@@ -206,15 +201,23 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   if (log_h) {
     log_h->info("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
-         nof_subheaders, last_sdu, total_sdu_len, onetwo_padding, rem_len);
+         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
   } else {
     printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
-         nof_subheaders, last_sdu, total_sdu_len, onetwo_padding, rem_len);
+         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
   }
   
   if (rem_len + header_sz + ce_payload_sz + total_sdu_len != pdu_len) {
+    printf("\n------------------------------\n");
+    for (int i=0;i<nof_subheaders;i++) {
+      printf("SUBH %d is_sdu=%d, payload=%d\n", i, subheaders[i].is_sdu(), subheaders[i].get_payload_size());
+    }
+    printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
+         pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
+         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
     fprintf(stderr, "Expected PDU len %d bytes but wrote %d\n", pdu_len, rem_len + header_sz + ce_payload_sz + total_sdu_len);
+    printf("------------------------------\n");
     return NULL; 
   }
 
@@ -253,39 +256,45 @@ bool sch_pdu::has_space_ce(uint32_t nbytes)
   }
 }
 
-bool sch_pdu::has_space_sdu(uint32_t nbytes)
-{
-  return has_space_sdu(nbytes, false);
-}
-
-bool sch_pdu::has_space_sdu(uint32_t nbytes, bool is_first)
-{
-  if (is_first) {
-    return rem_len >= nbytes + 1;
-  } else {
-    return rem_len >= size_header_sdu(nbytes) + nbytes;
-  }
-}
-
 bool sch_pdu::update_space_ce(uint32_t nbytes)
 {
   if (has_space_ce(nbytes)) {
     rem_len      -= nbytes + 1; 
+    return true; 
+  } else {
+    return false; 
   }
-}
-bool sch_pdu::update_space_sdu(uint32_t nbytes) {
-  return update_space_sdu(nbytes, false);
 }
 
-bool sch_pdu::update_space_sdu(uint32_t nbytes, bool is_first)
+bool sch_pdu::has_space_sdu(uint32_t nbytes)
 {
-  if (has_space_sdu(nbytes, is_first)) {
-    if (is_first) {
+  return get_sdu_space() >= nbytes;
+}
+
+bool sch_pdu::update_space_sdu(uint32_t nbytes)
+{
+  if (has_space_sdu(nbytes)) {
+    if (last_sdu_idx < 0) {
       rem_len      -= (nbytes+1);
     } else {
-      rem_len      -= size_header_sdu(nbytes) + nbytes;
+      rem_len      -= (nbytes+1 + (size_header_sdu(subheaders[last_sdu_idx].get_payload_size())-1));
     }
+    last_sdu_idx = cur_idx;
+    return true;
+  } else {
+    return false;
   }
+}
+
+int sch_pdu::get_sdu_space()
+{
+  int ret; 
+  if (last_sdu_idx < 0) {
+    ret = rem_len - 1;
+  } else {
+    ret = rem_len - (size_header_sdu(subheaders[last_sdu_idx].get_payload_size())-1) - 1; 
+  }
+  return ret; 
 }
 
 void sch_subh::init()
@@ -503,14 +512,9 @@ bool sch_subh::set_ta_cmd(uint8_t ta_cmd)
   }
 }
 
-int sch_subh::set_sdu(uint32_t lcid_, uint32_t nof_bytes_, rlc_interface_mac *rlc)
+int sch_subh::set_sdu(uint32_t lcid_, uint32_t requested_bytes, rlc_interface_mac *rlc)
 {
-  return set_sdu(lcid_, nof_bytes_, rlc, false);
-}
-
-int sch_subh::set_sdu(uint32_t lcid_, uint32_t requested_bytes, rlc_interface_mac *rlc, bool is_first)
-{
-  if (((sch_pdu*)parent)->has_space_sdu(requested_bytes, is_first)) {
+  if (((sch_pdu*)parent)->has_space_sdu(requested_bytes)) {
     lcid = lcid_;
     
     payload = ((sch_pdu*)parent)->get_current_sdu_ptr();
@@ -528,22 +532,22 @@ int sch_subh::set_sdu(uint32_t lcid_, uint32_t requested_bytes, rlc_interface_ma
     nof_bytes = sdu_sz;
 
     ((sch_pdu*)parent)->add_sdu(nof_bytes);
-    ((sch_pdu*)parent)->update_space_sdu(nof_bytes, is_first);
+    ((sch_pdu*)parent)->update_space_sdu(nof_bytes);
     return (int) nof_bytes; 
   } else {
     return -1; 
   }
 }
 
-int sch_subh::set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload, bool is_first)
+int sch_subh::set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload)
 {
-  if (((sch_pdu*)parent)->has_space_sdu(nof_bytes_, is_first)) {
+  if (((sch_pdu*)parent)->has_space_sdu(nof_bytes_)) {
     lcid = lcid_;
     
     memcpy(((sch_pdu*)parent)->get_current_sdu_ptr(), payload, nof_bytes_);
     
     ((sch_pdu*)parent)->add_sdu(nof_bytes_);
-    ((sch_pdu*)parent)->update_space_sdu(nof_bytes_, is_first);
+    ((sch_pdu*)parent)->update_space_sdu(nof_bytes_);
     nof_bytes = nof_bytes_;
 
     return (int) nof_bytes; 
@@ -819,13 +823,10 @@ int main()
   pdu.init_tx(buffer, 11, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh();
-  pdu.next();
-  pdu.get()->set_sdu(0,6,ccch_payload,true);
+  pdu.get()->set_sdu(0,6,ccch_payload);
   pdu.new_subh();
-  pdu.next();
   pdu.get()->set_phr(10);
   pdu.new_subh();
-  pdu.next();
   pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
@@ -839,8 +840,7 @@ int main()
   pdu.init_tx(buffer, 16, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(1, 15, dlsch_payload, true);
+  pdu.get()->set_sdu(1, 15, dlsch_payload);
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
@@ -854,43 +854,63 @@ int main()
   pdu.init_tx(buffer, 18, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(2, 8, dlsch_payload1, true);
+  pdu.get()->set_sdu(2, 8, dlsch_payload1);
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(3, 2, dlsch_payload2, false);
+  pdu.get()->set_sdu(3, 2, dlsch_payload2);
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
   printf("\n");
   
-  /* Test multiple SDU + singleword padding: SDU 8 + SDU 2 byte*/
   printf("------- Multiple SDU + 2word padding ----------\n");
   bzero(buffer, 10240);
   pdu.init_tx(buffer, 15, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(2, 8, dlsch_payload1, true);
+  pdu.get()->set_sdu(2, 8, dlsch_payload1);
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(3, 2, dlsch_payload2, false);
+  pdu.get()->set_sdu(3, 2, dlsch_payload2);
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
   printf("\n");
   
-  /* Test multiple SDU + oneword padding: SDU 8 + SDU 2 byte*/
   printf("------- Multiple SDU + 1word padding ----------\n");
   bzero(buffer, 10240);
   pdu.init_tx(buffer, 14, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(2, 8, dlsch_payload1, true);
+  pdu.get()->set_sdu(2, 8, dlsch_payload1);
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(3, 2, dlsch_payload2, false);
+  pdu.get()->set_sdu(3, 2, dlsch_payload2);
+  printf("Remaining space: %d\n", pdu.rem_size());
+  ptr = pdu.write_packet();
+  srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
+  printf("\n");
+
+  printf("------- Multiple SDU + 0word padding ----------\n");
+  bzero(buffer, 10240);
+  pdu.init_tx(buffer, 13, true);
+  printf("Available space: %d\n", pdu.rem_size());
+  pdu.new_subh(); 
+  pdu.get()->set_sdu(2, 8, dlsch_payload1);
+  pdu.new_subh(); 
+  pdu.get()->set_sdu(3, 2, dlsch_payload2);
+  printf("Remaining space: %d\n", pdu.rem_size());
+  ptr = pdu.write_packet();
+  srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
+  printf("\n");
+
+  printf("------- Multiple SDU + no space ----------\n");
+  bzero(buffer, 10240);
+  pdu.init_tx(buffer, 12, true);
+  printf("Available space: %d\n", pdu.rem_size());
+  pdu.new_subh(); 
+  pdu.get()->set_sdu(2, 8, dlsch_payload1);
+  pdu.new_subh(); 
+  if (pdu.get()->set_sdu(3, 2, dlsch_payload2) < 0) {
+    pdu.del_subh();
+  }
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
@@ -902,25 +922,26 @@ int main()
   pdu.init_tx(buffer, 125, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh();
-  pdu.next();
   pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
-  srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
   printf("\n");
   
   /* Another test */
   printf("------- Another test ----------\n");
-  uint8_t dlsch_payload3[122];
-  for (int i=0;i<122;i++) {
-    dlsch_payload3[i] = i; 
-  }
+  uint8_t dlsch_payload3[602];
+  uint8_t dlsch_payload4[14];
   bzero(buffer, 10240);
-  pdu.init_tx(buffer, 125, true);
+  pdu.init_tx(buffer, 621, true);
   printf("Available space: %d\n", pdu.rem_size());
+  pdu.new_subh();
+  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
   pdu.new_subh(); 
-  pdu.next();
-  pdu.get()->set_sdu(3, 122, dlsch_payload3, true);
+  pdu.get()->set_sdu(3, 602, dlsch_payload3);
+  pdu.new_subh(); 
+  if (pdu.get()->set_sdu(3, 14, dlsch_payload4) < 0) {
+    pdu.del_subh();
+  }
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   //srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
