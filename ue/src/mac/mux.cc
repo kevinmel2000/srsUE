@@ -138,10 +138,6 @@ sch_subh::cetype bsr_format_convert(bsr_proc::bsr_format_t format) {
 uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
 {
   
-  if (pdu_sz == 0) {
-    fprintf(stderr, "Caution pdu_sz=0\n");
-  }
-  
   pthread_mutex_lock(&mutex);
     
   // Update Bj
@@ -171,16 +167,13 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
   }
   pending_crnti_ce = 0; 
   
-  uint32_t bsr_payload_sz = bsr_procedure->need_to_send_bsr_on_ul_grant(pdu_msg.rem_size());
   bsr_proc::bsr_t bsr; 
+  bool regular_bsr = bsr_procedure->need_to_send_bsr_on_ul_grant(pdu_msg.rem_size(), &bsr);
   
   // MAC control element for BSR, with exception of BSR included for padding;
-  sch_subh *bsr_subh = NULL;
-  if (bsr_payload_sz) {
-    Debug("Including BSR CE size %d\n", bsr_payload_sz);
+  if (regular_bsr) {
     if (pdu_msg.new_subh()) {
-      bsr_subh = pdu_msg.get();
-      pdu_msg.update_space_ce(bsr_payload_sz);
+      pdu_msg.get()->set_bsr(bsr.buff_size, bsr_format_convert(bsr.format));    
     }
   }
   // MAC control element for PHR
@@ -212,19 +205,15 @@ uint8_t* mux::pdu_get(uint8_t *payload, uint32_t pdu_sz)
     while (allocate_sdu(lchid_sorted[i], &pdu_msg, -1, NULL));   
   }
 
-  bool send_bsr = bsr_procedure->generate_bsr_on_ul_grant(pdu_msg.rem_size(), &bsr);
-  // Insert Padding BSR if not inserted Regular/Periodic BSR 
-  if (!bsr_payload_sz && send_bsr) {
-    if (pdu_msg.new_subh()) {
-      bsr_subh = pdu_msg.get();
-    }    
+  if (!regular_bsr) {
+    // Insert Padding BSR if not inserted Regular/Periodic BSR 
+    if (bsr_procedure->generate_padding_bsr(pdu_msg.rem_size(), &bsr)) {
+      if (pdu_msg.new_subh()) {
+        pdu_msg.get()->set_bsr(bsr.buff_size, bsr_format_convert(bsr.format));
+      }    
+    }
   }
-
-  // And set the BSR 
-  if (bsr_subh) {
-    bsr_subh->set_bsr(bsr.buff_size, bsr_format_convert(bsr.format), bsr_payload_sz?false:true);    
-  }
-
+  
   Debug("Assembled MAC PDU msg size %d/%d bytes\n", pdu_msg.get_pdu_len()-pdu_msg.rem_size(), pdu_sz);
 
   /* Generate MAC PDU and save to buffer */
@@ -251,8 +240,9 @@ bool mux::allocate_sdu(uint32_t lcid, srsue::sch_pdu* pdu_msg, int max_sdu_sz, u
     if (sdu_len > max_sdu_sz && max_sdu_sz >= 0) {
       sdu_len = max_sdu_sz;
     }
-    if (sdu_len > pdu_msg->get_sdu_space()) {
-      sdu_len = pdu_msg->get_sdu_space();
+    int sdu_space = pdu_msg->get_sdu_space();
+    if (sdu_len > sdu_space) {
+      sdu_len = sdu_space;
     }        
     if (sdu_len > MIN_RLC_SDU_LEN) {
       if (pdu_msg->new_subh()) { // there is space for a new subheader
@@ -267,7 +257,7 @@ bool mux::allocate_sdu(uint32_t lcid, srsue::sch_pdu* pdu_msg, int max_sdu_sz, u
                  lcid, sdu_len, buffer_state, pdu_msg->get_pdu_len(), pdu_msg->rem_size());
           return true;               
         } else {
-          Info("Could not add SDU rem_size=%d, sdu_len_available=%d, sdu_len_read=%d\n",
+          Debug("Could not add SDU rem_size=%d, sdu_len_available=%d, sdu_len_read=%d\n",
                pdu_msg->rem_size(),
                sdu_len2,
                sdu_len);

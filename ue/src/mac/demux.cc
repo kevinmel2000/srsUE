@@ -40,7 +40,7 @@ namespace srsue {
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {
   for (int i=0;i<NOF_PDU_Q;i++) {
-    pdu_q[i].init(128, MAX_PDU_LEN);
+    pdu_q[i].init(32, MAX_PDU_LEN);
     used_q[i] = false; 
   }
 }
@@ -245,14 +245,7 @@ void demux::process_sch_pdu(sch_pdu *pdu_msg)
     if (pdu_msg->get()->is_sdu()) {
       // Route logical channel 
       Info("Delivering PDU for lcid=%d, %d bytes\n", pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_payload_size());
-      struct timeval t[3];
-      gettimeofday(&t[1], NULL);
-      rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_payload_size());
-      gettimeofday(&t[2], NULL);
-      get_time_interval(t);
-      if (t[0].tv_usec > 200) {
-        log_h->console("Write_pdu() execution time: %d us\n", t[0].tv_usec);
-      }
+      rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_payload_size());      
     } else {
       // Process MAC Control Element
       if (!process_ce(pdu_msg->get())) {

@@ -73,13 +73,13 @@ void bsr_proc::timer_expired(uint32_t timer_id) {
       if (triggered_bsr_type == NONE) {
         // Check condition 4 in Sec 5.4.5 
         triggered_bsr_type = PERIODIC; 
-        Info("Triggering BSR PERIODIC\n");
+        Debug("Triggering BSR PERIODIC\n");
       }
       break;
     case mac::BSR_TIMER_RETX:
       // Enable reTx of SR 
       triggered_bsr_type = REGULAR; 
-      Info("Triggering BSR reTX\n");
+      Debug("Triggering BSR reTX\n");
       sr_is_sent = false; 
       break;      
   }
@@ -136,7 +136,7 @@ bool bsr_proc::check_single_channel() {
     // If there is new data available for this logical channel 
     if (nbytes > last_pending_data[pending_data_lcid]) {
       triggered_bsr_type = REGULAR; 
-      Info("Triggered REGULAR BSR for single LCID=%d\n", pending_data_lcid);
+      Debug("Triggered REGULAR BSR for single LCID=%d\n", pending_data_lcid);
       return true; 
     } 
   }
@@ -229,7 +229,7 @@ void bsr_proc::step(uint32_t tti)
     for (int i=0;i<MAX_LCID;i++) {
       sprintf(str, "%s%d (%d), ", str, rlc->get_buffer_state(i), last_pending_data[i]);
     }
-    Warning("QUEUE status: %s\n", str);
+    Info("QUEUE status: %s\n", str);
     last_print = tti; 
   }
   
@@ -257,12 +257,14 @@ char* bsr_proc::bsr_format_tostring(bsr_format_t format) {
   }
 }
 
-uint32_t bsr_proc::need_to_send_bsr_on_ul_grant(uint32_t grant_size) 
+bool bsr_proc::need_to_send_bsr_on_ul_grant(uint32_t grant_size, bsr_t *bsr) 
 {
+  bool ret = false; 
+
   uint32_t bsr_sz = 0; 
   if (triggered_bsr_type == PERIODIC || triggered_bsr_type == REGULAR) {
     /* Check if grant + MAC SDU headers is enough to accomodate all pending data */
-    uint32_t total_data = 0; 
+    int total_data = 0; 
     for (int i=0;i<MAX_LCID && total_data < grant_size;i++) {
       total_data += sch_pdu::size_header_sdu(rlc->get_buffer_state(i))+rlc->get_buffer_state(i);      
     }
@@ -271,26 +273,36 @@ uint32_t bsr_proc::need_to_send_bsr_on_ul_grant(uint32_t grant_size)
     /* All triggered BSRs shall be cancelled in case the UL grant can accommodate all pending data available for transmission
        but is not sufficient to additionally accommodate the BSR MAC control element plus its subheader.
      */
-    bsr_t bsr;     
-    generate_bsr(&bsr, 0);
-    bsr_sz = bsr.format==LONG_BSR?3:1;
+    generate_bsr(bsr, 0);
+    bsr_sz = bsr->format==LONG_BSR?3:1;
     if (total_data <= grant_size && total_data + 1 + bsr_sz > grant_size) {
-      bsr_sz = 0; 
-      Info("Grant is not enough to accomodate the BSR MAC CE\n");
-      triggered_bsr_type = NONE; 
+      Debug("Grant is not enough to accomodate the BSR MAC CE\n");
+    } else {
+      Info("Including Regular BSR: grant_size=%d, total_data=%d, bsr_sz=%d\n", 
+          grant_size, total_data, bsr_sz);
+      ret = true; 
+    }    
+    if (timer_periodic && bsr->format != TRUNC_BSR) {
+      timers_db->get(mac::BSR_TIMER_PERIODIC)->reset();
+      timers_db->get(mac::BSR_TIMER_PERIODIC)->run();
     }
-    Info("Checking if Regular BSR is sent: grant_size=%d, total_data=%d, bsr_sz=%d\n", 
-         grant_size, total_data, bsr_sz);
   }
-  return bsr_sz; 
+  // Cancel all triggered BSR       
+  triggered_bsr_type = NONE; 
+  reset_sr = true;     
+  // Restart or Start ReTX timer
+  if (timer_retx) {
+    timers_db->get(mac::BSR_TIMER_RETX)->reset();
+    timers_db->get(mac::BSR_TIMER_RETX)->run();
+  }
+  return ret;   
 }
 
-bool bsr_proc::generate_bsr_on_ul_grant(uint32_t nof_padding_bytes, bsr_t *bsr) 
+bool bsr_proc::generate_padding_bsr(uint32_t nof_padding_bytes, bsr_t *bsr) 
 {
   bool ret = false; 
 
   if (triggered_bsr_type != NONE || nof_padding_bytes >= 2) {
-
 
     if (triggered_bsr_type == NONE) {
       triggered_bsr_type = PADDING;      
@@ -304,15 +316,6 @@ bool bsr_proc::generate_bsr_on_ul_grant(uint32_t nof_padding_bytes, bsr_t *bsr)
       timers_db->get(mac::BSR_TIMER_PERIODIC)->reset();
       timers_db->get(mac::BSR_TIMER_PERIODIC)->run();
     }
-    // Cancel all triggered BSR       
-    triggered_bsr_type = NONE;     
-    reset_sr = true;     
-  }
-  
-  // Restart or Start ReTX timer
-  if (timer_retx) {
-    timers_db->get(mac::BSR_TIMER_RETX)->reset();
-    timers_db->get(mac::BSR_TIMER_RETX)->run();
   }
   return ret; 
 }
@@ -321,7 +324,7 @@ bool bsr_proc::need_to_reset_sr() {
   if (reset_sr) {
     reset_sr = false; 
     sr_is_sent = false; 
-    Info("SR reset. sr_is_sent and reset_rs false\n");
+    Debug("SR reset. sr_is_sent and reset_rs false\n");
     return true; 
   } else {
     return false; 
