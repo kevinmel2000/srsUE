@@ -50,6 +50,7 @@ namespace srsue {
 class mac
     :public mac_interface_phy
     ,public mac_interface_rrc
+    ,public mac_interface_timers
     ,public thread
     ,public srslte::timer_callback
 {
@@ -81,9 +82,10 @@ public:
   void timer_expired(uint32_t timer_id); 
   void start_pcap(mac_pcap* pcap);
   
+  srslte::timers::timer*   get(uint32_t timer_id);
+  
   uint32_t get_current_tti();
       
-  
   enum {
     HARQ_RTT, 
     TIME_ALIGNMENT,
@@ -94,6 +96,8 @@ public:
     PHR_TIMER_PROHIBIT,
     NOF_MAC_TIMERS
   } mac_timers_t; 
+  
+  static const int MAC_NOF_UPPER_TIMERS = 20; 
   
 private:  
   void run_thread(); 
@@ -135,6 +139,23 @@ private:
   void            setup_timers();
   void            timeAlignmentTimerExpire();
 
+  /* Class to run upper-layer timers with normal priority */
+  class upper_timers : public thread {
+  public: 
+    upper_timers() : timers_db(MAC_NOF_UPPER_TIMERS),ttisync(10240) {start();}
+    void tti_clock();
+    void stop();
+    void reset();
+    srslte::timers::timer* get(uint32_t timer_id);
+  private:
+    void run_thread();
+    srslte::timers  timers_db;
+    tti_sync_cv     ttisync;
+    bool running; 
+  };
+  upper_timers   upper_timers_thread; 
+  
+  
   // pointer to MAC PCAP object
   mac_pcap* pcap;
   bool si_search_in_progress;

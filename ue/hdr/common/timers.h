@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <time.h>
 
 namespace srslte {
   
@@ -57,12 +58,14 @@ public:
     void set(timer_callback *callback_, uint32_t timeout_) {
       callback = callback_; 
       timeout = timeout_; 
+      reset();
+      run();
     }
     bool is_running() {
-      return counter < timeout; 
+      return (counter < timeout) && running; 
     }
     bool is_expired() {
-      return counter == timeout; 
+      return counter == timeout || !running; 
     }
     void reset() {
       counter = 0; 

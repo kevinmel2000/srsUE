@@ -25,6 +25,7 @@
  *
  */
 
+
 #define Error(fmt, ...)   log_h->error_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define Warning(fmt, ...) log_h->warning_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define Info(fmt, ...)    log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -39,7 +40,7 @@ namespace srsue {
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {
   for (int i=0;i<NOF_PDU_Q;i++) {
-    pdu_q[i].init(32, MAX_PDU_LEN);
+    pdu_q[i].init(128, MAX_PDU_LEN);
     used_q[i] = false; 
   }
 }
@@ -91,6 +92,8 @@ bool demux::find_nonempty_queue(uint8_t *idx) {
   return false; 
 }
 
+int cnt=0;
+
 uint8_t* demux::request_buffer(uint32_t len)
 {
   if (len >= MAX_PDU_LEN - sizeof(buff_header_t)) {
@@ -99,8 +102,14 @@ uint8_t* demux::request_buffer(uint32_t len)
 
   uint8_t idx=0;
   if(find_unused_queue(&idx)) {
-    if (idx > 0) {
-     // printf("Using queue %d for MAC PDU\n", idx);
+    if (idx > NOF_PDU_Q - 2) {
+      log_h->console("Warning using queue %d for MAC PDU\n", idx);
+    }
+    if (pdu_q[idx].pending_msgs() > 0.75*pdu_q[idx].max_msgs()) {
+      log_h->console("Warning buffer %d occupation is %.1f%% \n", 
+                     idx, (float) 100*pdu_q[idx].pending_msgs()/pdu_q[idx].max_msgs());
+      log_h=NULL;
+      log_h->console("hola\n");
     }
     uint8_t *buff = (uint8_t*) pdu_q[idx].request();
     if (buff) {
@@ -108,12 +117,12 @@ uint8_t* demux::request_buffer(uint32_t len)
       head->idx = idx;   
       return &buff[sizeof(buff_header_t)];
     } else {
-      Error("Requested buffer from DL Queue %d but no buffers available\n");
-      return NULL; 
+      printf("Requested buffer from DL Queue %d but no buffers available\n", idx);
+      exit(0); 
     }
   } else {
-    Error("All DL buffers are full. Packet will be lost\n");
-    return NULL; 
+    printf("All DL buffers are full. Packet will be lost\n");
+    exit(0); 
   }
 }
 
@@ -191,6 +200,11 @@ void demux::release_buffer(uint8_t* ptr)
     }
   }
   fprintf(stderr, "Fatal Error: Trying to release an unknown buffer\n");
+  printf("Requested ptr=0x%x, addr=0x%x.  Current ptrs in queue\n", ptr, addr);
+  for (int i=0;i<NOF_PDU_Q;i++) {
+    printf("queue %d: is_used=%d, ptr=%d\n", i, used_q[i], pdu_q[i].request());
+  }
+  exit(0);
 }
 
 void demux::process_pdus()
@@ -199,13 +213,18 @@ void demux::process_pdus()
   uint8_t idx=0; 
   while(find_nonempty_queue(&idx)) {
     uint8_t *mac_pdu = NULL;
+    int cnt = 0; 
     do {
       mac_pdu = (uint8_t*) pdu_q[idx].pop(&len);
       if (mac_pdu) {
         process_pdu(&mac_pdu[sizeof(buff_header_t)], len);
         pdu_q[idx].release();
+        cnt++;
       }
     } while(mac_pdu);
+    if (cnt > 2) {
+      printf("Dispatched %d packets for itf %d\n", cnt, idx);
+    }
     idx++;
   } 
 }
@@ -227,7 +246,14 @@ void demux::process_sch_pdu(sch_pdu *pdu_msg)
     if (pdu_msg->get()->is_sdu()) {
       // Route logical channel 
       Info("Delivering PDU for lcid=%d, %d bytes\n", pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_payload_size());
+      struct timeval t[3];
+      gettimeofday(&t[1], NULL);
       rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_payload_size());
+      gettimeofday(&t[2], NULL);
+      get_time_interval(t);
+      if (t[0].tv_usec > 100) {
+        printf("Write_pdu() execution time: %d us\n", t[0].tv_usec);
+      }
     } else {
       // Process MAC Control Element
       if (!process_ce(pdu_msg->get())) {

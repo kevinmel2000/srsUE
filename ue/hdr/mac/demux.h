@@ -60,8 +60,8 @@ public:
   bool     get_uecrid_successful();
   
 private:
-  const static int NOF_PDU_Q   = 8; // prevents threads from being locked
-  const static int MAX_PDU_LEN = 128*1024; 
+  const static int NOF_PDU_Q   = 4; // prevents threads from being locked. Should be at least equal to the number of threads
+  const static int MAX_PDU_LEN = 150*1024/8; // ~ 150 Mbps  
 
   bool (*uecrid_callback) (void*, uint64_t);
   void *uecrid_callback_arg; 
@@ -80,7 +80,7 @@ private:
   
   typedef struct {
     uint8_t idx; 
-    uint8_t dummy[15]; // FIXME: This it to keep 128-bit alignment
+    uint8_t dummy[31]; // FIXME: This it to keep 256-bit alignment
   } buff_header_t;
 
   // Mutex for exclusive access

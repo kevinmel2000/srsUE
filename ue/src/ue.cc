@@ -129,7 +129,7 @@ void ue::init()
 
   phy->init_agc(radio_uhd, mac, phy_log);
   mac->init(phy, rlc, mac_log);
-  rlc->init(pdcp, rrc, this, rlc_log);
+  rlc->init(pdcp, rrc, this, rlc_log, mac);
   pdcp->init(rlc, rrc, gw, pdcp_log);
   rrc->init(phy, mac, rlc, pdcp, nas, usim, rrc_log);
   nas->init(usim, rrc, gw, nas_log);

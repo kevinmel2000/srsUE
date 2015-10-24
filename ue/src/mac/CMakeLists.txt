@@ -19,6 +19,7 @@
 
 file(GLOB SOURCES "*.cc")
 add_library(srsue_mac SHARED ${SOURCES})
+target_link_libraries(srsue_mac)
 
 add_executable(pdu_test pdu.cc)
 target_link_libraries(pdu_test srsue_mac srsue_common ${SRSLTE_LIBRARY})

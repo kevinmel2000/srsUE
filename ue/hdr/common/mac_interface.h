@@ -38,6 +38,8 @@
 #include <string>
 #include "srslte/srslte.h"
 
+#include "common/timers.h"
+
 namespace srsue {
   
 /* Interface PHY -> MAC */
@@ -167,6 +169,15 @@ public:
   virtual int64_t get_param(mac_param_t param) = 0;  
 };
 
+class mac_interface_timers
+{
+public: 
+  /* Timer services with ms resolution. 
+   * timer_id must be lower than MAC_NOF_UPPER_TIMERS
+   */
+  virtual srslte::timers::timer* get(uint32_t timer_id) = 0;     
+};
+
 /* Interface RRC -> MAC */
 class mac_interface_rrc
     :public mac_interface_params
@@ -177,7 +188,7 @@ public:
   virtual void    setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_tti, uint32_t BSD) = 0;
 
   virtual uint32_t get_current_tti() = 0;
-
+  
   virtual void    reconfiguration() = 0;
   virtual void    reset() = 0;
 };

@@ -167,8 +167,8 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
   
   srslte_vec_sc_prod_cfc(signal_buffer, scale, signal_buffer, len);
   
-  Info("Pathloss=%.2f dB, Target power %.2f dBm, tx_power %.2f dBm\n",
-         pathloss, target_power_dbm, tx_power);
+  printf("Pathloss=%.2f dB, Target power %.2f dBm, tx_power %.2f dBm, Gain %.1f dB\n",
+         pathloss, target_power_dbm, tx_power, radio_handler->get_tx_gain());
   
 #endif
   

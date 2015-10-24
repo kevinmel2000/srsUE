@@ -48,15 +48,16 @@ struct rlc_umd_pdu_t{
 
 class rlc_um
     :public rlc_entity
-    ,public timeout_callback
+    ,public srslte::timer_callback
 {
 public:
   rlc_um();
 
-  void init(srslte::log        *rlc_entity_log_,
-            uint32_t            lcid_,
-            pdcp_interface_rlc *pdcp_,
-            rrc_interface_rlc  *rrc_);
+  void init(srslte::log          *rlc_entity_log_,
+            uint32_t              lcid_,
+            pdcp_interface_rlc   *pdcp_,
+            rrc_interface_rlc    *rrc_,
+            mac_interface_timers *mac_timers_);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
   rlc_mode_t    get_mode();
@@ -72,7 +73,7 @@ public:
   void     write_pdu(uint8_t *payload, uint32_t nof_bytes);
 
   // Timeout callback interface
-  void timeout_expired(uint32_t timeout_id);
+  void timer_expired(uint32_t timeout_id);
 
   bool reordering_timeout_running();
 
@@ -83,6 +84,7 @@ private:
   uint32_t            lcid;
   pdcp_interface_rlc *pdcp;
   rrc_interface_rlc  *rrc;
+  mac_interface_timers *mac_timers; 
 
   // TX SDU buffers
   msg_queue           tx_sdu_queue;
@@ -127,7 +129,6 @@ private:
    * Timers
    * Ref: 3GPP TS 36.322 v10.0.0 Section 7
    ***************************************************************************/
-  timeout reordering_timeout;
   static const int reordering_timeout_id = 1;
 
   int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);

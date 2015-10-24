@@ -44,12 +44,14 @@ rlc::rlc()
 void rlc::init(pdcp_interface_rlc *pdcp_,
                rrc_interface_rlc  *rrc_,
                ue_interface       *ue_,
-               srslte::log        *rlc_log_)
+               srslte::log        *rlc_log_, 
+               mac_interface_timers *mac_timers_)
 {
   pdcp    = pdcp_;
   rrc     = rrc_;
   ue      = ue_;
   rlc_log = rlc_log_;
+  mac_timers = mac_timers_;
 
   for(uint32_t i=0;i<SRSUE_N_RADIO_BEARERS;i++)
   {
@@ -57,7 +59,7 @@ void rlc::init(pdcp_interface_rlc *pdcp_,
   }
 
   rlc_array[0] = new rlc_tm;
-  rlc_array[0]->init(rlc_log, RB_ID_SRB0, pdcp, rrc); // SRB0
+  rlc_array[0]->init(rlc_log, RB_ID_SRB0, pdcp, rrc, mac_timers); // SRB0
 }
 
 void rlc::stop()
@@ -171,7 +173,7 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
     rlc_log->error("Cannot add RLC entity - invalid mode\n");
     return;
   }
-  rlc_array[lcid]->init(rlc_log, lcid, pdcp, rrc);
+  rlc_array[lcid]->init(rlc_log, lcid, pdcp, rrc, mac_timers);
   if(cnfg)
     rlc_array[lcid]->configure(cnfg);
 

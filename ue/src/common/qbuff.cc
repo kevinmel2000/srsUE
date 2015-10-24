@@ -177,6 +177,20 @@ uint32_t qbuff::pending_data()
   return total_len; 
 }
 
+uint32_t qbuff::pending_msgs()
+{
+  uint32_t nof_msg = 0; 
+  for (int i=0;i<nof_messages;i++) {
+    nof_msg += packets[i].valid?1:0;
+  }
+  return nof_msg;
+}
+
+uint32_t qbuff::max_msgs()
+{
+  return nof_messages;
+}
+
 // Move packets between queues with only 1 memcpy
 void qbuff::move_to(qbuff *dst) {
   uint32_t len; 

@@ -62,7 +62,6 @@ ELSE(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   ENDIF(HAVE_AVX)    
 ENDIF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
-
 ########################################################################
 # Find boost
 ########################################################################

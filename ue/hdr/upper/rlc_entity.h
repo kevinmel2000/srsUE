@@ -139,7 +139,8 @@ public:
   virtual void init(srslte::log        *rlc_entity_log_,
                     uint32_t            lcid_,
                     pdcp_interface_rlc *pdcp_,
-                    rrc_interface_rlc  *rrc_) = 0;
+                    rrc_interface_rlc  *rrc_, 
+                    mac_interface_timers *mac_timers_) = 0;
   virtual void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg) = 0;
 
   virtual rlc_mode_t    get_mode() = 0;

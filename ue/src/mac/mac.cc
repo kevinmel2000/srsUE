@@ -42,7 +42,7 @@
 
 namespace srsue {
 
-mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS) 
+mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS)
 {
   started = false;  
   pcap    = NULL;   
@@ -85,6 +85,7 @@ void mac::stop()
   started = false;   
   ttisync.increase();
   wait_thread_finish();
+  upper_timers_thread.stop();
 }
 
 void mac::start_pcap(mac_pcap* pcap_)
@@ -105,6 +106,8 @@ void mac::reconfiguration()
 void mac::reset()
 {
   timers_db.stop_all();
+  upper_timers_thread.reset();
+  
   timeAlignmentTimerExpire(); 
   ul_harq.reset_ndi();
   
@@ -241,6 +244,7 @@ void mac::search_si_rnti()
 void mac::tti_clock(uint32_t tti)
 {
   ttisync.increase();
+  upper_timers_thread.tti_clock();
 }
 
 void mac::bch_decoded_ok(uint8_t* payload, uint32_t len)
@@ -353,6 +357,44 @@ void mac::setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_t
   bsr_procedure.setup_lcg(lcid, lcg);
   bsr_procedure.set_priority(lcid, priority);
 }
+
+/* Class to run upper-layer timers with normal priority */
+srslte::timers::timer* mac::get(uint32_t timer_id)
+{
+  return upper_timers_thread.get(timer_id);
+}
+
+void mac::upper_timers::run_thread()
+{
+  running=true; 
+  ttisync.set_producer_cntr(0);
+  ttisync.resync();
+  while(running) {
+    ttisync.wait();
+    timers_db.step_all();
+  }
+}
+srslte::timers::timer* mac::upper_timers::get(uint32_t timer_id)
+{
+  return timers_db.get(timer_id%MAC_NOF_UPPER_TIMERS);
+}
+
+void mac::upper_timers::stop()
+{
+  running=false;
+  wait_thread_finish();
+}
+void mac::upper_timers::reset()
+{
+  timers_db.stop_all();
+}
+
+void mac::upper_timers::tti_clock()
+{
+  ttisync.increase();
+}
+
+
 
 }
 

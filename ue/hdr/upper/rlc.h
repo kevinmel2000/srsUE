@@ -53,7 +53,8 @@ public:
   void init(pdcp_interface_rlc *pdcp_,
             rrc_interface_rlc  *rrc_,
             ue_interface       *ue_,
-            srslte::log        *rlc_log_);
+            srslte::log        *rlc_log_, 
+            mac_interface_timers *mac_timers_);
   void stop();
 
   // PDCP interface
@@ -78,6 +79,7 @@ private:
   srslte::log        *rlc_log;
   pdcp_interface_rlc *pdcp;
   rrc_interface_rlc  *rrc;
+  mac_interface_timers *mac_timers; 
   ue_interface       *ue;
   rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
 

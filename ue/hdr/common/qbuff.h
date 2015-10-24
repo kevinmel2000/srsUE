@@ -71,6 +71,8 @@ namespace srslte {
     int   recv(void* buffer, uint32_t buffer_size); 
     void  move_to(qbuff *dst);
     uint32_t pending_data(); 
+    uint32_t pending_msgs(); 
+    uint32_t max_msgs(); 
   private:
     typedef struct {
       bool valid; 

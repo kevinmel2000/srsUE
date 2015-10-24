@@ -49,12 +49,14 @@ rlc_um::rlc_um()
 void rlc_um::init(srslte::log        *log_,
                   uint32_t            lcid_,
                   pdcp_interface_rlc *pdcp_,
-                  rrc_interface_rlc  *rrc_)
+                  rrc_interface_rlc  *rrc_,
+                  mac_interface_timers *mac_timers_)
 {
   log  = log_;
   lcid = lcid_;
   pdcp = pdcp_;
   rrc  = rrc_;
+  mac_timers = mac_timers_;
 }
 
 void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -177,7 +179,7 @@ void rlc_um::write_pdu(uint8_t *payload, uint32_t nof_bytes)
  * Timeout callback interface
  ***************************************************************************/
 
-void rlc_um::timeout_expired(uint32_t timeout_id)
+void rlc_um::timer_expired(uint32_t timeout_id)
 {
   if(reordering_timeout_id == timeout_id)
   {
@@ -192,10 +194,10 @@ void rlc_um::timeout_expired(uint32_t timeout_id)
       vr_ur = (vr_ur + 1)%rx_mod;
       reassemble_rx_sdus();
     }
-    reordering_timeout.reset();
+    mac_timers->get(reordering_timeout_id)->stop();
     if(RX_MOD_BASE(vr_uh) > RX_MOD_BASE(vr_ur))
     {
-      reordering_timeout.start(t_reordering, reordering_timeout_id, this);
+      mac_timers->get(reordering_timeout_id)->set(this, t_reordering);
       vr_ux = vr_uh;
     }
 
@@ -205,7 +207,7 @@ void rlc_um::timeout_expired(uint32_t timeout_id)
 
 bool rlc_um::reordering_timeout_running()
 {
-  return reordering_timeout.is_running();
+  return mac_timers->get(reordering_timeout_id)->is_running();
 }
 
 /****************************************************************************
@@ -355,19 +357,19 @@ void rlc_um::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   reassemble_rx_sdus();
 
   // Update reordering variables and timers
-  if(reordering_timeout.is_running())
+  if(mac_timers->get(reordering_timeout_id)->is_running())
   {
     if(RX_MOD_BASE(vr_ux) <= RX_MOD_BASE(vr_ur) ||
        (!inside_reordering_window(vr_ux) && vr_ux != vr_uh))
     {
-      reordering_timeout.reset();
+      mac_timers->get(reordering_timeout_id)->stop();
     }
   }
-  if(!reordering_timeout.is_running())
+  if(!mac_timers->get(reordering_timeout_id)->is_running())
   {
     if(RX_MOD_BASE(vr_uh) > RX_MOD_BASE(vr_ur))
     {
-      reordering_timeout.start(t_reordering, reordering_timeout_id, this);
+      mac_timers->get(reordering_timeout_id)->set(this, t_reordering);
       vr_ux = vr_uh;
     }
   }
