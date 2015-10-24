@@ -108,8 +108,6 @@ uint8_t* demux::request_buffer(uint32_t len)
     if (pdu_q[idx].pending_msgs() > 0.75*pdu_q[idx].max_msgs()) {
       log_h->console("Warning buffer %d occupation is %.1f%% \n", 
                      idx, (float) 100*pdu_q[idx].pending_msgs()/pdu_q[idx].max_msgs());
-      log_h=NULL;
-      log_h->console("hola\n");
     }
     uint8_t *buff = (uint8_t*) pdu_q[idx].request();
     if (buff) {
@@ -117,11 +115,11 @@ uint8_t* demux::request_buffer(uint32_t len)
       head->idx = idx;   
       return &buff[sizeof(buff_header_t)];
     } else {
-      printf("Requested buffer from DL Queue %d but no buffers available\n", idx);
+      fprintf(stderr, "Requested buffer from DL Queue %d but no buffers available\n", idx);
       exit(0); 
     }
   } else {
-    printf("All DL buffers are full. Packet will be lost\n");
+    fprintf(stderr, "All DL buffers are full. Packet will be lost\n");
     exit(0); 
   }
 }
@@ -137,6 +135,7 @@ void demux::push_buffer(uint8_t *buff, uint32_t nof_bytes) {
     used_q[head->idx] = false; 
   } else {
     fprintf(stderr, "Fatal error had a buffer of unkown index %d\n", head->idx);
+    exit(0);
   }
 }
 
@@ -200,9 +199,9 @@ void demux::release_buffer(uint8_t* ptr)
     }
   }
   fprintf(stderr, "Fatal Error: Trying to release an unknown buffer\n");
-  printf("Requested ptr=0x%x, addr=0x%x.  Current ptrs in queue\n", ptr, addr);
+  fprintf(stderr, "Requested ptr=0x%x, addr=0x%x.  Current ptrs in queue\n", ptr, addr);
   for (int i=0;i<NOF_PDU_Q;i++) {
-    printf("queue %d: is_used=%d, ptr=%d\n", i, used_q[i], pdu_q[i].request());
+    fprintf(stderr, "queue %d: is_used=%d, ptr=%d\n", i, used_q[i], pdu_q[i].request());
   }
   exit(0);
 }
@@ -222,8 +221,8 @@ void demux::process_pdus()
         cnt++;
       }
     } while(mac_pdu);
-    if (cnt > 2) {
-      printf("Dispatched %d packets for itf %d\n", cnt, idx);
+    if (cnt > 4) {
+      log_h->console("Warning dispatched %d packets for itf %d\n", cnt, idx);
     }
     idx++;
   } 
@@ -251,8 +250,8 @@ void demux::process_sch_pdu(sch_pdu *pdu_msg)
       rlc->write_pdu(pdu_msg->get()->get_sdu_lcid(), pdu_msg->get()->get_sdu_ptr(), pdu_msg->get()->get_payload_size());
       gettimeofday(&t[2], NULL);
       get_time_interval(t);
-      if (t[0].tv_usec > 100) {
-        printf("Write_pdu() execution time: %d us\n", t[0].tv_usec);
+      if (t[0].tv_usec > 200) {
+        log_h->console("Write_pdu() execution time: %d us\n", t[0].tv_usec);
       }
     } else {
       // Process MAC Control Element

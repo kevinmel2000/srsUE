@@ -181,7 +181,7 @@ void ue::run_thread()
   {
     have_data = false;
     if(rlc->check_dl_buffers()) have_data = true;
-    if(gw->check_ul_buffers()) have_data = true;
+    //if(gw->check_ul_buffers()) have_data = true;
     if(!have_data){
       boost::mutex::scoped_lock lock(mutex);
       while (!have_data) condition.wait(lock);
