@@ -39,9 +39,8 @@ namespace srsue {
     
 demux::demux() : mac_msg(20), pending_mac_msg(20)
 {
-  for (int i=0;i<NOF_PDU_Q;i++) {
-    pdu_q[i].init(32, MAX_PDU_LEN);
-    used_q[i] = false; 
+  for (int i=0;i<NOF_HARQ_PID;i++) {
+    pdu_q[i].init(NOF_BUFFER_PDUS, MAX_PDU_LEN);
   }
 }
 
@@ -62,93 +61,30 @@ bool demux::get_uecrid_successful() {
   return is_uecrid_successful;
 }
 
-bool demux::find_unused_queue(uint8_t *idx) {
-  for (uint8_t i=0;i<NOF_PDU_Q;i++) {
-    if (!used_q[i]) {
-      used_q[i] = true; 
-      if (idx) {
-        *idx = i; 
+uint8_t* demux::request_buffer(uint32_t pid, uint32_t len)
+{  
+  uint8_t *buff = NULL; 
+  if (pid < NOF_HARQ_PID) {
+    if (len < MAX_PDU_LEN) {
+      if (pdu_q[pid].pending_msgs() > 0.75*pdu_q[pid].max_msgs()) {
+        log_h->console("Warning buffer PID=%d: Occupation is %.1f%% \n", 
+                      pid, (float) 100*pdu_q[pid].pending_msgs()/pdu_q[pid].max_msgs());
       }
-      return true; 
-    }
-  }
-  return false; 
-}
-
-// Read packets from queues in round robin
-bool demux::find_nonempty_queue(uint8_t *idx) {
-  uint32_t start=0; 
-  if (idx) {
-    start = *idx; 
-  }
-  for (uint8_t i=0;i<NOF_PDU_Q;i++) {
-    if (!pdu_q[(i+start+1)%NOF_PDU_Q].isempty()) {
-      if (idx) {
-        *idx = (i+start+1)%NOF_PDU_Q; 
-      }
-      return true; 
-    }
-  }
-  return false; 
-}
-
-int cnt=0;
-
-uint8_t* demux::request_buffer(uint32_t len)
-{
-  if (len >= MAX_PDU_LEN - sizeof(buff_header_t)) {
-    return NULL; 
-  }
-
-  uint8_t idx=0;
-  if(find_unused_queue(&idx)) {
-    if (idx > NOF_PDU_Q - 2) {
-      log_h->console("Warning using queue %d for MAC PDU\n", idx);
-    }
-    if (pdu_q[idx].pending_msgs() > 0.75*pdu_q[idx].max_msgs()) {
-      log_h->console("Warning buffer %d occupation is %.1f%% \n", 
-                     idx, (float) 100*pdu_q[idx].pending_msgs()/pdu_q[idx].max_msgs());
-    }
-    uint8_t *buff = (uint8_t*) pdu_q[idx].request();
-    if (buff) {
-      buff_header_t *head = (buff_header_t*) buff;
-      head->idx = idx;   
-      return &buff[sizeof(buff_header_t)];
+      buff = (uint8_t*) pdu_q[pid].request();
+      if (!buff) {
+        fprintf(stderr, "Buffer full for PID=%d\n", pid);
+        exit(0); 
+      }      
     } else {
-      fprintf(stderr, "Requested buffer from DL Queue %d but no buffers available\n", idx);
-      exit(0); 
+      Error("Requested too large buffer for PID=%d. Requested %d bytes, max length %d bytes\n", 
+            pid, len, MAX_PDU_LEN);
     }
+  } else if (pid == NOF_HARQ_PID) {
+    buff = bcch_buffer;
   } else {
-    fprintf(stderr, "All DL buffers are full. Packet will be lost\n");
-    exit(0); 
+    Error("Requested buffer for invalid PID=%d\n", pid);
   }
-}
-
-void demux::push_buffer(uint8_t *buff, uint32_t nof_bytes) {
-  buff_header_t *head = (buff_header_t*) (buff-sizeof(buff_header_t));
-  if (head->idx < NOF_PDU_Q) {
-    if (nof_bytes > 0) {
-      if (!pdu_q[head->idx].push(nof_bytes)) {
-        Warning("Full queue %d when pushing MAC PDU %d bytes\n", head->idx, nof_bytes);
-      }
-    } 
-    used_q[head->idx] = false; 
-  } else {
-    fprintf(stderr, "Fatal error had a buffer of unkown index %d\n", head->idx);
-    exit(0);
-  }
-}
-
-/* Demultiplexing of MAC PDU associated with SI-RNTI. The PDU passes through 
- * the MAC in transparent mode. 
- * Warning: this function sends the message to RLC now, since SI blocks do not 
- * require ACK feedback to be transmitted quickly. 
- */
-void demux::push_pdu_bcch(uint8_t *buff, uint32_t nof_bytes) 
-{
-  Debug("Pushed BCCH MAC PDU in transparent mode\n");
-  rlc->write_pdu_bcch_dlsch(buff, nof_bytes);
-  push_buffer(buff, 0);
+  return buff; 
 }
 
 /* Demultiplexing of MAC PDU associated with a Temporal C-RNTI. The PDU will 
@@ -160,72 +96,83 @@ void demux::push_pdu_bcch(uint8_t *buff, uint32_t nof_bytes)
  * Warning: this function does some processing here assuming ACK deadline is not an 
  * issue here because Temp C-RNTI messages have small payloads
  */
-void demux::push_pdu_temp_crnti(uint8_t *buff, uint32_t nof_bytes) 
+void demux::push_pdu_temp_crnti(uint32_t pid, uint8_t *buff, uint32_t nof_bytes) 
 {
-  // Unpack DLSCH MAC PDU 
-  pending_mac_msg.init_rx(nof_bytes);
-  pending_mac_msg.parse_packet(buff);
-  
-  // Look for Contention Resolution UE ID 
-  is_uecrid_successful = false; 
-  while(pending_mac_msg.next() && !is_uecrid_successful) {
-    if (pending_mac_msg.get()->ce_type() == sch_subh::CON_RES_ID) {
-      Debug("Found Contention Resolution ID CE\n");
-      is_uecrid_successful = uecrid_callback(uecrid_callback_arg, pending_mac_msg.get()->get_con_res_id());
+  if (pid < NOF_HARQ_PID) {
+    if (nof_bytes > 0) {
+      // Unpack DLSCH MAC PDU 
+      pending_mac_msg.init_rx(nof_bytes);
+      pending_mac_msg.parse_packet(buff);
+      
+      // Look for Contention Resolution UE ID 
+      is_uecrid_successful = false; 
+      while(pending_mac_msg.next() && !is_uecrid_successful) {
+        if (pending_mac_msg.get()->ce_type() == sch_subh::CON_RES_ID) {
+          Debug("Found Contention Resolution ID CE\n");
+          is_uecrid_successful = uecrid_callback(uecrid_callback_arg, pending_mac_msg.get()->get_con_res_id());
+        }
+      }
+      
+      pending_mac_msg.reset();
+      
+      Debug("Saved MAC PDU with Temporal C-RNTI in buffer\n");
+      
+      if (!pdu_q[pid].push(nof_bytes)) {
+        Warning("Full queue %d when pushing MAC PDU %d bytes\n", pid, nof_bytes);
+      }
+    } else {
+      Warning("Trying to push PDU with payload size zero\n");
     }
-  }
-  
-  pending_mac_msg.reset();
-  Debug("Saved MAC PDU with Temporal C-RNTI in buffer\n");
-  push_buffer(buff, nof_bytes);
+  } else {
+    Error("Pushed buffer for invalid PID=%d\n", pid);
+  } 
 }
 
 /* Demultiplexing of logical channels and dissassemble of MAC CE 
  * This function enqueues the packet and returns quicly because ACK 
  * deadline is important here. 
  */ 
-void demux::push_pdu(uint8_t *buff, uint32_t nof_bytes)
+void demux::push_pdu(uint32_t pid, uint8_t *buff, uint32_t nof_bytes)
 {
-  push_buffer(buff, nof_bytes);
-}
-
-void demux::release_buffer(uint8_t* ptr)
-{
-  uint8_t *addr = ptr - sizeof(buff_header_t); 
-  for (int i=0;i<NOF_PDU_Q;i++) {
-    if (pdu_q[i].request() == addr) {
-      used_q[i] = false; 
-      return;
+  if (pid < NOF_HARQ_PID) {    
+    if (nof_bytes > 0) {
+      if (!pdu_q[pid].push(nof_bytes)) {
+        Warning("Full queue %d when pushing MAC PDU %d bytes\n", pid, nof_bytes);
+      }
+    } else {
+      Warning("Trying to push PDU with payload size zero\n");
     }
-  }
-  fprintf(stderr, "Fatal Error: Trying to release an unknown buffer\n");
-  fprintf(stderr, "Requested ptr=0x%x, addr=0x%x.  Current ptrs in queue\n", ptr, addr);
-  for (int i=0;i<NOF_PDU_Q;i++) {
-    fprintf(stderr, "queue %d: is_used=%d, ptr=%d\n", i, used_q[i], pdu_q[i].request());
-  }
-  exit(0);
+  } else if (pid == NOF_HARQ_PID) {
+    /* Demultiplexing of MAC PDU associated with SI-RNTI. The PDU passes through 
+    * the MAC in transparent mode. 
+    * Warning: In this case function sends the message to RLC now, since SI blocks do not 
+    * require ACK feedback to be transmitted quickly. 
+    */
+    Debug("Pushed BCCH MAC PDU in transparent mode\n");
+    rlc->write_pdu_bcch_dlsch(buff, nof_bytes);
+  } else {
+    Error("Pushed buffer for invalid PID=%d\n", pid);
+  }  
 }
 
 void demux::process_pdus()
 {
-  uint32_t len; 
-  uint8_t idx=0; 
-  while(find_nonempty_queue(&idx)) {
-    uint8_t *mac_pdu = NULL;
-    int cnt = 0; 
+  for (int i=0;i<NOF_HARQ_PID;i++) {
+    uint8_t *buff = NULL;
+    uint32_t len  = 0; 
+    uint32_t cnt  = 0; 
     do {
-      mac_pdu = (uint8_t*) pdu_q[idx].pop(&len);
-      if (mac_pdu) {
-        process_pdu(&mac_pdu[sizeof(buff_header_t)], len);
-        pdu_q[idx].release();
+      buff = (uint8_t*) pdu_q[i].pop(&len);
+      if (buff) {
+        process_pdu(buff, len);
+        pdu_q[i].release();
         cnt++;
       }
-    } while(mac_pdu);
+    } while(buff);
     if (cnt > 4) {
-      log_h->console("Warning dispatched %d packets for itf %d\n", cnt, idx);
+      log_h->console("Warning dispatched %d packets for PID=%d\n", cnt, i);
     }
-    idx++;
-  } 
+  }
 }
 
 void demux::process_pdu(uint8_t *mac_pdu, uint32_t nof_bytes)

@@ -48,21 +48,20 @@ public:
   void init(phy_interface* phy_h_, rlc_interface_mac *rlc, srslte::log* log_h_, srslte::timers* timers_db_);
 
   void     process_pdus();
-  uint8_t* request_buffer(uint32_t len);
+  uint8_t* request_buffer(uint32_t pid, uint32_t len);
   
-  void     push_pdu(uint8_t *buff, uint32_t nof_bytes);
-  void     push_pdu_bcch(uint8_t *buff, uint32_t nof_bytes);
-  void     push_pdu_temp_crnti(uint8_t *buff, uint32_t nof_bytes);
+  void     push_pdu(uint32_t pid, uint8_t *buff, uint32_t nof_bytes);
+  void     push_pdu_temp_crnti(uint32_t pid, uint8_t *buff, uint32_t nof_bytes);
 
-  void     release_buffer(uint8_t *ptr);
-  
   void     set_uecrid_callback(bool (*callback)(void*, uint64_t), void *arg);
   bool     get_uecrid_successful();
   
 private:
-  const static int NOF_PDU_Q   = 4; // prevents threads from being locked. Should be at least equal to the number of threads
-  const static int MAX_PDU_LEN = 150*1024/8; // ~ 150 Mbps  
-
+  const static int NOF_HARQ_PID    = 8; 
+  const static int MAX_PDU_LEN     = 150*1024/8; // ~ 150 Mbps  
+  const static int NOF_BUFFER_PDUS = 8; // Number of PDU buffers per HARQ pid
+  uint8_t bcch_buffer[1024]; // BCCH PID has a dedicated buffer
+  
   bool (*uecrid_callback) (void*, uint64_t);
   void *uecrid_callback_arg; 
   
@@ -72,20 +71,10 @@ private:
   void process_pdu(uint8_t *pdu, uint32_t nof_bytes);
   void process_sch_pdu(sch_pdu *pdu);
   bool process_ce(sch_subh *subheader);
-  bool find_unused_queue(uint8_t *idx);  
-  bool find_nonempty_queue(uint8_t *idx);
-  void push_buffer(uint8_t *buff, uint32_t nof_bytes);
-
+  
   bool       is_uecrid_successful; 
   
-  typedef struct {
-    uint8_t idx; 
-    uint8_t dummy[31]; // FIXME: This it to keep 256-bit alignment
-  } buff_header_t;
-
-  // Mutex for exclusive access
-  srslte::qbuff pdu_q[NOF_PDU_Q];
-  bool          used_q[NOF_PDU_Q];
+  srslte::qbuff pdu_q[NOF_HARQ_PID];
   
   phy_interface     *phy_h; 
   srslte::log       *log_h;

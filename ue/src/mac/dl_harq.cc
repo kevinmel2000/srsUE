@@ -240,7 +240,7 @@ void dl_harq_entity::dl_harq_process::new_grant_dl(mac_interface_phy::mac_grant_
   if (ack == false) {
     
     // Instruct the PHY To combine the received data and attempt to decode it
-    payload_buffer_ptr = harq_entity->demux_unit->request_buffer(cur_grant.n_bytes);
+    payload_buffer_ptr = harq_entity->demux_unit->request_buffer(pid, cur_grant.n_bytes);
     action->payload_ptr = payload_buffer_ptr;
     if (!action->payload_ptr) {
       action->decode_enabled = false; 
@@ -283,7 +283,7 @@ void dl_harq_entity::dl_harq_process::tb_decoded(bool ack_)
       }
       if (ack) {
         Debug("Delivering PDU=%d bytes to Dissassemble and Demux unit (BCCH)\n", cur_grant.n_bytes);
-        harq_entity->demux_unit->push_pdu_bcch(payload_buffer_ptr, cur_grant.n_bytes);
+        harq_entity->demux_unit->push_pdu(pid, payload_buffer_ptr, cur_grant.n_bytes);
       }
     } else {
       
@@ -293,16 +293,14 @@ void dl_harq_entity::dl_harq_process::tb_decoded(bool ack_)
       if (ack) {
         if (cur_grant.rnti_type == SRSLTE_RNTI_TEMP) {
           Debug("Delivering PDU=%d bytes to Dissassemble and Demux unit (Temporal C-RNTI)\n", cur_grant.n_bytes);
-          harq_entity->demux_unit->push_pdu_temp_crnti(payload_buffer_ptr, cur_grant.n_bytes);
+          harq_entity->demux_unit->push_pdu_temp_crnti(pid, payload_buffer_ptr, cur_grant.n_bytes);
         } else {
           Debug("Delivering PDU=%d bytes to Dissassemble and Demux unit\n", cur_grant.n_bytes);
-          harq_entity->demux_unit->push_pdu(payload_buffer_ptr, cur_grant.n_bytes);
+          harq_entity->demux_unit->push_pdu(pid, payload_buffer_ptr, cur_grant.n_bytes);
         }
       }
     }
-  } else {
-    harq_entity->demux_unit->release_buffer(payload_buffer_ptr);
-  }
+  } 
   Info("DL PID %d: TBS=%d, RV=%d, ACK=%s\n", pid, cur_grant.n_bytes, cur_grant.rv, ack?"OK":"KO");
 }
 
