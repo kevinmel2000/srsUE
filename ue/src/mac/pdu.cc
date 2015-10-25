@@ -117,9 +117,9 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
   padding.set_padding(); 
     
   /* If last SDU has zero payload, remove it. FIXME: Why happens this?? */
-  //if (subheaders[nof_subheaders-1].get_payload_size() == 0) {
-  //  del_subh();
- // }
+  if (subheaders[nof_subheaders-1].get_payload_size() == 0) {
+    del_subh();
+  }
   
   /* Determine if we are transmitting CEs only. */
   bool ce_only = last_sdu_idx<0?true:false; 
