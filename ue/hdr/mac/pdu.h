@@ -53,6 +53,7 @@ public:
     cur_idx        = -1; 
     pdu_len        = 0; 
     rem_len        = 0;   
+    last_sdu_idx   = -1; 
     for (int i=0;i<max_subheaders;i++) {
       subheaders[i].parent = this; 
     }
@@ -68,7 +69,8 @@ public:
   
   /* Resets the Read/Write position and remaining PDU length */
   void reset() {
-    cur_idx = -1; 
+    cur_idx      = -1; 
+    last_sdu_idx = -1; 
     rem_len = pdu_len;
   }
 
@@ -235,7 +237,7 @@ public:
   int      set_sdu(uint32_t lcid_, uint32_t nof_bytes_, uint8_t *payload);
   int      set_sdu(uint32_t lcid, uint32_t requested_bytes, rlc_interface_mac *rlc);
   bool     set_c_rnti(uint16_t crnti);
-  bool     set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool update_size);
+  bool     set_bsr(uint32_t buff_size[4], sch_subh::cetype format);
   bool     set_con_res_id(uint64_t con_res_id);
   bool     set_ta_cmd(uint8_t ta_cmd);
   bool     set_phr(float phr);

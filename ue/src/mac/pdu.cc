@@ -112,9 +112,15 @@ uint8_t* sch_pdu::write_packet() {
 /* Writes the MAC PDU in the packet, including the MAC headers and CE payload. Section 6.1.2 */
 uint8_t* sch_pdu::write_packet(srslte::log *log_h)
 {
+  int init_rem_len=rem_len; 
   sch_subh padding; 
   padding.set_padding(); 
     
+  /* If last SDU has zero payload, remove it. FIXME: Why happens this?? */
+  if (subheaders[nof_subheaders-1].get_payload_size() == 0) {
+    del_subh();
+  }
+  
   /* Determine if we are transmitting CEs only. */
   bool ce_only = last_sdu_idx<0?true:false; 
   
@@ -200,9 +206,9 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
          nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
   } else {
-    printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
+    printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d, init_rem_len=%d\n", 
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
-         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
+         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len, init_rem_len);
   }
   
   if (rem_len + header_sz + ce_payload_sz + total_sdu_len != pdu_len) {
@@ -210,9 +216,9 @@ uint8_t* sch_pdu::write_packet(srslte::log *log_h)
     for (int i=0;i<nof_subheaders;i++) {
       printf("SUBH %d is_sdu=%d, payload=%d\n", i, subheaders[i].is_sdu(), subheaders[i].get_payload_size());
     }
-    printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d\n", 
+    printf("Wrote PDU: pdu_len=%d, header_and_ce=%d (%d+%d), nof_subh=%d, last_sdu=%d, sdu_len=%d, onepad=%d, multi=%d, init_rem_len=%d\n", 
          pdu_len, header_sz+ce_payload_sz, header_sz, ce_payload_sz, 
-         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len);
+         nof_subheaders, last_sdu_idx, total_sdu_len, onetwo_padding, rem_len, init_rem_len);
     fprintf(stderr, "Expected PDU len %d bytes but wrote %d\n", pdu_len, rem_len + header_sz + ce_payload_sz + total_sdu_len);
     printf("------------------------------\n");
     return NULL; 
@@ -270,6 +276,7 @@ bool sch_pdu::has_space_sdu(uint32_t nbytes)
 
 bool sch_pdu::update_space_sdu(uint32_t nbytes)
 {
+  int init_rem = rem_len; 
   if (has_space_sdu(nbytes)) {
     if (last_sdu_idx < 0) {
       rem_len      -= (nbytes+1);
@@ -425,7 +432,7 @@ void sch_subh::set_padding()
 }
 
 
-bool sch_subh::set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool update_size)
+bool sch_subh::set_bsr(uint32_t buff_size[4], sch_subh::cetype format)
 {
   uint32_t nonzero_lcg=0;
   for (int i=0;i<4;i++) {
@@ -434,7 +441,7 @@ bool sch_subh::set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool upda
     }
   }
   uint32_t ce_size = format==LONG_BSR?3:1;
-  if (((sch_pdu*)parent)->has_space_ce(ce_size) || !update_size) {
+  if (((sch_pdu*)parent)->has_space_ce(ce_size)) {
     if (format==LONG_BSR) {
       w_payload_ce[0] = (buff_size_table(buff_size[0])&0x3f) << 2 | (buff_size_table(buff_size[1])&0xc0)>>6;
       w_payload_ce[1] = (buff_size_table(buff_size[1])&0xf)  << 4 | (buff_size_table(buff_size[2])&0xf0)>>4;
@@ -443,9 +450,7 @@ bool sch_subh::set_bsr(uint32_t buff_size[4], sch_subh::cetype format, bool upda
       w_payload_ce[0] = (nonzero_lcg&0x3)<<6 | buff_size_table(buff_size[nonzero_lcg])&0x3f;
     }
     lcid = format;
-    if (update_size) {
-      ((sch_pdu*)parent)->update_space_ce(ce_size);
-    }
+    ((sch_pdu*)parent)->update_space_ce(ce_size);
     nof_bytes = ce_size;
     return true; 
   } else {
@@ -825,7 +830,7 @@ int main()
   pdu.new_subh();
   pdu.get()->set_phr(10);
   pdu.new_subh();
-  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
+  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
@@ -922,7 +927,7 @@ int main()
   pdu.new_subh();
   pdu.get()->set_phr(15);  
   pdu.new_subh();
-  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
+  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR);  
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());
@@ -931,18 +936,16 @@ int main()
   /* Another test */
   printf("------- Another test ----------\n");
   uint8_t dlsch_payload3[602];
-  uint8_t dlsch_payload4[14];
   bzero(buffer, 10240);
-  pdu.init_tx(buffer, 621, true);
+  pdu.init_tx(buffer, 75, true);
   printf("Available space: %d\n", pdu.rem_size());
   pdu.new_subh();
-  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR, true);  
+  pdu.get()->set_bsr(bsr_st, srsue::sch_subh::SHORT_BSR);  
   pdu.new_subh(); 
-  pdu.get()->set_sdu(3, 602, dlsch_payload3);
+  pdu.get()->set_sdu(3, 2, dlsch_payload3);
   pdu.new_subh(); 
-  if (pdu.get()->set_sdu(3, 14, dlsch_payload4) < 0) {
-    pdu.del_subh();
-  }
+  pdu.get()->set_sdu(3, 66, dlsch_payload3);
+  pdu.new_subh(); 
   printf("Remaining space: %d\n", pdu.rem_size());
   ptr = pdu.write_packet();
   //srslte_vec_fprint_byte(stdout, ptr, pdu.get_pdu_len());

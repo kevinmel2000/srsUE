@@ -64,8 +64,8 @@ public:
     uint32_t buff_size[4];
   } bsr_t; 
 
-  uint32_t need_to_send_bsr_on_ul_grant(uint32_t grant_size); 
-  bool generate_bsr_on_ul_grant(uint32_t nof_padding_bytes, bsr_t *bsr);
+  bool need_to_send_bsr_on_ul_grant(uint32_t grant_size, bsr_t *bsr); 
+  bool generate_padding_bsr(uint32_t nof_padding_bytes, bsr_t *bsr);
   bool need_to_send_sr(); 
   bool need_to_reset_sr(); 
   
