@@ -59,10 +59,10 @@ rlc_am::rlc_am()
   do_status     = false;
 }
 
-void rlc_am::init(srslte::log        *log_,
-                  uint32_t            lcid_,
-                  pdcp_interface_rlc *pdcp_,
-                  rrc_interface_rlc  *rrc_, 
+void rlc_am::init(srslte::log          *log_,
+                  uint32_t              lcid_,
+                  pdcp_interface_rlc   *pdcp_,
+                  rrc_interface_rlc    *rrc_,
                   mac_interface_timers *mac_timers)
 {
   log  = log_;

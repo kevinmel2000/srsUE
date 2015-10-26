@@ -46,17 +46,18 @@ rlc_um::rlc_um()
   vr_uh    = 0;
 }
 
-void rlc_um::init(srslte::log        *log_,
-                  uint32_t            lcid_,
-                  pdcp_interface_rlc *pdcp_,
-                  rrc_interface_rlc  *rrc_,
+void rlc_um::init(srslte::log          *log_,
+                  uint32_t              lcid_,
+                  pdcp_interface_rlc   *pdcp_,
+                  rrc_interface_rlc    *rrc_,
                   mac_interface_timers *mac_timers_)
 {
-  log  = log_;
-  lcid = lcid_;
-  pdcp = pdcp_;
-  rrc  = rrc_;
-  mac_timers = mac_timers_;
+  log                   = log_;
+  lcid                  = lcid_;
+  pdcp                  = pdcp_;
+  rrc                   = rrc_;
+  mac_timers            = mac_timers_;
+  reordering_timeout_id = mac_timers->get_unique_id();
 }
 
 void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
@@ -64,7 +65,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   switch(cnfg->rlc_mode)
   {
   case LIBLTE_RRC_RLC_MODE_UM_BI:
-    t_reordering        = cnfg->dl_um_bi_rlc.t_reordering;
+    t_reordering        = liblte_rrc_t_reordering_num[cnfg->dl_um_bi_rlc.t_reordering];
     rx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->dl_um_bi_rlc.sn_field_len;
     rx_window_size      = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 16 : 512;
     rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 32 : 1024;
@@ -85,7 +86,7 @@ void rlc_um::configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
               rlc_umd_sn_size_num[tx_sn_field_length]);
     break;
   case LIBLTE_RRC_RLC_MODE_UM_UNI_DL:
-    t_reordering        = cnfg->dl_um_uni_rlc.t_reordering;
+    t_reordering        = liblte_rrc_t_reordering_num[cnfg->dl_um_uni_rlc.t_reordering];
     rx_sn_field_length  = (rlc_umd_sn_size_t)cnfg->dl_um_uni_rlc.sn_field_len;
     rx_window_size      = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 16 : 512;
     rx_mod              = (RLC_UMD_SN_SIZE_5_BITS == rx_sn_field_length) ? 32 : 1024;
@@ -186,7 +187,8 @@ void rlc_um::timer_expired(uint32_t timeout_id)
     boost::lock_guard<boost::mutex> lock(mutex);
 
     // 36.322 v10 Section 5.1.2.2.4
-    log->debug("%s reordering timeout expiry - updating vr_ur\n", rb_id_text[lcid]);
+    log->debug("%s reordering timeout expiry - updating vr_ur and reassembling\n",
+               rb_id_text[lcid]);
 
     rx_sdu->reset();            // We only get here if we've lost a PDU
     while(RX_MOD_BASE(vr_ur) < RX_MOD_BASE(vr_ux))

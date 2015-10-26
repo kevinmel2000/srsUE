@@ -33,6 +33,24 @@
 
 using namespace srsue;
 
+class mac_dummy_timers
+    :public mac_interface_timers
+{
+public:
+  srslte::timers::timer* get(uint32_t timer_id)
+  {
+    return &t;
+  }
+  uint32_t get_unique_id(){return 0;}
+  void step()
+  {
+    t.step();
+  }
+
+private:
+  srslte::timers::timer t;
+};
+
 class rlc_um_tester
     :public pdcp_interface_rlc
     ,public rrc_interface_rlc
@@ -64,7 +82,8 @@ void basic_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_um_tester      tester;
+  rlc_um_tester    tester;
+  mac_dummy_timers timers;
 
   rlc_um rlc1;
   rlc_um rlc2;
@@ -74,8 +93,8 @@ void basic_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 3, &tester, &tester);
-  rlc2.init(&log2, 3, &tester, &tester);
+  rlc1.init(&log1, 3, &tester, &tester, &timers);
+  rlc2.init(&log2, 3, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_UM_BI;
@@ -134,7 +153,8 @@ void loss_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_um_tester tester;
+  rlc_um_tester    tester;
+  mac_dummy_timers timers;
 
   rlc_um rlc1;
   rlc_um rlc2;
@@ -144,8 +164,8 @@ void loss_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 3, &tester, &tester);
-  rlc2.init(&log2, 3, &tester, &tester);
+  rlc1.init(&log1, 3, &tester, &tester, &timers);
+  rlc2.init(&log2, 3, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_UM_BI;
@@ -184,9 +204,9 @@ void loss_test()
       rlc2.write_pdu(pdu_bufs[i].msg, pdu_bufs[i].N_bytes);
   }
 
-  // Wait for the reordering timeout
-  while(rlc2.reordering_timeout_running())
-    usleep(0);
+  // Step the reordering timer until expiry
+  while(!timers.get(1)->is_expired())
+    timers.get(1)->step();
 
   // Read SDUs from RLC2
   rlc2.read_sdu();

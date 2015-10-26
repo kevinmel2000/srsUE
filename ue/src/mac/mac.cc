@@ -363,6 +363,10 @@ srslte::timers::timer* mac::get(uint32_t timer_id)
 {
   return upper_timers_thread.get(timer_id);
 }
+uint32_t mac::get_unique_id()
+{
+  return upper_timers_thread.get_unique_id();
+}
 
 void mac::upper_timers::run_thread()
 {
@@ -377,6 +381,11 @@ void mac::upper_timers::run_thread()
 srslte::timers::timer* mac::upper_timers::get(uint32_t timer_id)
 {
   return timers_db.get(timer_id%MAC_NOF_UPPER_TIMERS);
+}
+
+uint32_t mac::upper_timers::get_unique_id()
+{
+  return timers_db.get_unique_id();
 }
 
 void mac::upper_timers::stop()

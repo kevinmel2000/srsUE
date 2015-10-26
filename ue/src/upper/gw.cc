@@ -221,10 +221,8 @@ void* gw::receive_thread(void *inputs)
             if(ntohs(ip_pkt->tot_len) == pdu->N_bytes)
             {
               g->gw_log->info_hex(pdu->msg, pdu->N_bytes, "UL PDU");
-              //g->rx_sdu_queue.write(pdu);
-              //g->ue->notify();
               
-              /* Send PDU directly to PDCP */
+              // Send PDU directly to PDCP
               g->pdcp->write_sdu(RB_ID_DRB1, pdu);
               
               pdu = g->pool->allocate();

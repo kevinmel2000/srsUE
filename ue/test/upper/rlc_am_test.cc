@@ -33,6 +33,20 @@
 
 using namespace srsue;
 
+class mac_dummy_timers
+    :public mac_interface_timers
+{
+public:
+  srslte::timers::timer* get(uint32_t timer_id)
+  {
+    return &t;
+  }
+  uint32_t get_unique_id(){return 0;}
+
+private:
+  srslte::timers::timer t;
+};
+
 class rlc_am_tester
     :public pdcp_interface_rlc
     ,public rrc_interface_rlc
@@ -64,7 +78,8 @@ void basic_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_am_tester      tester;
+  rlc_am_tester     tester;
+  mac_dummy_timers  timers;
 
   rlc_am rlc1;
   rlc_am rlc2;
@@ -74,8 +89,8 @@ void basic_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 1, &tester, &tester);
-  rlc2.init(&log2, 1, &tester, &tester);
+  rlc1.init(&log1, 1, &tester, &tester, &timers);
+  rlc2.init(&log2, 1, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_AM;
@@ -145,7 +160,8 @@ void concat_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_am_tester      tester;
+  rlc_am_tester     tester;
+  mac_dummy_timers  timers;
 
   rlc_am rlc1;
   rlc_am rlc2;
@@ -155,8 +171,8 @@ void concat_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 1, &tester, &tester);
-  rlc2.init(&log2, 1, &tester, &tester);
+  rlc1.init(&log1, 1, &tester, &tester, &timers);
+  rlc2.init(&log2, 1, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_AM;
@@ -211,7 +227,8 @@ void segment_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_am_tester      tester;
+  rlc_am_tester     tester;
+  mac_dummy_timers  timers;
 
   rlc_am rlc1;
   rlc_am rlc2;
@@ -221,8 +238,8 @@ void segment_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 1, &tester, &tester);
-  rlc2.init(&log2, 1, &tester, &tester);
+  rlc1.init(&log1, 1, &tester, &tester, &timers);
+  rlc2.init(&log2, 1, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_AM;
@@ -295,7 +312,8 @@ void retx_test()
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
   log1.set_hex_limit(-1);
   log2.set_hex_limit(-1);
-  rlc_am_tester      tester;
+  rlc_am_tester     tester;
+  mac_dummy_timers  timers;
 
   rlc_am rlc1;
   rlc_am rlc2;
@@ -305,8 +323,8 @@ void retx_test()
   log1.set_level(srslte::LOG_LEVEL_DEBUG);
   log2.set_level(srslte::LOG_LEVEL_DEBUG);
 
-  rlc1.init(&log1, 1, &tester, &tester);
-  rlc2.init(&log2, 1, &tester, &tester);
+  rlc1.init(&log1, 1, &tester, &tester, &timers);
+  rlc2.init(&log2, 1, &tester, &tester, &timers);
 
   LIBLTE_RRC_RLC_CONFIG_STRUCT cnfg;
   cnfg.rlc_mode = LIBLTE_RRC_RLC_MODE_AM;

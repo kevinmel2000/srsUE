@@ -83,6 +83,7 @@ public:
   void start_pcap(mac_pcap* pcap);
   
   srslte::timers::timer*   get(uint32_t timer_id);
+  u_int32_t                get_unique_id();
   
   uint32_t get_current_tti();
       
@@ -147,6 +148,7 @@ private:
     void stop();
     void reset();
     srslte::timers::timer* get(uint32_t timer_id);
+    uint32_t get_unique_id();
   private:
     void run_thread();
     srslte::timers  timers_db;

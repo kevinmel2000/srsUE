@@ -54,7 +54,7 @@ public:
   class timer
   {
   public:
-    timer() { counter = 0; timeout = 0; running = false; }; 
+    timer(uint32_t id_=0) {id = id_; counter = 0; timeout = 0; running = false; }
     void set(timer_callback *callback_, uint32_t timeout_) {
       callback = callback_; 
       timeout = timeout_; 
@@ -94,6 +94,7 @@ public:
   
   timers(uint32_t nof_timers_) : timer_list(nof_timers_) {
     nof_timers = nof_timers_; 
+    next_timer = 0;
     for (uint32_t i=0;i<nof_timers;i++) {
       timer_list[i].id = i; 
     }
@@ -127,8 +128,16 @@ public:
       return NULL; 
     }
   }
+  uint32_t get_unique_id() {
+    if (next_timer == nof_timers){
+      printf("No more unique timer ids (Only %d timers available)\n", nof_timers);
+      next_timer = 0;
+    }
+    return next_timer++;
+  }
 private:
   uint32_t nof_timers; 
+  uint32_t next_timer;
   std::vector<timer>   timer_list;   
 };
 

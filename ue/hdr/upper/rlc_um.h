@@ -32,7 +32,6 @@
 #include "common/log.h"
 #include "common/common.h"
 #include "common/msg_queue.h"
-#include "common/timeout.h"
 #include "upper/rlc_entity.h"
 #include <boost/thread/mutex.hpp>
 #include <map>
@@ -42,7 +41,7 @@ namespace srsue {
 
 struct rlc_umd_pdu_t{
   rlc_umd_pdu_header_t  header;
-  byte_buffer_t  *buf;
+  byte_buffer_t        *buf;
   bool                  pdu_complete;
 };
 
@@ -79,11 +78,11 @@ public:
 
 private:
 
-  buffer_pool        *pool;
-  srslte::log        *log;
-  uint32_t            lcid;
-  pdcp_interface_rlc *pdcp;
-  rrc_interface_rlc  *rrc;
+  buffer_pool          *pool;
+  srslte::log          *log;
+  uint32_t              lcid;
+  pdcp_interface_rlc   *pdcp;
+  rrc_interface_rlc    *rrc;
   mac_interface_timers *mac_timers; 
 
   // TX SDU buffers
@@ -129,7 +128,7 @@ private:
    * Timers
    * Ref: 3GPP TS 36.322 v10.0.0 Section 7
    ***************************************************************************/
-  static const int reordering_timeout_id = 1;
+  uint32_t reordering_timeout_id;
 
   int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);
   void handle_data_pdu(uint8_t *payload, uint32_t nof_bytes);

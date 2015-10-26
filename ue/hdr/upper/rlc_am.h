@@ -42,13 +42,13 @@ namespace srsue {
 
 struct rlc_amd_rx_pdu_t{
   rlc_amd_pdu_header_t  header;
-  byte_buffer_t  *buf;
+  byte_buffer_t        *buf;
   bool                  pdu_complete;
 };
 
 struct rlc_amd_tx_pdu_t{
   rlc_amd_pdu_header_t  header;
-  byte_buffer_t  *buf;
+  byte_buffer_t        *buf;
   uint32_t              retx_count;
   bool                  is_acked;
 };
@@ -58,10 +58,10 @@ class rlc_am
 {
 public:
   rlc_am();
-  void init(srslte::log        *rlc_entity_log_,
-            uint32_t            lcid_,
-            pdcp_interface_rlc *pdcp_,
-            rrc_interface_rlc  *rrc_, 
+  void init(srslte::log          *rlc_entity_log_,
+            uint32_t              lcid_,
+            pdcp_interface_rlc   *pdcp_,
+            rrc_interface_rlc    *rrc_,
             mac_interface_timers *mac_timers);
   void configure(LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg);
 
@@ -86,7 +86,7 @@ private:
   rrc_interface_rlc  *rrc;
 
   // TX SDU buffers
-  msg_queue            tx_sdu_queue;
+  msg_queue      tx_sdu_queue;
   byte_buffer_t *tx_sdu;
 
   // Tx and Rx windows
@@ -95,7 +95,7 @@ private:
   std::map<uint32_t, rlc_amd_rx_pdu_t>  rx_window;
 
   // RX SDU buffers
-  msg_queue            rx_sdu_queue;
+  msg_queue      rx_sdu_queue;
   byte_buffer_t *rx_sdu;
 
   // Mutexes
