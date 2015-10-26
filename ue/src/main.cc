@@ -67,6 +67,7 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
     // Command line or config file options
     bpo::options_description common("Configuration options");
     common.add_options()
+        ("usrp_args",         bpo::value<string>(&args->usrp_args),   "USRP args")
         ("rf.dl_freq",        bpo::value<float>(&args->rf.dl_freq)->default_value(2680000000),  "Downlink centre frequency")
         ("rf.ul_freq",        bpo::value<float>(&args->rf.ul_freq)->default_value(2560000000),  "Uplink centre frequency")
         ("rf.rx_gain",        bpo::value<float>(&args->rf.rx_gain)->default_value(10),          "Front-end receiver gain")
@@ -219,9 +220,9 @@ int main(int argc, char *argv[]) {
   parse_args(&args, argc, argv);
 
   srsue::ue ue(&args);
-  ue.init();
-
-  while(1) {
-    usleep(100000);
+  if(ue.init()) {
+    while(1) {
+      usleep(100000);
+    }
   }
 }

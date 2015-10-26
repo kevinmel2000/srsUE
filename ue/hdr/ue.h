@@ -106,6 +106,7 @@ typedef struct{
 }usim_args_t;
 
 typedef struct {
+  std::string   usrp_args;
   rf_args_t     rf;
   pcap_args_t   pcap;
   trace_args_t  trace;
@@ -124,7 +125,7 @@ class ue
 public:
   ue(all_args_t *args_);
   ~ue();
-  void init();
+  bool init();
   void stop();
   void notify();
 

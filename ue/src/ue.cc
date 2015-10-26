@@ -86,7 +86,7 @@ ue::~ue()
   buffer_pool::cleanup();
 }
 
-void ue::init()
+bool ue::init()
 {
   // Init logs
   logger->log("\n\n");
@@ -122,7 +122,16 @@ void ue::init()
   }
 
   // Init layers
-  radio_uhd->init_agc();
+  char *c_str = new char[args->usrp_args.size() + 1];
+  strcpy(c_str, args->usrp_args.c_str());
+  if(!radio_uhd->init_agc(c_str))
+  {
+    printf("Failed to find usrp with args=%s\n",c_str);
+    delete [] c_str;
+    return false;
+  }
+  delete [] c_str;
+
   radio_uhd->set_tx_rx_gain_offset(15);
   radio_uhd->set_rx_freq(args->rf.dl_freq);
   radio_uhd->set_tx_freq(args->rf.ul_freq);
