@@ -17,5 +17,5 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_library(srsue_radio SHARED radio_uhd.cc)
+add_library(srsue_radio radio_uhd.cc)
 target_link_libraries(srsue_radio ${SRSLTE_LIBRARY_CUHD})

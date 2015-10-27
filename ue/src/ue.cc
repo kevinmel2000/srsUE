@@ -25,9 +25,8 @@
  *
  */
 
-#include "ue.h"
-
 #include <boost/algorithm/string.hpp>
+#include "ue.h"
 
 namespace srsue{
 

@@ -18,8 +18,8 @@
 #
 
 file(GLOB SOURCES "*.cc")
-add_library(srsue_mac SHARED ${SOURCES})
+add_library(srsue_mac ${SOURCES})
 target_link_libraries(srsue_mac)
 
-add_executable(pdu_test pdu.cc)
-target_link_libraries(pdu_test srsue_mac srsue_common ${SRSLTE_LIBRARY})
+#add_executable(pdu_test pdu.cc)
+#target_link_libraries(pdu_test srsue_mac srsue_common ${SRSLTE_LIBRARY})

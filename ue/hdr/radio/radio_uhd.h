@@ -25,8 +25,6 @@
  *
  */
 
-
-
 #include "radio/radio.h"
 #include "srslte/srslte.h"
 #include "srslte/cuhd/cuhd.h"
@@ -83,7 +81,7 @@ namespace srslte {
       void set_tti(uint32_t tti);
       void tx_offset(int offset);
       void set_tti_len(uint32_t sf_len);
-      uint32_t get_tti_len();     
+      uint32_t get_tti_len();
       
     private:
       

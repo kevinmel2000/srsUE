@@ -35,7 +35,6 @@
 namespace srslte {
   
 /* Interface to the RF frontend. */
-
 class SRSLTE_API radio
 {
   public:
@@ -71,7 +70,7 @@ class SRSLTE_API radio
     virtual void set_tti(uint32_t tti) = 0;
     virtual void tx_offset(int offset) = 0;
     virtual void set_tti_len(uint32_t sf_len) = 0;
-    virtual uint32_t get_tti_len() = 0;     
+    virtual uint32_t get_tti_len() = 0;
 };
 
 } // namespace srslte

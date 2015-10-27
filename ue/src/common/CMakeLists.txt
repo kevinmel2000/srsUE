@@ -19,4 +19,4 @@
 
 file(GLOB CXX_SOURCES "*.cc")
 file(GLOB C_SOURCES "*.c")
-add_library(srsue_common SHARED ${CXX_SOURCES} ${C_SOURCES})
+add_library(srsue_common ${CXX_SOURCES} ${C_SOURCES})

@@ -18,7 +18,7 @@
 #
 
 add_executable(ue_itf_test_sib1 ue_itf_test_sib1.cc)
-target_link_libraries(ue_itf_test_sib1 srsue_common srsue_phy srsue_radio)
+target_link_libraries(ue_itf_test_sib1 srsue_common srsue_phy srsue_radio ${Boost_LIBRARIES})
 
 add_executable(ue_itf_test_prach ue_itf_test_prach.cc)
-target_link_libraries(ue_itf_test_prach srsue_common srsue_phy srsue_radio)
+target_link_libraries(ue_itf_test_prach srsue_common srsue_phy srsue_radio ${Boost_LIBRARIES})

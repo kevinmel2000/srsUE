@@ -18,5 +18,5 @@
 #
 
 file(GLOB SOURCES "*.cc")
-add_library(srsue_phy SHARED ${SOURCES})
-target_link_libraries(srsue_phy ${SRSLTE_LIBRARY})
+add_library(srsue_phy ${SOURCES})
+target_link_libraries(srsue_phy srsue_common ${SRSLTE_LIBRARY})

@@ -18,5 +18,5 @@
 #
 
 file(GLOB SOURCES "*.cc")
-add_library(srsue_upper SHARED ${SOURCES})
+add_library(srsue_upper ${SOURCES})
 target_link_libraries(srsue_upper srsue_common lte ${SRSLTE_LIBRARY} ${Boost_LIBRARIES})
