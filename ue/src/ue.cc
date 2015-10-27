@@ -172,6 +172,7 @@ void ue::stop()
       radio_uhd->write_trace(args->trace.radio_filename);
     }
     started = false;
+    notify();
     wait_thread_finish();
   }
 }

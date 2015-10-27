@@ -212,6 +212,7 @@ inline int MAC_LTE_PCAP_WritePDU(FILE *fd, MAC_Context_Info_t *context,
 /* Close the PCAP file */
 inline void MAC_LTE_PCAP_Close(FILE *fd)
 {
+  if(fd)
     fclose(fd);
 }
 

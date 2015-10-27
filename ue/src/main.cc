@@ -44,10 +44,11 @@
 using namespace std;
 namespace bpo = boost::program_options;
 
+volatile static bool running = true;
+
 void sig_int_handler(int signo)
 {
-  printf("bye\n");
-  exit(0);
+  running = false;
 }
 
 /**********************************************************************
@@ -220,9 +221,15 @@ int main(int argc, char *argv[]) {
   parse_args(&args, argc, argv);
 
   srsue::ue ue(&args);
-  if(ue.init()) {
-    while(1) {
-      usleep(100000);
-    }
+  if(!ue.init()) {
+    exit(1);
   }
+
+  while(running) {
+    usleep(100000);
+  }
+
+  ue.stop();
+  cout << "---  exiting  ---" << endl;
+  exit(0);
 }

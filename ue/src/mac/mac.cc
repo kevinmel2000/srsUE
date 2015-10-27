@@ -139,7 +139,7 @@ void mac::run_thread() {
 
   Info("Waiting PHY to synchronize with cell\n");  
   phy_h->sync_start();
-  while(!phy_h->get_current_tti()) {
+  while(!phy_h->get_current_tti() && started) {
     usleep(50000);
   }
   Debug("Setting ttysync to %d\n", phy_h->get_current_tti());
@@ -391,6 +391,7 @@ uint32_t mac::upper_timers::get_unique_id()
 void mac::upper_timers::stop()
 {
   running=false;
+  ttisync.increase();
   wait_thread_finish();
 }
 void mac::upper_timers::reset()
