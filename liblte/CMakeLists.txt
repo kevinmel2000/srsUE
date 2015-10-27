@@ -1,5 +1,5 @@
 include_directories(hdr)
-add_library(lte SHARED
+add_library(lte
   src/liblte_common.cc
   src/liblte_interface.cc
   src/liblte_rlc.cc
