@@ -66,6 +66,8 @@ public:
             srslte::log         *nas_log_);
   void stop();
 
+  emm_state_t get_state();
+
   // RRC interface
   void      notify_connection_setup();
   void      write_pdu(uint32_t lcid, byte_buffer_t *pdu);

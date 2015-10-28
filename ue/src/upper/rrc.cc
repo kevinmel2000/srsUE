@@ -62,6 +62,10 @@ void rrc::init(phy_interface_rrc     *phy_,
 void rrc::stop()
 {}
 
+rrc_state_t rrc::get_state()
+{
+  return state;
+}
 
 /*******************************************************************************
   NAS interface

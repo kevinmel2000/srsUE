@@ -73,6 +73,8 @@ public:
             srslte::log           *rrc_log_);
   void stop();
 
+  rrc_state_t get_state();
+
 private:
   buffer_pool          *pool;
   srslte::log          *rrc_log;

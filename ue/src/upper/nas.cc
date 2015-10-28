@@ -56,6 +56,11 @@ void nas::init(usim_interface_nas *usim_,
 void nas::stop()
 {}
 
+emm_state_t nas::get_state()
+{
+  return state;
+}
+
 
 /*******************************************************************************
   RRC interface
