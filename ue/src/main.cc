@@ -44,7 +44,7 @@
 using namespace std;
 namespace bpo = boost::program_options;
 
-volatile static bool running = true;
+static bool running = true;
 
 void sig_int_handler(int signo)
 {
