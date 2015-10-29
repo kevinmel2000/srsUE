@@ -61,8 +61,7 @@ void gw::stop()
     running = false;
     if(if_up)
     {
-      pthread_cancel(rx_thread);
-      pthread_join(rx_thread, NULL);
+      wait_thread_finish();
     }
 
     // TODO: tear down TUN device?
@@ -138,7 +137,7 @@ error_t gw::setup_if_addr(uint32_t ip_addr, char *err_str)
   }
 
   // Setup a thread to receive packets from the TUN device
-  pthread_create(&rx_thread, NULL, &receive_thread, this);
+  start(GW_THREAD_PRIO);
 
   return(ERROR_NONE);
 }
@@ -198,20 +197,19 @@ error_t gw::init_if(char *err_str)
 /********************/
 /*    GW Receive    */
 /********************/
-void* gw::receive_thread(void *inputs)
+void gw::run_thread()
 {
-    gw             *g    = (gw *)inputs;
     struct iphdr   *ip_pkt;
     uint32          idx = 0;
     int32           N_bytes;
-    byte_buffer_t  *pdu = g->pool->allocate();
+    byte_buffer_t  *pdu = pool->allocate();
 
-    g->gw_log->info("GW IP packet receiver thread running\n");
+    gw_log->info("GW IP packet receiver thread running\n");
 
-    while(g->running)
+    while(running)
     {
-        N_bytes = read(g->tun_fd, &pdu->msg[idx], SRSUE_MAX_BUFFER_SIZE_BYTES-SRSUE_BUFFER_HEADER_OFFSET);
-        g->gw_log->debug("Read %d bytes from TUN fd=%d\n", N_bytes, g->tun_fd);
+        N_bytes = read(tun_fd, &pdu->msg[idx], SRSUE_MAX_BUFFER_SIZE_BYTES-SRSUE_BUFFER_HEADER_OFFSET);
+        gw_log->debug("Read %d bytes from TUN fd=%d\n", N_bytes, tun_fd);
         if(N_bytes > 0)
         {
             pdu->N_bytes = idx + N_bytes;
@@ -220,23 +218,23 @@ void* gw::receive_thread(void *inputs)
             // Check if entire packet was received
             if(ntohs(ip_pkt->tot_len) == pdu->N_bytes)
             {
-              g->gw_log->info_hex(pdu->msg, pdu->N_bytes, "UL PDU");
+              gw_log->info_hex(pdu->msg, pdu->N_bytes, "UL PDU");
               
               // Send PDU directly to PDCP
-              g->pdcp->write_sdu(RB_ID_DRB1, pdu);
+              pdcp->write_sdu(RB_ID_DRB1, pdu);
               
-              pdu = g->pool->allocate();
+              pdu = pool->allocate();
               idx = 0;
             }else{
               idx += N_bytes;
             }
         }else{
-            g->gw_log->error("Failed to read from TUN interface - gw receive thread exiting.\n");
+            gw_log->error("Failed to read from TUN interface - gw receive thread exiting.\n");
             break;
         }
     }
 
-    g->gw_log->info("GW IP receiver thread exiting.\n");
+    gw_log->info("GW IP receiver thread exiting.\n");
 }
 
 } // namespace srsue

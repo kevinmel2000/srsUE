@@ -33,6 +33,7 @@
 #include "common/common.h"
 #include "common/msg_queue.h"
 #include "common/interfaces.h"
+#include "common/threads.h"
 
 #include <linux/if.h>
 
@@ -41,6 +42,7 @@ namespace srsue {
 class gw
     :public gw_interface_pdcp
     ,public gw_interface_nas
+    ,public thread
 {
 public:
   gw();
@@ -55,8 +57,11 @@ public:
 
   // NAS interface
   error_t setup_if_addr(uint32_t ip_addr, char *err_str);
-
+  
 private:
+  
+  static const int GW_THREAD_PRIO = 7; 
+  
   buffer_pool        *pool;
   srslte::log        *gw_log;
   pdcp_interface_gw  *pdcp;
@@ -66,10 +71,9 @@ private:
   struct ifreq        ifr;
   int32               sock;
   bool                if_up;
-  pthread_t           rx_thread;
   msg_queue           rx_sdu_queue;
 
-  static void*        receive_thread(void *inputs);
+  void                run_thread();
   error_t             init_if(char *err_str);
 };
 
