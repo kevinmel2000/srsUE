@@ -61,6 +61,7 @@ void gw::stop()
     running = false;
     if(if_up)
     {
+      thread_cancel();
       wait_thread_finish();
     }
 

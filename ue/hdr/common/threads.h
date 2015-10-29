@@ -58,6 +58,9 @@ public:
   void wait_thread_finish() {
     pthread_join(_thread, NULL);
   }
+  void thread_cancel() {
+    pthread_cancel(_thread);
+  }
 protected:
   virtual void run_thread() = 0; 
 private:
