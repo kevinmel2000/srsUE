@@ -147,7 +147,7 @@ void thread_pool::worker::finished()
   my_parent->status[my_id] = IDLE; 
   pthread_mutex_unlock(&my_parent->mutex[my_id]); 
 
-  pthread_mutex_lock(&my_parent->mutex_queue); 
+  pthread_mutex_lock(&my_parent->mutex_queue);  
   pthread_cond_signal(&my_parent->cvar_queue);
   pthread_mutex_unlock(&my_parent->mutex_queue); 
 #else

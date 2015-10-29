@@ -62,7 +62,6 @@ bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, pra
 
 void phch_recv::stop() {
   running = false; 
-  thread_cancel();
   wait_thread_finish();
 }
 
@@ -342,7 +341,9 @@ void phch_recv::run_thread()
             workers_pool->start_worker(worker);             
             mac->tti_clock(tti);
           } else {
+            log_h->console("Lost sync at tti=%d\n", tti);            
             worker->release();
+            exit(-1);
           }
         } else {
           // wait_worker() only returns NULL if it's being closed. Quit now to avoid unnecessary loops here
