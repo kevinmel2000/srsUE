@@ -121,23 +121,6 @@ void rlc_um::write_sdu(byte_buffer_t *sdu)
   tx_sdu_queue.write(sdu);
 }
 
-bool rlc_um::read_sdu()
-{
-  int n_sdus = rx_sdu_queue.size();
-  if(n_sdus == 0)
-    return false;
-
-  byte_buffer_t *sdu;
-  for(int i=0; i<n_sdus; i++)
-  {
-    rx_sdu_queue.read(&sdu);
-    log->info_hex(sdu->msg, sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
-    pdcp->write_pdu(lcid, sdu);
-  }
-
-  return true;
-}
-
 /****************************************************************************
  * MAC interface
  ***************************************************************************/
@@ -399,7 +382,8 @@ void rlc_um::reassemble_rx_sdus()
         rx_sdu->N_bytes += len;
         rx_window[vr_ur].buf->msg += len;
         rx_window[vr_ur].buf->N_bytes -= len;
-        rx_sdu_queue.write(rx_sdu);
+        log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+        pdcp->write_pdu(lcid, rx_sdu);
         rx_sdu = pool->allocate();
       }
 
@@ -408,7 +392,8 @@ void rlc_um::reassemble_rx_sdus()
       rx_sdu->N_bytes += rx_window[vr_ur].buf->N_bytes;
       if(rlc_um_end_aligned(rx_window[vr_ur].header.fi))
       {
-        rx_sdu_queue.write(rx_sdu);
+        log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+        pdcp->write_pdu(lcid, rx_sdu);
         rx_sdu = pool->allocate();
       }
 
@@ -432,7 +417,8 @@ void rlc_um::reassemble_rx_sdus()
       rx_sdu->N_bytes += len;
       rx_window[vr_ur].buf->msg += len;
       rx_window[vr_ur].buf->N_bytes -= len;
-      rx_sdu_queue.write(rx_sdu);
+      log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+      pdcp->write_pdu(lcid, rx_sdu);
       rx_sdu = pool->allocate();
     }
 
@@ -441,7 +427,8 @@ void rlc_um::reassemble_rx_sdus()
     rx_sdu->N_bytes += rx_window[vr_ur].buf->N_bytes;
     if(rlc_um_end_aligned(rx_window[vr_ur].header.fi))
     {
-      rx_sdu_queue.write(rx_sdu);
+      log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+      pdcp->write_pdu(lcid, rx_sdu);
       rx_sdu = pool->allocate();
     }
 

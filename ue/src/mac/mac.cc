@@ -42,7 +42,9 @@
 
 namespace srsue {
 
-mac::mac() : ttisync(10240), timers_db((uint32_t) NOF_MAC_TIMERS)
+mac::mac() : ttisync(10240), 
+             timers_db((uint32_t) NOF_MAC_TIMERS), 
+             pdu_process_thread(&demux_unit)
 {
   started = false;  
   pcap    = NULL;   
@@ -75,7 +77,7 @@ bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h_)
   reset();
 
   started = true; 
-  start(MAC_THREAD_PRIO);
+  start(MAC_MAIN_THREAD_PRIO);
   
   return started; 
 }
@@ -84,8 +86,9 @@ void mac::stop()
 {
   started = false;   
   ttisync.increase();
-  wait_thread_finish();
   upper_timers_thread.stop();
+  pdu_process_thread.stop();
+  wait_thread_finish();
 }
 
 void mac::start_pcap(mac_pcap* pcap_)
@@ -202,10 +205,7 @@ void mac::run_thread() {
         signals_pregenerated = true; 
       }
       
-      timers_db.step_all();
-      
-      demux_unit.process_pdus();
-      
+      timers_db.step_all();          
     }
   }  
 }
@@ -310,6 +310,9 @@ void mac::tb_decoded(bool ack, srslte_rnti_type_t rnti_type, uint32_t harq_pid)
     }
   } else {
     dl_harq.tb_decoded(ack, rnti_type, harq_pid);
+    if (ack) {
+      pdu_process_thread.notify();
+    }
   }
 }
 
@@ -358,16 +361,25 @@ void mac::setup_lcid(uint32_t lcid, uint32_t lcg, uint32_t priority, int PBR_x_t
   bsr_procedure.set_priority(lcid, priority);
 }
 
-/* Class to run upper-layer timers with normal priority */
-srslte::timers::timer* mac::get(uint32_t timer_id)
-{
-  return upper_timers_thread.get(timer_id);
-}
 uint32_t mac::get_unique_id()
 {
   return upper_timers_thread.get_unique_id();
 }
 
+/* Front-end to upper-layer timers */
+srslte::timers::timer* mac::get(uint32_t timer_id)
+{
+  return upper_timers_thread.get(timer_id);
+}
+
+
+
+
+/********************************************************
+ *
+ * Class to run upper-layer timers with normal priority 
+ *
+ *******************************************************/
 void mac::upper_timers::run_thread()
 {
   running=true; 
@@ -403,6 +415,61 @@ void mac::upper_timers::tti_clock()
 {
   ttisync.increase();
 }
+
+
+
+
+/********************************************************
+ *
+ * Class that runs a thread to process DL MAC PDUs from
+ * DEMU unit
+ *
+ *******************************************************/
+mac::pdu_process::pdu_process(demux *demux_unit_)
+{
+  demux_unit = demux_unit_;
+  pthread_mutex_init(&mutex, NULL);
+  pthread_cond_init(&cvar, NULL);
+  have_data = false; 
+  start(MAC_PDU_THREAD_PRIO);  
+}
+
+void mac::pdu_process::stop()
+{
+  pthread_mutex_lock(&mutex);
+  running = false; 
+  pthread_cond_signal(&cvar);
+  pthread_mutex_unlock(&mutex);
+  
+  wait_thread_finish();
+}
+
+void mac::pdu_process::notify()
+{
+  pthread_mutex_lock(&mutex);
+  have_data = true; 
+  pthread_cond_signal(&cvar);
+  pthread_mutex_unlock(&mutex);
+}
+
+void mac::pdu_process::run_thread()
+{
+  running = true; 
+  while(running) {
+    have_data = demux_unit->process_pdus();
+    if (!have_data) {
+      pthread_mutex_lock(&mutex);
+      while(!have_data && running) {
+        pthread_cond_wait(&cvar, &mutex);
+      }
+      pthread_mutex_unlock(&mutex);
+    }
+  }
+}
+
+
+
+
 
 
 

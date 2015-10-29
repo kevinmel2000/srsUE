@@ -35,8 +35,6 @@ using namespace srslte;
 namespace srsue{
 
 rlc::rlc()
-  :bcch_bch_queue(2)
-  ,bcch_dlsch_queue(2)
 {
   pool = buffer_pool::get_instance();
 }
@@ -98,7 +96,6 @@ void rlc::write_pdu(uint32_t lcid, uint8_t *payload, uint32_t nof_bytes)
 {
   if(valid_lcid(lcid)) {
     rlc_array[lcid]->write_pdu(payload, nof_bytes);
-    ue->notify();
   }
 }
 
@@ -108,8 +105,7 @@ void rlc::write_pdu_bcch_bch(uint8_t *payload, uint32_t nof_bytes)
   byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
-  bcch_bch_queue.write(buf);
-  ue->notify();
+  pdcp->write_pdu_bcch_bch(buf);
 }
 
 void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
@@ -118,8 +114,7 @@ void rlc::write_pdu_bcch_dlsch(uint8_t *payload, uint32_t nof_bytes)
   byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
-  bcch_dlsch_queue.write(buf);
-  ue->notify();
+  pdcp->write_pdu_bcch_dlsch(buf);
 }
 
 /*******************************************************************************
@@ -177,36 +172,6 @@ void rlc::add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg)
   if(cnfg)
     rlc_array[lcid]->configure(cnfg);
 
-}
-
-/*******************************************************************************
-  UE interface
-*******************************************************************************/
-bool rlc::check_dl_buffers()
-{
-  bool ret = false;
-  byte_buffer_t *buf;
-
-  if(bcch_bch_queue.try_read(&buf))
-  {
-    pdcp->write_pdu_bcch_bch(buf);
-    ret = true;
-  }
-  if(bcch_dlsch_queue.try_read(&buf))
-  {
-    pdcp->write_pdu_bcch_dlsch(buf);
-    ret = true;
-  }
-  for(uint32_t i=0;i<SRSUE_N_RADIO_BEARERS;i++)
-  {
-    if(valid_lcid(i))
-    {
-      if(rlc_array[i]->read_sdu())
-        ret = true;
-    }
-  }
-
-  return ret;
 }
 
 /*******************************************************************************

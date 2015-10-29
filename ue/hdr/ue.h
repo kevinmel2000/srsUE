@@ -119,18 +119,13 @@ typedef struct {
 *******************************************************************************/
 
 class ue
-    :public thread
-    ,public ue_interface
+    :public ue_interface
 {
 public:
   ue(all_args_t *args_);
   ~ue();
   bool init();
   void stop();
-  void notify();
-
-protected:
-  void run_thread();
 
 private:
   srslte::radio_uhd *radio_uhd;
@@ -158,10 +153,6 @@ private:
 
   all_args_t       *args;
   bool              started;
-
-  bool              have_data;
-  boost::condition  condition;
-  boost::mutex      mutex;
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
 };

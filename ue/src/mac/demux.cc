@@ -155,8 +155,9 @@ void demux::push_pdu(uint32_t pid, uint8_t *buff, uint32_t nof_bytes)
   }  
 }
 
-void demux::process_pdus()
+bool demux::process_pdus()
 {
+  bool have_data = false; 
   for (int i=0;i<NOF_HARQ_PID;i++) {
     uint8_t *buff = NULL;
     uint32_t len  = 0; 
@@ -167,12 +168,14 @@ void demux::process_pdus()
         process_pdu(buff, len);
         pdu_q[i].release();
         cnt++;
+        have_data = true;
       }
     } while(buff);
     if (cnt > 4) {
       log_h->console("Warning dispatched %d packets for PID=%d\n", cnt, i);
     }
   }
+  return have_data; 
 }
 
 void demux::process_pdu(uint8_t *mac_pdu, uint32_t nof_bytes)

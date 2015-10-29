@@ -148,7 +148,6 @@ public:
 
   // PDCP interface
   virtual void write_sdu(byte_buffer_t *sdu) = 0;
-  virtual bool read_sdu() = 0;
 
   // MAC interface
   virtual uint32_t get_buffer_state() = 0;

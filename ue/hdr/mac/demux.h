@@ -47,7 +47,7 @@ public:
   demux();
   void init(phy_interface* phy_h_, rlc_interface_mac *rlc, srslte::log* log_h_, srslte::timers* timers_db_);
 
-  void     process_pdus();
+  bool     process_pdus();
   uint8_t* request_buffer(uint32_t pid, uint32_t len);
   
   void     push_pdu(uint32_t pid, uint8_t *buff, uint32_t nof_bytes);

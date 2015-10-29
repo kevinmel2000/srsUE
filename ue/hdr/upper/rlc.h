@@ -71,9 +71,6 @@ public:
   void add_bearer(uint32_t lcid);
   void add_bearer(uint32_t lcid, LIBLTE_RRC_RLC_CONFIG_STRUCT *cnfg=NULL);
 
-  // UE interface
-  bool check_dl_buffers();
-
 private:
   buffer_pool        *pool;
   srslte::log        *rlc_log;
@@ -82,10 +79,6 @@ private:
   mac_interface_timers *mac_timers; 
   ue_interface       *ue;
   rlc_entity         *rlc_array[SRSUE_N_RADIO_BEARERS];
-
-  // Thread-safe queues for MAC messages
-  msg_queue           bcch_bch_queue;
-  msg_queue           bcch_dlsch_queue;
 
   bool valid_lcid(uint32_t lcid);
 };

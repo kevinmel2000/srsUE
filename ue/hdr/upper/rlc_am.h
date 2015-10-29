@@ -70,7 +70,6 @@ public:
 
   // PDCP interface
   void write_sdu(byte_buffer_t *sdu);
-  bool read_sdu();
 
   // MAC interface
   uint32_t get_buffer_state();
@@ -95,7 +94,6 @@ private:
   std::map<uint32_t, rlc_amd_rx_pdu_t>  rx_window;
 
   // RX SDU buffers
-  msg_queue      rx_sdu_queue;
   byte_buffer_t *rx_sdu;
 
   // Mutexes

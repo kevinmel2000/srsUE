@@ -69,17 +69,6 @@ void rlc_tm::write_sdu(byte_buffer_t *sdu)
   ul_queue.write(sdu);
 }
 
-bool rlc_tm::read_sdu()
-{
-  byte_buffer_t *sdu;
-  if(dl_queue.try_read(&sdu))
-  {
-    pdcp->write_pdu(lcid, sdu);
-    return true;
-  }
-  return false;
-}
-
 // MAC interface
 uint32_t rlc_tm::get_buffer_state()
 {
@@ -109,7 +98,7 @@ void rlc_tm:: write_pdu(uint8_t *payload, uint32_t nof_bytes)
   byte_buffer_t *buf = pool->allocate();
   memcpy(buf->msg, payload, nof_bytes);
   buf->N_bytes = nof_bytes;
-  dl_queue.write(buf);
+  pdcp->write_pdu(lcid, buf);  
 }
 
 } // namespace srsue

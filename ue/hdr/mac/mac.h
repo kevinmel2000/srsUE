@@ -105,7 +105,8 @@ private:
   void search_si_rnti();
   
 
-  static const int MAC_THREAD_PRIO = 5; 
+  static const int MAC_MAIN_THREAD_PRIO = 5; 
+  static const int MAC_PDU_THREAD_PRIO  = 6;
 
   // Interaction with PHY 
   tti_sync_cv        ttisync; 
@@ -139,6 +140,17 @@ private:
   srslte::timers  timers_db;
   void            setup_timers();
   void            timeAlignmentTimerExpire();
+  
+  // pointer to MAC PCAP object
+  mac_pcap* pcap;
+  bool si_search_in_progress;
+  int si_window_length;
+  int si_window_start;
+  bool signals_pregenerated;
+  bool is_first_ul_grant;
+
+
+
 
   /* Class to run upper-layer timers with normal priority */
   class upper_timers : public thread {
@@ -156,16 +168,24 @@ private:
     bool running; 
   };
   upper_timers   upper_timers_thread; 
-  
-  
-  // pointer to MAC PCAP object
-  mac_pcap* pcap;
-  bool si_search_in_progress;
-  int si_window_length;
-  int si_window_start;
-  bool signals_pregenerated;
-  bool is_first_ul_grant;
-  
+
+
+
+  /* Class to process MAC PDUs from DEMUX unit */
+  class pdu_process : public thread {
+  public: 
+    pdu_process(demux *demux_unit);
+    void notify();
+    void stop();
+  private:
+    void run_thread();
+    bool running; 
+    bool have_data; 
+    pthread_mutex_t mutex;
+    pthread_cond_t  cvar;
+    demux* demux_unit;
+  };
+  pdu_process pdu_process_thread;
 };
 
 } // namespace srsue

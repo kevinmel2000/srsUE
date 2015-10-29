@@ -33,7 +33,6 @@ namespace srsue{
 ue::ue(all_args_t *args_)
     :args(args_)
     ,started(false)
-    ,have_data(false)
 {
   pool      = buffer_pool::get_instance();
 
@@ -145,7 +144,6 @@ bool ue::init()
   usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
 
   started = true;
-  start();
 }
 
 void ue::stop()
@@ -172,27 +170,6 @@ void ue::stop()
       radio_uhd->write_trace(args->trace.radio_filename);
     }
     started = false;
-    notify();
-    wait_thread_finish();
-  }
-}
-
-void ue::notify()
-{
-  boost::mutex::scoped_lock lock(mutex);
-  have_data = true;
-  condition.notify_one();
-}
-
-void ue::run_thread()
-{
-  while(started)
-  {
-    have_data = rlc->check_dl_buffers();
-    if(!have_data){
-      boost::mutex::scoped_lock lock(mutex);
-      while (!have_data) condition.wait(lock);
-    }
   }
 }
 

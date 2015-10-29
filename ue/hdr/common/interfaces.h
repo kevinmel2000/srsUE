@@ -44,8 +44,6 @@ namespace srsue {
 // UE interface
 class ue_interface
 {
-public:
-  virtual void notify() = 0;
 };
 
 // USIM interface for NAS
