@@ -62,6 +62,7 @@ bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, pra
 
 void phch_recv::stop() {
   running = false; 
+  thread_cancel();
   wait_thread_finish();
 }
 
