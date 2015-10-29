@@ -130,7 +130,6 @@ bool ue::init()
   }
   delete [] c_str;
 
-  radio_uhd->set_tx_rx_gain_offset(15);
   radio_uhd->set_rx_freq(args->rf.dl_freq);
   radio_uhd->set_tx_freq(args->rf.ul_freq);
 

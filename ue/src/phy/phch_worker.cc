@@ -392,10 +392,10 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
       snprintf(timestr, 64, ", dec_time=%4d us", (int) t[0].tv_usec);
 #endif
       
-      Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, ack=%s, snr=%.1f dB, n_iter=%d%s\n", 
+      Info("PDSCH: l_crb=%2d, harq=%d, tbs=%d, mcs=%d, rv=%d, crc=%s, snr=%.1f dB, n_iter=%d%s\n", 
              grant->nof_prb, harq_pid, 
              grant->mcs.tbs/8, grant->mcs.idx, rv, 
-             ack?"ok":"ko", 
+             ack?"OK":"KO", 
              10*log10(srslte_chest_dl_get_snr(&ue_dl.chest)), 
              srslte_pdsch_last_noi(&ue_dl.pdsch),
              timestr);
