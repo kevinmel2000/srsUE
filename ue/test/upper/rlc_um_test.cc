@@ -134,9 +134,6 @@ void basic_test()
 
   assert(0 == rlc2.get_buffer_state());
 
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
-
   assert(NBUFS == tester.n_sdus);
   for(int i=0; i<tester.n_sdus; i++)
   {
@@ -207,9 +204,6 @@ void loss_test()
   // Step the reordering timer until expiry
   while(!timers.get(1)->is_expired())
     timers.get(1)->step();
-
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
 
   assert(NBUFS-1 == tester.n_sdus);
 }

@@ -142,9 +142,6 @@ void basic_test()
   // Write status PDU to RLC1
   rlc1.write_pdu(status_buf.msg, status_buf.N_bytes);
 
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
-
   for(int i=0; i<tester.n_sdus; i++)
   {
     assert(tester.sdus[i]->N_bytes == 1);
@@ -207,9 +204,6 @@ void concat_test()
   rlc2.write_pdu(pdu_buf.msg, pdu_buf.N_bytes);
 
   // No status report as we haven't crossed polling thresholds
-
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
 
   assert(tester.n_sdus == 5);
   for(int i=0; i<tester.n_sdus; i++)
@@ -291,9 +285,6 @@ void segment_test()
 
   // Write status PDU to RLC1
   rlc1.write_pdu(status_buf.msg, status_buf.N_bytes);
-
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
 
   assert(tester.n_sdus == 5);
   for(int i=0; i<tester.n_sdus; i++)
@@ -385,9 +376,6 @@ void retx_test()
 
   // Write the retx PDU to RLC2
   rlc2.write_pdu(retx.msg, retx.N_bytes);
-
-  // Read SDUs from RLC2
-  rlc2.read_sdu();
 
   assert(tester.n_sdus == 5);
   for(int i=0; i<tester.n_sdus; i++)
