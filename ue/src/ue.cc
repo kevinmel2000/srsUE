@@ -26,103 +26,93 @@
  */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/thread/mutex.hpp>
 #include "ue.h"
 
 namespace srsue{
 
-ue::ue(all_args_t *args_)
-    :args(args_)
-    ,started(false)
+ue*           ue::instance = NULL;
+boost::mutex  ue_instance_mutex;
+
+ue* ue::get_instance(void)
 {
-  pool      = buffer_pool::get_instance();
+    boost::mutex::scoped_lock lock(ue_instance_mutex);
+    if(NULL == instance) {
+        instance = new ue();
+    }
+    return(instance);
+}
+void ue::cleanup(void)
+{
+    boost::mutex::scoped_lock lock(ue_instance_mutex);
+    if(NULL != instance) {
+        delete instance;
+        instance = NULL;
+    }
+}
 
-  logger    = new srsue::logger(args_->log.filename);
-  phy_log   = new srsue::log_filter("PHY ", logger, true);
-  mac_log   = new srsue::log_filter("MAC ", logger, true);
-  rlc_log   = new srsue::log_filter("RLC ", logger);
-  pdcp_log  = new srsue::log_filter("PDCP", logger);
-  rrc_log   = new srsue::log_filter("RRC ", logger);
-  nas_log   = new srsue::log_filter("NAS ", logger);
-  gw_log    = new srsue::log_filter("GW  ", logger);
-  usim_log  = new srsue::log_filter("USIM", logger);
-
-  radio_uhd = new srslte::radio_uhd;
-  phy       = new srsue::phy;
-  mac       = new srsue::mac;
-  mac_pcap  = new srsue::mac_pcap;
-  rlc       = new srsue::rlc;
-  pdcp      = new srsue::pdcp;
-  rrc       = new srsue::rrc;
-  nas       = new srsue::nas;
-  gw        = new srsue::gw;
-  usim      = new srsue::usim;
+ue::ue()
+    :started(false)
+{
+  pool = buffer_pool::get_instance();
 }
 
 ue::~ue()
 {
-  delete radio_uhd;
-  delete phy;
-  delete mac;
-  delete mac_pcap;
-  delete rlc;
-  delete pdcp;
-  delete rrc;
-  delete nas;
-  delete gw;
-  delete usim;
-
-  delete logger;
-  delete phy_log;
-  delete mac_log;
-  delete rlc_log;
-  delete pdcp_log;
-  delete rrc_log;
-  delete nas_log;
-  delete gw_log;
-  delete usim_log;
-
   buffer_pool::cleanup();
 }
 
-bool ue::init()
+bool ue::init(all_args_t *args_)
 {
+  args     = args_;
+
+  logger.init(args->log.filename);
+  phy_log.init("PHY ", &logger, true);
+  mac_log.init("MAC ", &logger, true);
+  rlc_log.init("RLC ", &logger);
+  pdcp_log.init("PDCP", &logger);
+  rrc_log.init("RRC ", &logger);
+  nas_log.init("NAS ", &logger);
+  gw_log.init("GW  ", &logger);
+  usim_log.init("USIM", &logger);
+
   // Init logs
-  logger->log("\n\n");
+  logger.log("\n\n");
+  phy_log.set_level(level(args->log.phy_level));
+  mac_log.set_level(level(args->log.mac_level));
+  rlc_log.set_level(level(args->log.rlc_level));
+  pdcp_log.set_level(level(args->log.pdcp_level));
+  rrc_log.set_level(level(args->log.rrc_level));
+  nas_log.set_level(level(args->log.nas_level));
+  gw_log.set_level(level(args->log.gw_level));
+  usim_log.set_level(level(args->log.usim_level));
 
-  phy_log->set_level(level(args->log.phy_level));
-  mac_log->set_level(level(args->log.mac_level));
-  rlc_log->set_level(level(args->log.rlc_level));
-  pdcp_log->set_level(level(args->log.pdcp_level));
-  rrc_log->set_level(level(args->log.rrc_level));
-  nas_log->set_level(level(args->log.nas_level));
-  gw_log->set_level(level(args->log.gw_level));
-  usim_log->set_level(level(args->log.usim_level));
-
-  phy_log->set_hex_limit(args->log.phy_hex_limit);
-  mac_log->set_hex_limit(args->log.mac_hex_limit);
-  rlc_log->set_hex_limit(args->log.rlc_hex_limit);
-  pdcp_log->set_hex_limit(args->log.pdcp_hex_limit);
-  rrc_log->set_hex_limit(args->log.rrc_hex_limit);
-  nas_log->set_hex_limit(args->log.nas_hex_limit);
-  gw_log->set_hex_limit(args->log.gw_hex_limit);
-  usim_log->set_hex_limit(args->log.usim_hex_limit);
+  phy_log.set_hex_limit(args->log.phy_hex_limit);
+  mac_log.set_hex_limit(args->log.mac_hex_limit);
+  rlc_log.set_hex_limit(args->log.rlc_hex_limit);
+  pdcp_log.set_hex_limit(args->log.pdcp_hex_limit);
+  rrc_log.set_hex_limit(args->log.rrc_hex_limit);
+  nas_log.set_hex_limit(args->log.nas_hex_limit);
+  gw_log.set_hex_limit(args->log.gw_hex_limit);
+  usim_log.set_hex_limit(args->log.usim_hex_limit);
 
   // Set up pcap and trace
   if(args->pcap.enable)
   {
-    mac_pcap->open(args->pcap.filename.c_str());
-    mac->start_pcap(mac_pcap);
+    mac_pcap.open(args->pcap.filename.c_str());
+    mac.start_pcap(&mac_pcap);
   }
   if(args->trace.enable)
   {
-    phy->start_trace();
-    radio_uhd->start_trace();
+    phy.start_trace();
+    radio_uhd.start_trace();
   }
 
   // Init layers
+  radio_uhd.register_msg_handler(uhd_msg);
   char *c_str = new char[args->usrp_args.size() + 1];
   strcpy(c_str, args->usrp_args.c_str());
-  if(!radio_uhd->init_agc(c_str))
+  if(!radio_uhd.init_agc(c_str))
   {
     printf("Failed to find usrp with args=%s\n",c_str);
     delete [] c_str;
@@ -130,46 +120,81 @@ bool ue::init()
   }
   delete [] c_str;
 
-  radio_uhd->set_rx_freq(args->rf.dl_freq);
-  radio_uhd->set_tx_freq(args->rf.ul_freq);
+  radio_uhd.set_rx_freq(args->rf.dl_freq);
+  radio_uhd.set_tx_freq(args->rf.ul_freq);
 
-  phy->init_agc(radio_uhd, mac, phy_log);
-  mac->init(phy, rlc, mac_log);
-  rlc->init(pdcp, rrc, this, rlc_log, mac);
-  pdcp->init(rlc, rrc, gw, pdcp_log);
-  rrc->init(phy, mac, rlc, pdcp, nas, usim, rrc_log);
-  nas->init(usim, rrc, gw, nas_log);
-  gw->init(pdcp, this, gw_log);
-  usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
+  phy.init_agc(&radio_uhd, &mac, &phy_log);
+  mac.init(&phy, &rlc, &mac_log);
+  rlc.init(&pdcp, &rrc, this, &rlc_log, &mac);
+  pdcp.init(&rlc, &rrc, &gw, &pdcp_log);
+  rrc.init(&phy, &mac, &rlc, &pdcp, &nas, &usim, &rrc_log);
+  nas.init(&usim, &rrc, &gw, &nas_log);
+  gw.init(&pdcp, this, &gw_log);
+  usim.init(args->usim.imsi, args->usim.imei, args->usim.k, &usim_log);
 
   started = true;
+  pthread_create(&metrics_thread, NULL, &metrics_thread_start, this);
+  return true;
 }
 
 void ue::stop()
 {
+  struct timespec ts;
+
   if(started)
   {
-    phy->stop();
-    mac->stop();
-    rlc->stop();
-    pdcp->stop();
-    rrc->stop();
-    nas->stop();
-    gw->stop();
-    usim->stop();
+    phy.stop();
+    mac.stop();
+    rlc.stop();
+    pdcp.stop();
+    rrc.stop();
+    nas.stop();
+    gw.stop();
+    usim.stop();
 
     sleep(1);
     if(args->pcap.enable)
     {
-       mac_pcap->close();
+       mac_pcap.close();
     }
     if(args->trace.enable)
     {
-      phy->write_trace(args->trace.phy_filename);
-      radio_uhd->write_trace(args->trace.radio_filename);
+      phy.write_trace(args->trace.phy_filename);
+      radio_uhd.write_trace(args->trace.radio_filename);
     }
     started = false;
+    pthread_join(metrics_thread, NULL);
   }
+}
+
+void* ue::metrics_thread_start(void *ue_)
+{
+  ue *u = (ue*)ue_;
+  u->metrics_thread_run();
+}
+
+void ue::metrics_thread_run()
+{
+  while(started)
+  {
+    sleep(5);
+    if(EMM_STATE_REGISTERED == nas.get_state())
+    {
+      phy.get_metrics(phy_metrics);
+      print_metrics();
+    }
+  }
+}
+
+void ue::uhd_msg(const char *msg)
+{
+  ue *u = ue::get_instance();
+  u->handle_uhd_msg(msg);
+}
+
+void ue::handle_uhd_msg(const char* msg)
+{
+  printf("%s", msg);
 }
 
 srslte::LOG_LEVEL_ENUM ue::level(std::string l)
@@ -188,6 +213,30 @@ srslte::LOG_LEVEL_ENUM ue::level(std::string l)
   }else{
     return srslte::LOG_LEVEL_NONE;
   }
+}
+
+void ue::print_metrics()
+{
+  printf("PHY metrics: n=%f,"
+         "sinr=%f, "
+         "rsrp=%f, "
+         "rsrq=%f, "
+         "rssi=%f, "
+         "turbo_iters=%f, "
+         "dl_mcs=%f, "
+         "cfo=%f, "
+         "sfo=%f, "
+         "mabr=%f\n",
+         phy_metrics.phch_metrics.n,
+         phy_metrics.phch_metrics.sinr,
+         phy_metrics.phch_metrics.rsrp,
+         phy_metrics.phch_metrics.rsrq,
+         phy_metrics.phch_metrics.rssi,
+         phy_metrics.phch_metrics.turbo_iters,
+         phy_metrics.phch_metrics.dl_mcs,
+         phy_metrics.cfo,
+         phy_metrics.sfo,
+         phy_metrics.mabr);
 }
 
 } // namespace srsue

@@ -45,6 +45,14 @@ namespace srsue {
     
 typedef _Complex float cf_t; 
 
+struct phy_metrics_t
+{
+  phch_metrics_t phch_metrics;
+  float cfo;
+  float sfo;
+  float mabr;
+};
+
 class phy
     : public phy_interface
     , public phy_interface_rrc
@@ -54,6 +62,8 @@ public:
   bool init(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
   bool init_agc(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
   void stop();
+
+  void get_metrics(phy_metrics_t &m);
   
   void set_crnti(uint16_t rnti);
   

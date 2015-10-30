@@ -220,8 +220,8 @@ int main(int argc, char *argv[]) {
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
   parse_args(&args, argc, argv);
 
-  srsue::ue ue(&args);
-  if(!ue.init()) {
+  srsue::ue *ue = srsue::ue::get_instance();
+  if(!ue->init(&args)) {
     exit(1);
   }
 
@@ -229,7 +229,8 @@ int main(int argc, char *argv[]) {
     usleep(100000);
   }
 
-  ue.stop();
+  ue->stop();
+  ue->cleanup();
   cout << "---  exiting  ---" << endl;
   exit(0);
 }

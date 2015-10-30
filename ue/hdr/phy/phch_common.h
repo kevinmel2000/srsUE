@@ -42,6 +42,17 @@
 
 namespace srsue {
 
+struct phch_metrics_t
+{
+  float n;
+  float sinr;
+  float rsrp;
+  float rsrq;
+  float rssi;
+  float turbo_iters;
+  float dl_mcs;
+};
+
 /* Subclass that manages variables common to all workers */
   class phch_common {
   public:
@@ -52,7 +63,8 @@ namespace srsue {
       cur_pusch_power = 0; 
       p0_preamble = 0; 
       cur_radio_power = 0; 
-      rx_gain_offset = 0; 
+      rx_gain_offset = 0;
+      bzero(&metrics, sizeof(phch_metrics_t));
     }
     
     /* Common variables used by all phy workers */
@@ -96,6 +108,9 @@ namespace srsue {
     int  sr_last_tx_tti; 
    
     srslte::radio*    get_radio();
+
+    void set_metrics(phch_metrics_t &m);
+    void get_metrics(phch_metrics_t &m);
     
   private: 
     std::vector<pthread_mutex_t>    tx_mutex; 
@@ -126,6 +141,8 @@ namespace srsue {
     
     bool is_first_tx;
     uint32_t nof_workers;
+
+    phch_metrics_t metrics;
     
   };
   

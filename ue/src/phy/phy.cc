@@ -116,6 +116,11 @@ void phy::stop()
   workers_pool.stop();
 }
 
+void phy::get_metrics(phy_metrics_t &m) {
+  // Simply pull from first phch_worker for now
+  workers_common.get_metrics(m.phch_metrics);
+}
+
 void phy::set_timeadv_rar(uint32_t ta_cmd) {
   n_ta = srslte_N_ta_new_rar(ta_cmd);
   sf_recv.set_time_adv_sec(((float) n_ta)*SRSLTE_LTE_TS);

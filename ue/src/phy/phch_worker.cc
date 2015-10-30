@@ -25,6 +25,7 @@
  *
  */
 
+#include <unistd.h>
 #include <string.h>
 #include "phy/phch_worker.h"
 #include "common/mac_interface.h"
@@ -51,6 +52,7 @@ phch_worker::phch_worker() : tr_exec(10240)
   trace_enabled   = false; 
   cfi = 0;
   
+  bzero(&metrics, sizeof(phch_metrics_t));
   reset_ul_params();
   
 }
@@ -399,6 +401,15 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
              10*log10(srslte_chest_dl_get_snr(&ue_dl.chest)), 
              srslte_pdsch_last_noi(&ue_dl.pdsch),
              timestr);
+
+      // Store metrics
+      metrics.dl_mcs = grant->mcs.idx;
+      metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
+      metrics.rsrp   = srslte_chest_dl_get_rsrp(&ue_dl.chest);
+      metrics.sinr   = 10*log10(metrics.rsrp/metrics.n);
+      metrics.rsrq   = srslte_chest_dl_get_rsrq(&ue_dl.chest);
+      metrics.rssi   = srslte_chest_dl_get_rssi(&ue_dl.chest);
+      phy->set_metrics(metrics);
 
       return ack; 
     } else {

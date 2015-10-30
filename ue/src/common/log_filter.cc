@@ -32,11 +32,20 @@ using namespace srslte;
 
 namespace srsue{
 
-log_filter::log_filter(std::string layer, logger *logger_, bool tti)
-  :log(layer)
-  ,logger_h(logger_)
-  ,do_tti(tti)
+log_filter::log_filter()
 {}
+
+log_filter::log_filter(std::string layer, logger *logger_, bool tti)
+{
+  init(layer, logger_, tti);
+}
+
+void log_filter::init(std::string layer, logger *logger_, bool tti)
+{
+  service_name  = layer;
+  logger_h      = logger_;
+  do_tti        = tti;
+}
 
 void log_filter::all_log(srslte::LOG_LEVEL_ENUM level,
                          uint32_t               tti,

@@ -36,6 +36,7 @@
 
 #include <stdarg.h>
 #include <string>
+#include <pthread.h>
 
 #include "radio/radio_uhd.h"
 #include "phy/phy.h"
@@ -49,7 +50,6 @@
 
 #include "common/buffer_pool.h"
 #include "common/interfaces.h"
-#include "common/threads.h"
 #include "common/logger.h"
 #include "common/log_filter.h"
 
@@ -122,39 +122,51 @@ class ue
     :public ue_interface
 {
 public:
-  ue(all_args_t *args_);
-  ~ue();
-  bool init();
+  static ue* get_instance(void);
+  static void cleanup(void);
+
+  bool init(all_args_t *args_);
   void stop();
+  static void* metrics_thread_start(void *ue_);
+  void metrics_thread_run();
+  static void uhd_msg(const char* msg);
+  void handle_uhd_msg(const char* msg);
 
 private:
-  srslte::radio_uhd *radio_uhd;
-  srsue::phy        *phy;
-  srsue::mac        *mac;
-  srsue::mac_pcap   *mac_pcap;
-  srsue::rlc        *rlc;
-  srsue::pdcp       *pdcp;
-  srsue::rrc        *rrc;
-  srsue::nas        *nas;
-  srsue::gw         *gw;
-  srsue::usim       *usim;
+  static ue *instance;
+  ue();
+  ~ue();
 
-  srsue::logger     *logger;
-  srsue::log_filter *phy_log;
-  srsue::log_filter *mac_log;
-  srsue::log_filter *rlc_log;
-  srsue::log_filter *pdcp_log;
-  srsue::log_filter *rrc_log;
-  srsue::log_filter *nas_log;
-  srsue::log_filter *gw_log;
-  srsue::log_filter *usim_log;
+  srslte::radio_uhd radio_uhd;
+  srsue::phy        phy;
+  srsue::mac        mac;
+  srsue::mac_pcap   mac_pcap;
+  srsue::rlc        rlc;
+  srsue::pdcp       pdcp;
+  srsue::rrc        rrc;
+  srsue::nas        nas;
+  srsue::gw         gw;
+  srsue::usim       usim;
+
+  srsue::logger     logger;
+  srsue::log_filter phy_log;
+  srsue::log_filter mac_log;
+  srsue::log_filter rlc_log;
+  srsue::log_filter pdcp_log;
+  srsue::log_filter rrc_log;
+  srsue::log_filter nas_log;
+  srsue::log_filter gw_log;
+  srsue::log_filter usim_log;
 
   srsue::buffer_pool *pool;
 
   all_args_t       *args;
   bool              started;
+  pthread_t         metrics_thread;
+  phy_metrics_t     phy_metrics;
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
+  void print_metrics();
 };
 
 } // namespace srsue

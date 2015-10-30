@@ -59,6 +59,12 @@ class log
 {
 public:
 
+  log() {
+    service_name = "";
+    tti = 0;
+    level = LOG_LEVEL_NONE;
+  }
+
   log(std::string service_name_) {
     service_name = service_name_;
     tti = 0;
@@ -111,7 +117,6 @@ protected:
   uint32_t        tti;
   LOG_LEVEL_ENUM  level;
   int             hex_limit;
-private:
   std::string     service_name;
 };
 
