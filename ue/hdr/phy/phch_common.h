@@ -53,6 +53,12 @@ struct phch_metrics_t
   float dl_mcs;
 };
 
+struct phch_sync_metrics_t
+{
+  float cfo;
+  float sfo;
+};
+
 /* Subclass that manages variables common to all workers */
   class phch_common {
   public:
@@ -109,8 +115,12 @@ struct phch_metrics_t
    
     srslte::radio*    get_radio();
 
-    void set_metrics(phch_metrics_t &m);
+    void set_cell(const srslte_cell_t &c);
+    uint32_t get_nof_prb();
+    void set_metrics(const phch_metrics_t &m);
     void get_metrics(phch_metrics_t &m);
+    void set_sync_metrics(const phch_sync_metrics_t &m);
+    void get_sync_metrics(phch_sync_metrics_t &m);
     
   private: 
     std::vector<pthread_mutex_t>    tx_mutex; 
@@ -142,8 +152,9 @@ struct phch_metrics_t
     bool is_first_tx;
     uint32_t nof_workers;
 
-    phch_metrics_t metrics;
-    
+    srslte_cell_t       cell;
+    phch_metrics_t      metrics;
+    phch_sync_metrics_t sync_metrics;
   };
   
 } // namespace srsue

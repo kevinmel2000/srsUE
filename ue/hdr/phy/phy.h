@@ -47,9 +47,8 @@ typedef _Complex float cf_t;
 
 struct phy_metrics_t
 {
-  phch_metrics_t phch_metrics;
-  float cfo;
-  float sfo;
+  phch_sync_metrics_t sync_metrics;
+  phch_metrics_t      phch_metrics;
   float mabr;
 };
 
@@ -135,6 +134,8 @@ private:
   prach                    prach_buffer; 
   
   phy_params   params_db; 
+
+  srslte_cell_t cell;
   
   /* Current time advance */
   uint32_t     n_ta;

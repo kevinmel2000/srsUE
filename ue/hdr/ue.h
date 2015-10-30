@@ -114,6 +114,18 @@ typedef struct {
   usim_args_t   usim;
 }all_args_t;
 
+typedef struct {
+  uint32_t uhd_o;
+  uint32_t uhd_u;
+  uint32_t uhd_l;
+  bool     uhd_error;
+}uhd_metrics_t;
+
+typedef struct {
+  uhd_metrics_t uhd;
+  phy_metrics_t phy;
+}ue_metrics_t;
+
 /*******************************************************************************
   Main UE class
 *******************************************************************************/
@@ -127,8 +139,7 @@ public:
 
   bool init(all_args_t *args_);
   void stop();
-  static void* metrics_thread_start(void *ue_);
-  void metrics_thread_run();
+  bool get_metrics(ue_metrics_t &m);
   static void uhd_msg(const char* msg);
   void handle_uhd_msg(const char* msg);
 
@@ -162,11 +173,9 @@ private:
 
   all_args_t       *args;
   bool              started;
-  pthread_t         metrics_thread;
-  phy_metrics_t     phy_metrics;
+  uhd_metrics_t     uhd_metrics;
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
-  void print_metrics();
 };
 
 } // namespace srsue

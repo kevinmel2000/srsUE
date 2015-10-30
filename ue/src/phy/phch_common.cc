@@ -221,12 +221,28 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
   pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_workers]);
 }    
 
-void phch_common::set_metrics(phch_metrics_t &m) {
+void phch_common::set_cell(const srslte_cell_t &c) {
+  cell = c;
+}
+
+uint32_t phch_common::get_nof_prb() {
+  return cell.nof_prb;
+}
+
+void phch_common::set_metrics(const phch_metrics_t &m) {
   metrics = m;
 }
 
 void phch_common::get_metrics(phch_metrics_t &m) {
   m = metrics;
+}
+
+void phch_common::set_sync_metrics(const phch_sync_metrics_t &m) {
+  sync_metrics = m;
+}
+
+void phch_common::get_sync_metrics(phch_sync_metrics_t &m) {
+  m = sync_metrics;
 }
 
 }

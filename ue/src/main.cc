@@ -37,6 +37,7 @@
 #include <boost/program_options/parsers.hpp>
 
 #include "ue.h"
+#include "metrics_stdout.h"
 
 //TODO: Get version from cmake
 #define VERSION "0.1.0"
@@ -221,14 +222,17 @@ int main(int argc, char *argv[]) {
   parse_args(&args, argc, argv);
 
   srsue::ue *ue = srsue::ue::get_instance();
+  srsue::metrics_stdout m;
   if(!ue->init(&args)) {
     exit(1);
   }
+  m.init(ue);
 
   while(running) {
     usleep(100000);
   }
 
+  m.stop();
   ue->stop();
   ue->cleanup();
   cout << "---  exiting  ---" << endl;

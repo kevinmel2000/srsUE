@@ -133,14 +133,11 @@ bool ue::init(all_args_t *args_)
   usim.init(args->usim.imsi, args->usim.imei, args->usim.k, &usim_log);
 
   started = true;
-  pthread_create(&metrics_thread, NULL, &metrics_thread_start, this);
   return true;
 }
 
 void ue::stop()
 {
-  struct timespec ts;
-
   if(started)
   {
     phy.stop();
@@ -163,27 +160,21 @@ void ue::stop()
       radio_uhd.write_trace(args->trace.radio_filename);
     }
     started = false;
-    pthread_join(metrics_thread, NULL);
   }
 }
 
-void* ue::metrics_thread_start(void *ue_)
+bool ue::get_metrics(ue_metrics_t &m)
 {
-  ue *u = (ue*)ue_;
-  u->metrics_thread_run();
-}
+  m.uhd = uhd_metrics;
+  uhd_metrics.uhd_error = false; // Reset error flag
 
-void ue::metrics_thread_run()
-{
-  while(started)
-  {
-    sleep(5);
-    if(EMM_STATE_REGISTERED == nas.get_state())
-    {
-      phy.get_metrics(phy_metrics);
-      print_metrics();
+  if(EMM_STATE_REGISTERED == nas.get_state()) {
+    if(RRC_STATE_RRC_CONNECTED == rrc.get_state()) {
+      phy.get_metrics(m.phy);
+      return true;
     }
   }
+  return false;
 }
 
 void ue::uhd_msg(const char *msg)
@@ -194,7 +185,21 @@ void ue::uhd_msg(const char *msg)
 
 void ue::handle_uhd_msg(const char* msg)
 {
-  printf("%s", msg);
+  if(0 == strcmp(msg, "O")) {
+    uhd_metrics.uhd_o++;
+    uhd_metrics.uhd_error = true;
+  } else if(0 == strcmp(msg, "D")) {
+    uhd_metrics.uhd_o++;
+    uhd_metrics.uhd_error = true;
+  }else if(0 == strcmp(msg, "U")) {
+    uhd_metrics.uhd_u++;
+    uhd_metrics.uhd_error = true;
+  } else if(0 == strcmp(msg, "L")) {
+    uhd_metrics.uhd_l++;
+    uhd_metrics.uhd_error = true;
+  } else {
+    printf("%s", msg);
+  }
 }
 
 srslte::LOG_LEVEL_ENUM ue::level(std::string l)
@@ -213,30 +218,6 @@ srslte::LOG_LEVEL_ENUM ue::level(std::string l)
   }else{
     return srslte::LOG_LEVEL_NONE;
   }
-}
-
-void ue::print_metrics()
-{
-  printf("PHY metrics: n=%f,"
-         "sinr=%f, "
-         "rsrp=%f, "
-         "rsrq=%f, "
-         "rssi=%f, "
-         "turbo_iters=%f, "
-         "dl_mcs=%f, "
-         "cfo=%f, "
-         "sfo=%f, "
-         "mabr=%f\n",
-         phy_metrics.phch_metrics.n,
-         phy_metrics.phch_metrics.sinr,
-         phy_metrics.phch_metrics.rsrp,
-         phy_metrics.phch_metrics.rsrq,
-         phy_metrics.phch_metrics.rssi,
-         phy_metrics.phch_metrics.turbo_iters,
-         phy_metrics.phch_metrics.dl_mcs,
-         phy_metrics.cfo,
-         phy_metrics.sfo,
-         phy_metrics.mabr);
 }
 
 } // namespace srsue

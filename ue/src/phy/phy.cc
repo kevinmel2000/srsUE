@@ -117,8 +117,12 @@ void phy::stop()
 }
 
 void phy::get_metrics(phy_metrics_t &m) {
-  // Simply pull from first phch_worker for now
   workers_common.get_metrics(m.phch_metrics);
+  workers_common.get_sync_metrics(m.sync_metrics);
+  m.mabr = srslte_ra_tbs_from_idx(srslte_ra_tbs_idx_from_mcs(m.phch_metrics.dl_mcs), workers_common.get_nof_prb());
+
+  // Estimate IP-layer MABR as 75% of MAC-layer MABR
+  m.mabr = m.mabr*4/5;
 }
 
 void phy::set_timeadv_rar(uint32_t ta_cmd) {
