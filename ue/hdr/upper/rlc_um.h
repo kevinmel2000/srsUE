@@ -128,6 +128,8 @@ private:
    ***************************************************************************/
   uint32_t reordering_timeout_id;
 
+  bool     pdu_lost;
+
   int  build_data_pdu(uint8_t *payload, uint32_t nof_bytes);
   void handle_data_pdu(uint8_t *payload, uint32_t nof_bytes);
   void reassemble_rx_sdus();
