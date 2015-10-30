@@ -452,9 +452,15 @@ void rlc_um::reassemble_rx_sdus()
       }
       rx_window[vr_ur].buf->msg += len;
       rx_window[vr_ur].buf->N_bytes -= len;
-      log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
-      pdcp->write_pdu(lcid, rx_sdu);
-      rx_sdu = pool->allocate();
+      if(pdu_lost && !rlc_um_start_aligned(rx_window[vr_ur].header.fi)) {
+        log->warning("Dropping remainder of lost PDU\n");
+        rx_sdu->reset();
+      } else {
+        log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+        pdcp->write_pdu(lcid, rx_sdu);
+        rx_sdu = pool->allocate();
+      }
+      pdu_lost = false;
     }
 
     // Handle last segment
@@ -462,9 +468,15 @@ void rlc_um::reassemble_rx_sdus()
     rx_sdu->N_bytes += rx_window[vr_ur].buf->N_bytes;
     if(rlc_um_end_aligned(rx_window[vr_ur].header.fi))
     {
-      log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
-      pdcp->write_pdu(lcid, rx_sdu);
-      rx_sdu = pool->allocate();
+      if(pdu_lost && !rlc_um_start_aligned(rx_window[vr_ur].header.fi)) {
+        log->warning("Dropping remainder of lost PDU\n");
+        rx_sdu->reset();
+      } else {
+        log->info_hex(rx_sdu->msg, rx_sdu->N_bytes, "%s Rx SDU", rb_id_text[lcid]);
+        pdcp->write_pdu(lcid, rx_sdu);
+        rx_sdu = pool->allocate();
+      }
+      pdu_lost = false;
     }
 
     // Clean up rx_window
