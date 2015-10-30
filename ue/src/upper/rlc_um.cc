@@ -337,14 +337,6 @@ void rlc_um::handle_data_pdu(uint8_t *payload, uint32_t nof_bytes)
   pdu.header = header;
   rx_window[header.sn] = pdu;
   
-  /* If it was a MAC error, I should be able to catch it here looking at the PDU, 
-   * but it never stops here
-   */  
-  if (rlc_um_start_aligned(pdu.header.fi) && rx_window[header.sn].buf->msg[2] != 0x45) {
-    printf("Error in MAC PDU with SN=%d\n", header.sn);
-    srslte_vec_fprint_byte(stdout, rx_window[header.sn].buf->msg, pdu.buf->N_bytes);
-  }
-
   // Update vr_uh
   if(!inside_reordering_window(header.sn))
     vr_uh  = (header.sn + 1)%rx_mod;
@@ -437,19 +429,7 @@ void rlc_um::reassemble_rx_sdus()
     {
       int len = rx_window[vr_ur].header.li[i];
       memcpy(&rx_sdu->msg[rx_sdu->N_bytes], rx_window[vr_ur].buf->msg, len);
-      rx_sdu->N_bytes += len;
-      
-      /* Here I don't fully understant the logic. Apparently if i==0 it should be the start of a 
-       * packet. But there are many packets here were fi=3 for i=0, which shouldn't be the case, right?
-       * So there must be some problem between when the packet is received to it being stored in in the
-       * rx_window
-       */
-      if (rx_sdu->msg[2] != 0x45) { // The 2nd word of every 1st PDCP packet should be 45, it's some IP header
-        printf("Error in RLC reassemble: msg_len=%d bytes, vr_ur=%d, i=%d, N_li=%d, fi=%d, is_start=%d\n", 
-               rx_sdu->N_bytes, vr_ur, i, rx_window[vr_ur].header.N_li, rx_window[vr_ur].header.fi, 
-               rlc_um_start_aligned(rx_window[vr_ur].header.fi));
-        srslte_vec_fprint_byte(stdout, rx_sdu->msg, rx_sdu->N_bytes);
-      }
+      rx_sdu->N_bytes += len;      
       rx_window[vr_ur].buf->msg += len;
       rx_window[vr_ur].buf->N_bytes -= len;
       if(pdu_lost && !rlc_um_start_aligned(rx_window[vr_ur].header.fi)) {
