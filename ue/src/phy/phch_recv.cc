@@ -302,6 +302,15 @@ void phch_recv::run_thread()
         } 
        break;
       case SYNC_DONE:
+        
+        /* Set synchronization track phase threshold and averaging factor */
+        if (worker_com->params_db->get_param(phy_interface_params::SYNC_TRACK_THRESHOLD) > 0) {
+          srslte_sync_set_threshold(&ue_sync.strack, (float) worker_com->params_db->get_param(phy_interface_params::SYNC_TRACK_THRESHOLD)/10);          
+        }
+        if (worker_com->params_db->get_param(phy_interface_params::SYNC_TRACK_AVG_COEFF) > 0) {
+          srslte_sync_set_em_alpha(&ue_sync.strack, (float) worker_com->params_db->get_param(phy_interface_params::SYNC_TRACK_THRESHOLD)/10);
+        }
+        
         tti = (tti + 1) % 10240;
         worker = (phch_worker*) workers_pool->wait_worker(tti);
         if (worker) {          

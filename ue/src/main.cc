@@ -71,8 +71,8 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         ("usrp_args",         bpo::value<string>(&args->usrp_args),   "USRP args")
         ("rf.dl_freq",        bpo::value<float>(&args->rf.dl_freq)->default_value(2680000000),  "Downlink centre frequency")
         ("rf.ul_freq",        bpo::value<float>(&args->rf.ul_freq)->default_value(2560000000),  "Uplink centre frequency")
-        ("rf.rx_gain",        bpo::value<float>(&args->rf.rx_gain)->default_value(10),          "Front-end receiver gain")
-        ("rf.tx_gain",        bpo::value<float>(&args->rf.tx_gain)->default_value(10),          "Front-end transmitter gain")
+        ("rf.rx_gain",        bpo::value<float>(&args->rf.rx_gain)->default_value(-1),          "Front-end receiver gain")
+        ("rf.tx_gain",        bpo::value<float>(&args->rf.tx_gain)->default_value(-1),          "Front-end transmitter gain")
 
         ("pcap.enable",       bpo::value<bool>(&args->pcap.enable)->default_value(false),           "Enable MAC packet captures for wireshark")
         ("pcap.filename",     bpo::value<string>(&args->pcap.filename)->default_value("ue.pcap"),   "MAC layer capture filename")
@@ -106,6 +106,24 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         ("usim.imsi",         bpo::value<string>(&args->usim.imsi),        "USIM IMSI")
         ("usim.imei",         bpo::value<string>(&args->usim.imei),        "USIM IMEI")
         ("usim.k",            bpo::value<string>(&args->usim.k),           "USIM K")
+        
+        
+        /* Expert section */
+        ("expert.prach_gain", bpo::value<float>(&args->expert.prach_gain)->default_value(-1.0),  "Disable PRACH power control")
+        ("expert.ul_gain", bpo::value<float>(&args->expert.ul_gain)->default_value(-1.0),  "Disable UL power control")
+        
+        ("expert.ul_pwr_ctrl_offset",     bpo::value<float>(&args->expert.ul_pwr_ctrl_offset)->default_value(0),     "UL power control offset")
+        ("expert.rx_gain_offset",         bpo::value<float>(&args->expert.rx_gain_offset)->default_value(-1),     "RX gain offset")
+        
+        ("expert.pdsch_max_its",         bpo::value<int>(&args->expert.pdsch_max_its)->default_value(-1), "Maximum number of turbo decoder iterations")
+
+        ("expert.sync_track_th",         bpo::value<float>(&args->expert.sync_track_th)->default_value(-1), "Synchronization track phase threshold")
+        ("expert.sync_track_avg_coef",   bpo::value<float>(&args->expert.sync_track_avg_coef)->default_value(-1), "Synchronization track phase averaging factor")
+        ("expert.sync_find_th",         bpo::value<float>(&args->expert.sync_find_th)->default_value(1.6), "Synchronization find phase threshold")
+        ("expert.sync_find_max_frames",   bpo::value<float>(&args->expert.sync_find_max_frames)->default_value(100), "Synchronization find phase timeout")
+                
+        ("expert.nof_phy_threads",   bpo::value<int>(&args->expert.nof_phy_threads)->default_value(2), "Number of PHY threads")
+        
     ;
 
     // Positional options - config file location

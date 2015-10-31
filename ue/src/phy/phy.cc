@@ -75,11 +75,6 @@ bool phy::init_(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::l
   log_h = log_h_; 
   radio_handler = radio_handler_;
   
-  // Set default params  
-  params_db.set_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_NFRAMES, 100);
-  params_db.set_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD, 160);
-  params_db.set_param(phy_interface_params::CELLSEARCH_TIMEOUT_MIB_NFRAMES, 100);
-
   prach_buffer.init(&params_db, log_h);
   workers_common.init(&params_db, log_h, radio_handler, mac);
   

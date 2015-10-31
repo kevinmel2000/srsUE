@@ -106,12 +106,26 @@ typedef struct{
 }usim_args_t;
 
 typedef struct {
+  float prach_gain;
+  float ul_gain;
+  float ul_pwr_ctrl_offset;
+  float rx_gain_offset;
+  int pdsch_max_its;
+  float sync_track_th;
+  float sync_track_avg_coef;
+  float sync_find_th;
+  float sync_find_max_frames;
+  int nof_phy_threads;  
+}expert_args_t;
+
+typedef struct {
   std::string   usrp_args;
   rf_args_t     rf;
   pcap_args_t   pcap;
   trace_args_t  trace;
   log_args_t    log;
   usim_args_t   usim;
+  expert_args_t expert;
 }all_args_t;
 
 /*******************************************************************************
@@ -155,6 +169,8 @@ private:
   bool              started;
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
+  
+  void set_expert_parameters();
 };
 
 } // namespace srsue

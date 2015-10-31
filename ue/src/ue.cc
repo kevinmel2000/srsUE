@@ -118,22 +118,45 @@ bool ue::init()
     phy->start_trace();
     radio_uhd->start_trace();
   }
+  
+  // Set up expert mode parameters
+  set_expert_parameters();
 
   // Init layers
   char *c_str = new char[args->usrp_args.size() + 1];
   strcpy(c_str, args->usrp_args.c_str());
-  if(!radio_uhd->init_agc(c_str))
-  {
-    printf("Failed to find usrp with args=%s\n",c_str);
-    delete [] c_str;
-    return false;
+  
+  /* Start Radio/PHY with AGC if rx_gain argument is negative */
+  if (args->rf.rx_gain < 0) {
+    if(!radio_uhd->init_agc(c_str))
+    {
+      printf("Failed to find usrp with args=%s\n",c_str);
+      delete [] c_str;
+      return false;
+    }    
+    phy->init_agc(radio_uhd, mac, phy_log);
+  } else {
+    if(!radio_uhd->init(c_str))
+    {
+      printf("Failed to find usrp with args=%s\n",c_str);
+      delete [] c_str;
+      return false;
+    }    
+    phy->init(radio_uhd, mac, phy_log);    
+    radio_uhd->set_rx_gain(args->rf.rx_gain);
+    if (args->rf.tx_gain < 0) {
+      radio_uhd->set_tx_gain(args->rf.rx_gain);
+    }
   }
+  if (args->rf.tx_gain > 0) {
+    radio_uhd->set_tx_gain(args->rf.tx_gain);
+  }
+
   delete [] c_str;
 
   radio_uhd->set_rx_freq(args->rf.dl_freq);
   radio_uhd->set_tx_freq(args->rf.ul_freq);
 
-  phy->init_agc(radio_uhd, mac, phy_log);
   mac->init(phy, rlc, mac_log);
   rlc->init(pdcp, rrc, this, rlc_log, mac);
   pdcp->init(rlc, rrc, gw, pdcp_log);
@@ -143,6 +166,29 @@ bool ue::init()
   usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
 
   started = true;
+}
+
+void ue::set_expert_parameters() {
+  phy->set_param(phy_interface_params::CELLSEARCH_TIMEOUT_MIB_NFRAMES, args->expert.sync_find_max_frames);
+  phy->set_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_NFRAMES, args->expert.sync_find_max_frames);
+  if (args->expert.sync_find_th > 1.0) {
+    phy->set_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD, args->expert.sync_find_th*10);
+  } else {
+    phy->set_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD, 160);
+  }
+  
+  phy->set_param(phy_interface_params::SYNC_TRACK_THRESHOLD, 10*args->expert.sync_track_th);
+  phy->set_param(phy_interface_params::SYNC_TRACK_AVG_COEFF, 100*args->expert.sync_track_avg_coef);
+    
+  phy->set_param(phy_interface_params::PRACH_GAIN, args->expert.prach_gain);
+  phy->set_param(phy_interface_params::UL_GAIN, args->expert.ul_gain);
+  
+  phy->set_param(phy_interface_params::UL_PWR_CTRL_OFFSET, args->expert.ul_pwr_ctrl_offset);
+  
+  phy->set_param(phy_interface_params::RX_GAIN_OFFSET, args->expert.rx_gain_offset);
+  
+  phy->set_param(phy_interface_params::PDSCH_MAX_ITS, args->expert.pdsch_max_its);
+    
 }
 
 void ue::stop()

@@ -125,6 +125,18 @@ public:
     PRACH_ZC_CONFIG,
     PRACH_FREQ_OFFSET,
     
+    SYNC_TRACK_THRESHOLD,
+    SYNC_TRACK_AVG_COEFF,
+    
+    PRACH_GAIN,    
+    UL_GAIN,
+    
+    UL_PWR_CTRL_OFFSET,
+    
+    RX_GAIN_OFFSET,
+    
+    PDSCH_MAX_ITS,
+    
     NOF_PARAMS,    
   } phy_param_t;
 
