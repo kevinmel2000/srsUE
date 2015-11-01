@@ -196,7 +196,7 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
   } else {
     pthread_mutex_lock(&tx_mutex[tti%nof_mutex]);
   }
-  last_tti = tti; 
+
   radio_h->set_tti(tti); 
   if (tx_enable) {
     radio_h->tx(buffer, nof_samples, tx_time);
