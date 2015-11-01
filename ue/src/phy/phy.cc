@@ -54,7 +54,7 @@ namespace srsue {
 
 phy::phy() : workers_pool(NOF_WORKERS), 
              workers(NOF_WORKERS), 
-             workers_common(NOF_WORKERS)
+             workers_common(4*NOF_WORKERS)
 {
 }
 

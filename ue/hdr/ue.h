@@ -115,6 +115,7 @@ typedef struct {
   float sync_track_avg_coef;
   float sync_find_th;
   float sync_find_max_frames;
+  bool continuous_tx;
   int nof_phy_threads;  
 }expert_args_t;
 

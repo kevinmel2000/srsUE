@@ -187,6 +187,7 @@ void ue::set_expert_parameters() {
   
   phy->set_param(phy_interface_params::RX_GAIN_OFFSET, args->expert.rx_gain_offset);
   
+  phy->set_param(phy_interface_params::CONTINUOUS_TX, args->expert.continuous_tx?1:0);
   phy->set_param(phy_interface_params::PDSCH_MAX_ITS, args->expert.pdsch_max_its);
     
 }

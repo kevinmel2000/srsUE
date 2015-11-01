@@ -546,11 +546,11 @@ void phch_worker::set_uci_periodic_cqi()
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.subband.subband_cqi = srslte_cqi_from_snr(snr);
         cqi_report.subband.subband_label = 0;
-        printf("Warning: Subband CQI periodic reports not implemented\n");
+        phy->log_h->console("Warning: Subband CQI periodic reports not implemented\n");
       } else {
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
-        cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
+        cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);        
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
       rar_cqi_request = false; 
@@ -591,7 +591,6 @@ void phch_worker::normalize(float tx_power) {
     float power_scale = sqrt(pow(10, (tx_power-phy->cur_radio_power)/10));
     srslte_vec_sc_prod_cfc(signal_buffer, norm_factor*power_scale, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
   }
-  
   //float after_power = srslte_vec_avg_power_cf(signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
   //uint32_t max_idx = srslte_vec_max_fi((float*) signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
   //float *f = (float*) signal_buffer;
