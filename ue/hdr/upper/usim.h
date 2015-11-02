@@ -51,6 +51,7 @@ public:
             srslte::log *usim_log_);
   void stop();
 
+  // NAS interface
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
   void get_imei_vec(uint8_t* imei_, uint32_t n);
 
@@ -64,6 +65,7 @@ public:
   void generate_nas_keys(uint8_t *k_nas_enc,
                          uint8_t *k_nas_int);
 
+  // RRC interface
   void generate_as_keys(uint32_t count_ul,
                         uint8_t *k_rrc_enc,
                         uint8_t *k_rrc_int,

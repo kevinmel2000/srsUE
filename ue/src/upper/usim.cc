@@ -149,6 +149,46 @@ void usim::generate_authentication_response(uint8_t  *rand,
   }
 }
 
+void usim::generate_nas_keys(uint8_t *k_nas_enc, uint8_t *k_nas_int)
+{
+  // Generate K_nas_enc and K_nas_int
+  liblte_security_generate_k_nas(k_asme,
+                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                 k_nas_enc,
+                                 k_nas_int);
+}
+
+/*******************************************************************************
+  RRC interface
+*******************************************************************************/
+
+void usim::generate_as_keys(uint32_t count_ul, uint8_t *k_rrc_enc, uint8_t *k_rrc_int, uint8_t *k_up_enc, uint8_t *k_up_int)
+{
+  // Generate K_enb
+  liblte_security_generate_k_enb(k_asme,
+                                 count_ul,
+                                 k_enb);
+
+  // Generate K_rrc_enc and K_rrc_int
+  liblte_security_generate_k_rrc(k_enb,
+                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                 k_rrc_enc,
+                                 k_rrc_int);
+
+  // Generate K_up_enc and K_up_int
+  liblte_security_generate_k_up(k_enb,
+                                LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
+                                LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
+                                k_up_enc,
+                                k_up_int);
+}
+
+/*******************************************************************************
+  Helpers
+*******************************************************************************/
+
 void usim::gen_auth_res_milenage( uint8_t  *rand,
                                   uint8_t  *autn_enb,
                                   uint16_t  mcc,
@@ -294,38 +334,6 @@ void usim::gen_auth_res_xor(uint8_t  *rand,
                                   mcc,
                                   mnc,
                                   k_asme);
-}
-
-void usim::generate_nas_keys(uint8_t *k_nas_enc, uint8_t *k_nas_int)
-{
-  // Generate K_nas_enc and K_nas_int
-  liblte_security_generate_k_nas(k_asme,
-                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                 k_nas_enc,
-                                 k_nas_int);
-}
-
-void usim::generate_as_keys(uint32_t count_ul, uint8_t *k_rrc_enc, uint8_t *k_rrc_int, uint8_t *k_up_enc, uint8_t *k_up_int)
-{
-  // Generate K_enb
-  liblte_security_generate_k_enb(k_asme,
-                                 count_ul,
-                                 k_enb);
-
-  // Generate K_rrc_enc and K_rrc_int
-  liblte_security_generate_k_rrc(k_enb,
-                                 LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                 LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                 k_rrc_enc,
-                                 k_rrc_int);
-
-  // Generate K_up_enc and K_up_int
-  liblte_security_generate_k_up(k_enb,
-                                LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_EEA0,
-                                LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_128_EIA2,
-                                k_up_enc,
-                                k_up_int);
 }
 
 void usim::str_to_hex(std::string str, uint8_t *hex)
