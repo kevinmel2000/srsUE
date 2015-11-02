@@ -31,7 +31,6 @@
 #include "common/common.h"
 #include "common/interfaces.h"
 #include "liblte_rrc.h"
-#include "liblte_rlc.h"
 
 namespace srsue {
 
