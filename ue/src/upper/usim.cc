@@ -45,29 +45,49 @@ void usim::init(std::string imsi_, std::string imei_, std::string k_,
   const char *imei_str = imei_.c_str();
   uint32_t    i;
 
-  if(32   == op_.length()   &&
-     4    == amf_.length()  &&
-     15   == imsi_.length() &&
-     15   == imei_.length() &&
-     32   == k_.length())
-  {
+  if(32 == op_.length()) {
     str_to_hex(op_, op);
-    str_to_hex(amf_, amf);
-    str_to_hex(k_, k);
+  } else {
+    usim_log->error("Invalid length for OP: %d should be %d", op_.length(), 32);
+    usim_log->console("Invalid length for OP: %d should be %d", op_.length(), 32);
+  }
 
+  if(4 == amf_.length()) {
+    str_to_hex(amf_, amf);
+  } else {
+    usim_log->error("Invalid length for AMF: %d should be %d", amf_.length(), 4);
+    usim_log->console("Invalid length for AMF: %d should be %d", amf_.length(), 4);
+  }
+
+  if(15 == imsi_.length()) {
     imsi = 0;
     for(i=0; i<15; i++)
     {
       imsi *= 10;
       imsi += imsi_str[i] - '0';
     }
+  } else {
+    usim_log->error("Invalid length for ISMI: %d should be %d", imsi_.length(), 15);
+    usim_log->console("Invalid length for IMSI: %d should be %d", imsi_.length(), 15);
+  }
 
+  if(15 == imei_.length()) {
     imei = 0;
     for(i=0; i<15; i++)
     {
       imei *= 10;
       imei += imei_str[i] - '0';
     }
+  } else {
+    usim_log->error("Invalid length for IMEI: %d should be %d", imei_.length(), 15);
+    usim_log->console("Invalid length for IMEI: %d should be %d", imei_.length(), 15);
+  }
+
+  if(32 == k_.length()) {
+    str_to_hex(k_, k);
+  } else {
+    usim_log->error("Invalid length for K: %d should be %d", k_.length(), 32);
+    usim_log->console("Invalid length for K: %d should be %d", k_.length(), 32);
   }
 
   auth_algo = auth_algo_milenage;
