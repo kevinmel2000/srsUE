@@ -100,6 +100,9 @@ typedef struct {
 }log_args_t;
 
 typedef struct{
+  std::string algo;
+  std::string op;
+  std::string amf;
   std::string imsi;
   std::string imei;
   std::string k;

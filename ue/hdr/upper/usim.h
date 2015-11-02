@@ -35,13 +35,20 @@
 
 namespace srsue {
 
+typedef enum{
+  auth_algo_milenage = 0,
+  auth_algo_xor,
+}auth_algo_t;
+
 class usim
     :public usim_interface_nas
     ,public usim_interface_rrc
 {
 public:
   usim();
-  void init(std::string imsi_, std::string imei_, std::string k_, srslte::log *usim_log_);
+  void init(std::string imsi_, std::string imei_, std::string k_,
+            std::string auth_algo_, std::string op_, std::string amf_,
+            srslte::log *usim_log_);
   void stop();
 
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
@@ -65,22 +72,39 @@ public:
 
 
 private:
+  void gen_auth_res_milenage( uint8_t  *rand,
+                              uint8_t  *autn_enb,
+                              uint16_t  mcc,
+                              uint16_t  mnc,
+                              bool     *net_valid,
+                              uint8_t  *res);
+  void gen_auth_res_xor(      uint8_t  *rand,
+                              uint8_t  *autn_enb,
+                              uint16_t  mcc,
+                              uint16_t  mnc,
+                              bool     *net_valid,
+                              uint8_t  *res);
+  void str_to_hex(std::string str, uint8_t *hex);
+
   srslte::log *usim_log;
 
   // User data
-  uint64_t imsi;
-  uint64_t imei;
-  uint8_t  k[16];
+  auth_algo_t auth_algo;
+  uint8_t     amf[2];  // 3GPP 33.102 v10.0.0 Annex H
+  uint8_t     op[16];
+  uint64_t    imsi;
+  uint64_t    imei;
+  uint8_t     k[16];
 
   // Security variables
-  uint8_t  rand[16];
-  uint8_t  ck[16];
-  uint8_t  ik[16];
-  uint8_t  ak[6];
-  uint8_t  mac[8];
-  uint8_t  autn[16];
-  uint8_t  k_asme[32];
-  uint8_t  k_enb[32];
+  uint8_t     rand[16];
+  uint8_t     ck[16];
+  uint8_t     ik[16];
+  uint8_t     ak[6];
+  uint8_t     mac[8];
+  uint8_t     autn[16];
+  uint8_t     k_asme[32];
+  uint8_t     k_enb[32];
 
 };
 

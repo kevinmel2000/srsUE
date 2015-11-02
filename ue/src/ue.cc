@@ -140,7 +140,8 @@ bool ue::init()
   rrc->init(phy, mac, rlc, pdcp, nas, usim, rrc_log);
   nas->init(usim, rrc, gw, nas_log);
   gw->init(pdcp, this, gw_log);
-  usim->init(args->usim.imsi, args->usim.imei, args->usim.k, usim_log);
+  usim->init(args->usim.imsi, args->usim.imei, args->usim.k,
+             args->usim.algo, args->usim.op, args->usim.amf, usim_log);
 
   started = true;
 }

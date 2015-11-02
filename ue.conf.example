@@ -24,6 +24,9 @@ all_hex_limit = 16
 filename = /tmp/ue.log
 
 [usim]
+algo = milenage
+op   = 63BFA50EE6523365FF14C1F45F88737D
+amf  = 8000
 imsi = 001010123456789
 imei = 353490069873319
 k    = 00112233445566778899aabbccddeeff
