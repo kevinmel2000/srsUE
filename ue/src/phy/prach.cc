@@ -40,8 +40,6 @@
 #define Info(fmt, ...)    if (SRSLTE_DEBUG_ENABLED) log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define Debug(fmt, ...)   if (SRSLTE_DEBUG_ENABLED) log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-#define DO_UL_POWER_CONTROL
-
 namespace srsue {
  
   
@@ -154,24 +152,32 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
   // Correct CFO before transmission
   srslte_cfo_correct(&cfo_h, buffer[preamble_idx], signal_buffer, cfo /srslte_symbol_sz(cell.nof_prb));            
 
-#ifdef DO_UL_POWER_CONTROL
-  // Get PRACH transmission power 
-  float tx_power = SRSLTE_MIN(SRSLTE_PC_MAX, pathloss + target_power_dbm);
-  
-  // Get output power for amplitude 1
-  float max_tx_power = radio_handler->set_tx_power(tx_power);
+  // If power control is not disabled, choose amplitude and power 
+  if (params_db->get_param(phy_interface_params::PRACH_GAIN) < 0) {
+    // Get PRACH transmission power 
+    float tx_power = SRSLTE_MIN(SRSLTE_PC_MAX, pathloss + target_power_dbm);
+    
+    // Get output power for amplitude 1
+    float max_tx_power = radio_handler->set_tx_power(tx_power);
+    
+    max_tx_power += (float) params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
+    
+    // Scale signal
+    float cur_tx_power = srslte_vec_avg_power_cf(signal_buffer, len);
+    float scale = sqrtf(pow(10,(tx_power-max_tx_power)/10)/cur_tx_power);
+    
+    srslte_vec_sc_prod_cfc(signal_buffer, scale, signal_buffer, len);
 
-  // Scale signal
-  float cur_tx_power = srslte_vec_avg_power_cf(signal_buffer, len);
-  float scale = sqrtf(pow(10,(tx_power-max_tx_power)/10)/cur_tx_power);
-  
-  srslte_vec_sc_prod_cfc(signal_buffer, scale, signal_buffer, len);
-  
-  printf("Pathloss=%.2f dB, Target power %.2f dBm, tx_power %.2f dBm, Gain %.1f dB\n",
-         pathloss, target_power_dbm, tx_power, radio_handler->get_tx_gain());
-  
-#endif
-  
+    log_h->console("TX PRACH: Pathloss=%.2f dB, Target power %.2f dBm, tx_power %.2f dBm, Gain %.1f dB\n",
+          pathloss, target_power_dbm, tx_power, radio_handler->get_tx_gain());
+    
+  } else {
+    radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::PRACH_GAIN));
+    
+    log_h->console("TX PRACH: Power control for PRACH is disabled, setting gain to %.0f dB\n", 
+      (float) params_db->get_param(phy_interface_params::PRACH_GAIN));
+  }
+    
   radio_handler->tx(signal_buffer, len, tx_time);
   radio_handler->tx_end();
   
@@ -179,10 +185,13 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
        cfo*15000, preamble_idx, len, tx_time.frac_secs);
   preamble_idx = -1; 
 
-#ifdef DO_UL_POWER_CONTROL  
-  // restore gain (this will be controled by PUSCH power control)
-  radio_handler->set_tx_gain(60);
-#endif
+  // Set UL gain if power control for the rest of the channels is disabled
+  if (params_db->get_param(phy_interface_params::UL_GAIN) > 0) {
+    radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::UL_GAIN));    
+    log_h->console("UL power control is disabled. Fixing TX gain to %.0f dB\n", (float) params_db->get_param(phy_interface_params::UL_GAIN));
+  } else {
+    log_h->console("UL gain controled by UL power control\n");
+  }
   
 }
   

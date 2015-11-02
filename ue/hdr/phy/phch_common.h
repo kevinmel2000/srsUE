@@ -37,7 +37,7 @@
 #include "common/log.h"
 #include "phy/phy_params.h"
 
-#define CONTINUOUS_TX
+//#define CONTINUOUS_TX
 
 
 namespace srsue {
@@ -96,6 +96,7 @@ namespace srsue {
     int  sr_last_tx_tti; 
    
     srslte::radio*    get_radio();
+    void reset_ul();
     
   private: 
     std::vector<pthread_mutex_t>    tx_mutex; 
@@ -125,7 +126,7 @@ namespace srsue {
     pending_ack_t pending_ack[10];
     
     bool is_first_tx;
-    uint32_t nof_workers;
+    uint32_t nof_mutex;
     
   };
   

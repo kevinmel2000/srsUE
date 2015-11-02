@@ -35,8 +35,6 @@
 #define Info(fmt, ...)    if (SRSLTE_DEBUG_ENABLED) phy->log_h->info_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define Debug(fmt, ...)   if (SRSLTE_DEBUG_ENABLED) phy->log_h->debug_line(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
-//#define DO_UL_POWER_CONTROL
-
 
 namespace srsue {
 
@@ -79,13 +77,18 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Initiating UE UL\n");
     return false; 
   }
-#ifdef DO_UL_POWER_CONTROL
-  srslte_ue_ul_set_normalization(&ue_ul, false); 
-#else
-  srslte_ue_ul_set_normalization(&ue_ul, true);
-#endif
-  
+  if (phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
+    srslte_ue_ul_set_normalization(&ue_ul, false); 
+  } else {
+    srslte_ue_ul_set_normalization(&ue_ul, true);
+  }
+    
   srslte_ue_ul_set_cfo_enable(&ue_ul, true);
+  
+  /* Set decoder iterations */
+  if (phy->params_db->get_param(phy_interface_params::PDSCH_MAX_ITS) > 0) {
+    srslte_sch_set_max_noi(&ue_dl.pdsch.dl_sch, phy->params_db->get_param(phy_interface_params::PDSCH_MAX_ITS));
+  }
   
   cell_initiated = true; 
   
@@ -250,7 +253,11 @@ void phch_worker::work_imp()
         rx_gain_offset = 0; 
       }
     } else {
-      rx_gain_offset = phy->get_radio()->get_rx_gain();
+      if (phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET) > 0) {
+        rx_gain_offset = (float) phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET);
+      } else {
+        rx_gain_offset = phy->get_radio()->get_rx_gain();
+      }
     }
     if (phy->rx_gain_offset) {
       phy->rx_gain_offset = SRSLTE_VEC_EMA(phy->rx_gain_offset, rx_gain_offset, 0.1);
@@ -539,11 +546,11 @@ void phch_worker::set_uci_periodic_cqi()
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.subband.subband_cqi = srslte_cqi_from_snr(snr);
         cqi_report.subband.subband_label = 0;
-        printf("Warning: Subband CQI periodic reports not implemented\n");
+        phy->log_h->console("Warning: Subband CQI periodic reports not implemented\n");
       } else {
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
-        cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);
+        cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);        
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
       rar_cqi_request = false; 
@@ -568,21 +575,25 @@ void phch_worker::set_tx_time(srslte_timestamp_t _tx_time)
 }
 
 void phch_worker::normalize(float tx_power) {
-#ifdef DO_UL_POWER_CONTROL
-  float norm_factor = (float) cell.nof_prb/15/sqrt(ue_ul.pusch_cfg.grant.L_prb);
-  
-  float tx_power2 = tx_power;
-  if (ceil(tx_power2/4)*4 > phy->cur_radio_power + 4 || ceil(tx_power2/4)*4 < phy->cur_radio_power - 4) {
-    phy->cur_radio_power = ceil(tx_power2/4)*4;
-    phy->get_radio()->set_tx_power(phy->cur_radio_power);
+
+  if(phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
+    float norm_factor = (float) cell.nof_prb/15/sqrt(ue_ul.pusch_cfg.grant.L_prb);
+    
+    float tx_power2 = tx_power;
+    if (ceil(tx_power2/4)*4 > phy->cur_radio_power + 4 || ceil(tx_power2/4)*4 < phy->cur_radio_power - 4) {
+      phy->cur_radio_power = ceil(tx_power2/4)*4;
+      
+      float radio_tx_power = phy->cur_radio_power;
+      radio_tx_power += (float) phy->params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
+      
+      phy->get_radio()->set_tx_power(radio_tx_power);
+    }
+    float power_scale = sqrt(pow(10, (tx_power-phy->cur_radio_power)/10));
+    srslte_vec_sc_prod_cfc(signal_buffer, norm_factor*power_scale, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
   }
-  float power_scale = sqrt(pow(10, (tx_power-phy->cur_radio_power)/10));
-  srslte_vec_sc_prod_cfc(signal_buffer, norm_factor*power_scale, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-#endif
-  
-  float after_power = srslte_vec_avg_power_cf(signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-  uint32_t max_idx = srslte_vec_max_fi((float*) signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-  float *f = (float*) signal_buffer;
+  //float after_power = srslte_vec_avg_power_cf(signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
+  //uint32_t max_idx = srslte_vec_max_fi((float*) signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
+  //float *f = (float*) signal_buffer;
   //printf("amp=%.2f, tx_power=%.3f dBm, radio_power=%.3f dBm, after_power=%.3f dBm\n",  f[max_idx], tx_power, phy->cur_radio_power, 10*log10(after_power)+30);
 }
 

@@ -36,26 +36,22 @@
 
 namespace srsue {
 
-#ifdef CONTINUOUS_TX
 cf_t zeros[50000];
-#endif
 
-phch_common::phch_common(uint32_t nof_workers_) : tx_mutex(nof_workers_)
+phch_common::phch_common(uint32_t nof_mutex_) : tx_mutex(nof_mutex_)
 {
   params_db = NULL; 
   log_h     = NULL; 
   radio_h   = NULL; 
   mac       = NULL; 
-  nof_workers = nof_workers_;
+  nof_mutex = nof_mutex_;
   sr_enabled        = false; 
   is_first_of_burst = true; 
   is_first_tx       = true; 
   rar_grant_pending = false; 
   sr_last_tx_tti = -1;
   cur_pusch_power = 0;
-#ifdef CONTINUOUS_TX
   bzero(zeros, 50000*sizeof(cf_t));
-#endif
   
 }
   
@@ -68,7 +64,7 @@ void phch_common::init(phy_params *_params, srslte::log *_log, srslte::radio *_r
   is_first_tx = true; 
   sr_last_tx_tti = -1;
   
-  for (int i=0;i<nof_workers;i++) {
+  for (int i=0;i<nof_mutex;i++) {
     pthread_mutex_init(&tx_mutex[i], NULL);
   }
 }
@@ -194,31 +190,41 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
                                    srslte_timestamp_t tx_time) 
 {
 
-  
   // Wait previous TTIs to be transmitted 
   if (is_first_tx) {
     is_first_tx = false; 
   } else {
-    pthread_mutex_lock(&tx_mutex[tti%nof_workers]);
+    pthread_mutex_lock(&tx_mutex[tti%nof_mutex]);
   }
+
   radio_h->set_tti(tti); 
   if (tx_enable) {
     radio_h->tx(buffer, nof_samples, tx_time);
     is_first_of_burst = false; 
-#ifdef CONTINUOUS_TX
   } else {
-    if (!is_first_of_burst) {
-      radio_h->tx(zeros, nof_samples, tx_time);
+    if (params_db->get_param(phy_interface_params::CONTINUOUS_TX)) {
+      if (!is_first_of_burst) {
+        radio_h->tx(zeros, nof_samples, tx_time);
+      }
+    } else {
+      if (!is_first_of_burst) {
+        radio_h->tx_end();
+        is_first_of_burst = true;   
+      }
     }
   }
-#else
-  } else if (!is_first_of_burst) {
-    radio_h->tx_end();
-    is_first_of_burst = true;   
-  }
-#endif
   // Trigger next transmission 
-  pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_workers]);
+  pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_mutex]);
 }    
+
+void phch_common::reset_ul()
+{
+  is_first_tx = true; 
+  is_first_of_burst = true; 
+  for (int i=0;i<nof_mutex;i++) {
+    pthread_mutex_unlock(&tx_mutex[i]);
+  }
+}
+
 
 }

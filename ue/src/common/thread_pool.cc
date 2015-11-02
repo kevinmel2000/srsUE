@@ -142,7 +142,6 @@ void thread_pool::worker::wait_to_start()
 void thread_pool::worker::finished()
 {
 #ifdef USE_QUEUE
-  //my_parent->available_workers.push(this); 
   pthread_mutex_lock(&my_parent->mutex[my_id]); 
   my_parent->status[my_id] = IDLE; 
   pthread_mutex_unlock(&my_parent->mutex[my_id]); 
@@ -181,7 +180,7 @@ thread_pool::worker* thread_pool::wait_worker(uint32_t tti)
 #ifdef USE_QUEUE
   debug_thread("wait_worker() - enter - tti=%d, state0=%d, state1=%d\n", tti, status[0], status[1]);
   pthread_mutex_lock(&mutex_queue); 
-  uint32_t id = 0; 
+  uint32_t id = 0;
   while(!find_finished_worker(tti, &id) && running) {
     pthread_cond_wait(&cvar_queue, &mutex_queue);    
   }
