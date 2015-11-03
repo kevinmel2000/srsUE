@@ -10296,6 +10296,8 @@ LIBLTE_ERROR_ENUM liblte_rrc_pack_ue_capability_information_msg(LIBLTE_RRC_UE_CA
                 *msg_ptr = tmp.msg[i];
                 msg_ptr++;
             }
+
+            msg_ptr += pad;
         }
 
         // Fill in the number of bits used
