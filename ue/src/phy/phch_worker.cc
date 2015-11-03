@@ -542,13 +542,15 @@ void phch_worker::set_uci_periodic_cqi()
         cqi_report.subband.subband_cqi = srslte_cqi_from_snr(snr);
         cqi_report.subband.subband_label = 0;
         phy->log_h->console("Warning: Subband CQI periodic reports not implemented\n");
+        Info("CQI: subband snr=%.1f dB, cqi=%d\n", snr, cqi_report.subband.subband_cqi);
       } else {
         cqi_report.type = SRSLTE_CQI_TYPE_WIDEBAND;
         snr = SRSLTE_VEC_EMA(10*log10f(srslte_chest_dl_get_snr(&ue_dl.chest)), snr, 0.2);
         cqi_report.wideband.wideband_cqi = srslte_cqi_from_snr(snr);        
+        Info("CQI: wideband snr=%.1f dB, cqi=%d\n", snr, cqi_report.wideband.wideband_cqi);
       }
       uci_data.uci_cqi_len = srslte_cqi_value_pack(&cqi_report, uci_data.uci_cqi);
-      rar_cqi_request = false; 
+      rar_cqi_request = false;       
     }
   }
 }
@@ -647,7 +649,7 @@ void phch_worker::encode_pucch()
   float tx_power = srslte_ue_ul_pucch_power(&ue_ul, phy->pathloss, ue_ul.last_pucch_format, uci_data.uci_cqi_len, uci_data.uci_ack_len);
   float gain = set_power(tx_power);  
   
-  Info("PUCCH: power=%.2f dBm, tti_tx=%d, n_cce=%3d, ack=%s, sr=%s, shortened=%s%s\n", 
+  Info("PUCCH: power=%.2f dBm, tti_tx=%d, n_cce=%3d, ack=%s, sr=%s, cqi=%d, shortened=%s%s\n", 
          tx_power, tti+4, 
          last_dl_pdcch_ncce, uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",uci_data.scheduling_request?"yes":"no", 
          ue_ul.pucch.shortened?"yes":"no", timestr);        
