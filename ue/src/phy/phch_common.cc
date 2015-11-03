@@ -201,7 +201,7 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
     radio_h->tx(buffer, nof_samples, tx_time);
     is_first_of_burst = false; 
   } else {
-    if (params_db->get_param(phy_interface_params::CONTINUOUS_TX)) {
+    if (params_db->get_param(phy_interface_params::CONTINUOUS_TX)>0) {
       if (!is_first_of_burst) {
         radio_h->tx(zeros, nof_samples, tx_time);
       }

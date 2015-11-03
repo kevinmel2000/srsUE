@@ -85,7 +85,8 @@ private:
   void set_uci_periodic_cqi();
   void set_uci_ack(bool ack);
   bool srs_is_ready_to_send();
-  void normalize(float tx_power);
+  float set_power(float tx_power);
+  void setup_tx_gain();
   
   void tr_log_start();
   void tr_log_end();

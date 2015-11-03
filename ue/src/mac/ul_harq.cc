@@ -304,7 +304,7 @@ void ul_harq_entity::ul_harq_process::generate_tx(uint32_t tti_tx, mac_interface
   action->current_tx_nb = current_tx_nb;
   action->expect_ack = true;
   action->rnti = is_msg3?harq_entity->params_db->get_param(mac_interface_params::RNTI_TEMP):cur_grant.rnti; 
-  action->rv = get_rv();
+  action->rv = cur_grant.rv>0?cur_grant.rv:get_rv();
   action->softbuffer = &softbuffer; 
   action->tx_enabled = true; 
   action->payload_ptr = pdu_ptr; 

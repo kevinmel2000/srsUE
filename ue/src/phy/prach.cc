@@ -156,19 +156,18 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
     // Get PRACH transmission power 
     float tx_power = SRSLTE_MIN(SRSLTE_PC_MAX, pathloss + target_power_dbm);
     
+    tx_power += (float) params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
+
     // Get output power for amplitude 1
-    float max_tx_power = radio_handler->set_tx_power(tx_power);
-    
-    max_tx_power += (float) params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
-    
+    radio_handler->set_tx_power(tx_power);
+        
     // Scale signal
-    float cur_tx_power = srslte_vec_avg_power_cf(signal_buffer, len);
-    float scale = sqrtf(pow(10,(tx_power-max_tx_power)/10)/cur_tx_power);
+    float digital_power = srslte_vec_avg_power_cf(signal_buffer, len);
+    float scale = sqrtf(pow(10,tx_power/10)/digital_power);
     
     srslte_vec_sc_prod_cfc(signal_buffer, scale, signal_buffer, len);
-
-    log_h->console("TX PRACH: Pathloss=%.2f dB, Target power %.2f dBm, tx_power %.2f dBm, Gain %.1f dB\n",
-          pathloss, target_power_dbm, tx_power, radio_handler->get_tx_gain());
+    log_h->console("TX PRACH: Pathloss=%.2f dB, Target power %.2f dBm, TX_power %.2f dBm, TX_gain %.1f dB\n",
+          pathloss, target_power_dbm, tx_power, radio_handler->get_tx_gain(), scale);
     
   } else {
     radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::PRACH_GAIN));
@@ -188,9 +187,7 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
   if (params_db->get_param(phy_interface_params::UL_GAIN) > 0) {
     radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::UL_GAIN));    
     log_h->console("UL power control is disabled. Fixing TX gain to %.0f dB\n", (float) params_db->get_param(phy_interface_params::UL_GAIN));
-  } else {
-    log_h->console("UL gain controled by UL power control\n");
-  }
+  } 
   
 }
   

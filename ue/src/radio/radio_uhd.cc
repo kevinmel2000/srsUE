@@ -102,16 +102,12 @@ float radio_uhd::set_tx_power(float power)
   if (power > 10) {
     power = 10; 
   }
-  if (power < -30) {
-    power = 30; 
+  if (power < -50) {
+    power = -50; 
   }
   float gain = power + 74;
-  if (agc_enabled) {
-    cuhd_set_tx_gain_th(uhd, gain);
-  } else {
-    cuhd_set_tx_gain(uhd, gain);
-  }
-  return power; 
+  cuhd_set_tx_gain(uhd, gain);
+  return gain; 
 }
 
 float radio_uhd::get_max_tx_power()

@@ -76,12 +76,7 @@ bool phch_worker::init_cell(srslte_cell_t cell_)
     Error("Initiating UE UL\n");
     return false; 
   }
-  if (phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
-    srslte_ue_ul_set_normalization(&ue_ul, false); 
-  } else {
-    srslte_ue_ul_set_normalization(&ue_ul, true);
-  }
-    
+  srslte_ue_ul_set_normalization(&ue_ul, true);
   srslte_ue_ul_set_cfo_enable(&ue_ul, true);
   
   /* Set decoder iterations */
@@ -213,26 +208,26 @@ void phch_worker::work_imp()
   }
   
   /* Transmit PUSCH, PUCCH or SRS */
-  bool tx_signal = false; 
+  bool signal_ready = false; 
   if (ul_action.tx_enabled) {
     encode_pusch(&ul_action.phy_grant.ul, ul_action.payload_ptr, ul_action.current_tx_nb, 
                  ul_action.softbuffer, ul_action.rv, ul_action.rnti, ul_mac_grant.is_from_rar);          
-    tx_signal = true; 
+    signal_ready = true; 
     if (ul_action.expect_ack) {
       phy->set_pending_ack(tti + 8, ue_ul.pusch_cfg.grant.n_prb_tilde[0], ul_action.phy_grant.ul.ncs_dmrs);
     }
 
   } else if (dl_action.generate_ack || uci_data.scheduling_request || uci_data.uci_cqi_len > 0) {
     encode_pucch();
-    tx_signal = true; 
+    signal_ready = true; 
   } else if (srs_is_ready_to_send()) {
     encode_srs();
-    tx_signal = true; 
+    signal_ready = true; 
   } 
 
   tr_log_end();
   
-  phy->worker_end(tti, tx_signal, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb), tx_time);
+  phy->worker_end(tti, signal_ready, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb), tx_time);
   
   if (dl_action.decode_enabled && !dl_action.generate_ack_callback) {
     phy->mac->tb_decoded(dl_ack, dl_mac_grant.rnti_type, dl_mac_grant.pid);
@@ -421,8 +416,8 @@ bool phch_worker::decode_phich(bool *ack)
   uint32_t I_lowest, n_dmrs; 
   if (phy->get_pending_ack(tti, &I_lowest, &n_dmrs)) {
     if (ack) {
-      Debug("Decoding PHICH I_lowest=%d, n_dmrs=%d\n", I_lowest, n_dmrs);
       *ack = srslte_ue_dl_decode_phich(&ue_dl, tti%10, I_lowest, n_dmrs);     
+      Info("PHICH: hi=%d, I_lowest=%d, n_dmrs=%d\n", *ack, I_lowest, n_dmrs);
     }
     phy->reset_pending_ack(tti);
     return true; 
@@ -470,7 +465,7 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
         return false; 
       }
       if (srslte_dci_msg_to_ul_grant(&dci_msg, cell.nof_prb, pusch_hopping.hopping_offset, 
-        &dci_unpacked, &grant->phy_grant.ul)) 
+        &dci_unpacked, &grant->phy_grant.ul, tti)) 
       {
         Error("Converting DCI message to UL grant\n");
         return false;   
@@ -485,7 +480,12 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
   snprintf(timestr, 64, ", partial_time=%4d us", (int) logtime_start[0].tv_usec);
 #endif
 
-      Info("PDCCH: UL DCI Format0 cce_index=%d, n_data_bits=%d%s\n", ue_dl.last_n_cce, dci_msg.nof_bits, timestr);
+      Info("PDCCH: UL DCI Format0 cce_index=%d, L=%d, n_data_bits=%d, TBS=%d%s\n", 
+           ue_dl.last_location.ncce, (1<<ue_dl.last_location.L), dci_msg.nof_bits, grant->phy_grant.ul.mcs.tbs, timestr);
+      
+      if (grant->phy_grant.ul.mcs.tbs==0) {
+        srslte_vec_fprint_hex(stdout, dci_msg.data, dci_msg.nof_bits);
+      }
     }
   }
   if (ret) {    
@@ -494,16 +494,12 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
     grant->n_bytes = grant->phy_grant.ul.mcs.tbs/8;
     grant->tti = tti; 
     grant->rnti = ul_rnti; 
-    
+    grant->rv = dci_unpacked.rv_idx;
     if (SRSLTE_VERBOSE_ISINFO()) {
       srslte_ra_pusch_fprint(stdout, &dci_unpacked, cell.nof_prb);
     }
     
-    if (grant->n_bytes) {
-      return true; 
-    } else {
-      return false; 
-    }
+    return true;     
   } else {
     return false; 
   }    
@@ -573,29 +569,6 @@ void phch_worker::set_tx_time(srslte_timestamp_t _tx_time)
   memcpy(&tx_time, &_tx_time, sizeof(srslte_timestamp_t));
 }
 
-void phch_worker::normalize(float tx_power) {
-
-  if(phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
-    float norm_factor = (float) cell.nof_prb/15/sqrt(ue_ul.pusch_cfg.grant.L_prb);
-    
-    float tx_power2 = tx_power;
-    if (ceil(tx_power2/4)*4 > phy->cur_radio_power + 4 || ceil(tx_power2/4)*4 < phy->cur_radio_power - 4) {
-      phy->cur_radio_power = ceil(tx_power2/4)*4;
-      
-      float radio_tx_power = phy->cur_radio_power;
-      radio_tx_power += (float) phy->params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
-      
-      phy->get_radio()->set_tx_power(radio_tx_power);
-    }
-    float power_scale = sqrt(pow(10, (tx_power-phy->cur_radio_power)/10));
-    srslte_vec_sc_prod_cfc(signal_buffer, norm_factor*power_scale, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-  }
-  //float after_power = srslte_vec_avg_power_cf(signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-  //uint32_t max_idx = srslte_vec_max_fi((float*) signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
-  //float *f = (float*) signal_buffer;
-  //printf("amp=%.2f, tx_power=%.3f dBm, radio_power=%.3f dBm, after_power=%.3f dBm\n",  f[max_idx], tx_power, phy->cur_radio_power, 10*log10(after_power)+30);
-}
-
 void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, uint32_t current_tx_nb, 
                                srslte_softbuffer_tx_t* softbuffer, uint32_t rv, uint16_t rnti, bool is_from_rar)
 {
@@ -620,9 +593,10 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
     p0_preamble = phy->p0_preamble;
   }
   float tx_power = srslte_ue_ul_pusch_power(&ue_ul, phy->pathloss, p0_preamble);
-  normalize(tx_power);  
-  phy->cur_pusch_power = tx_power;
-  
+  float gain = set_power(tx_power);
+
+  // Save PUSCH power for PHR calculation  
+  phy->cur_pusch_power = tx_power; 
   
 #ifdef LOG_EXECTIME
   gettimeofday(&logtime_start[2], NULL);
@@ -630,10 +604,10 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
   snprintf(timestr, 64, ", total_time=%4d us", (int) logtime_start[0].tv_usec);
 #endif
 
-  Info("PUSCH: power=%.2f dBm, tti_tx=%d, harq=%d, n_prb=%d, rb_start=%d, tbs=%d, mcs=%d, ack=%s, sr=%s, shortened=%s%s\n", 
-         tx_power, tti+4, tti%8, 
+  Info("PUSCH: power=%.2f dBm, tti_tx=%d, n_prb=%d, rb_start=%d, tbs=%d, mcs=%d, rv_idx=%d, ack=%s, sr=%s, shortened=%s%s\n", 
+         tx_power, tti+4,
          grant->L_prb, grant->n_prb[0], 
-         grant->mcs.tbs/8, grant->mcs.idx,
+         grant->mcs.tbs/8, grant->mcs.idx, rv,
          uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",uci_data.scheduling_request?"yes":"no", 
          ue_ul.pusch.shortened?"yes":"no", timestr);
 
@@ -670,8 +644,11 @@ void phch_worker::encode_pucch()
   snprintf(timestr, 64, ", enc_time=%d, total_time=%d us", (int) t[0].tv_usec, (int) logtime_start[0].tv_usec);
 #endif
 
-    Info("PUCCH: power=%.2f dBm, tti_tx=%d, n_cce=%3d, ack=%s, sr=%s, shortened=%s%s\n", 
-         phy->cur_pusch_power, tti+4, 
+  float tx_power = srslte_ue_ul_pucch_power(&ue_ul, phy->pathloss, ue_ul.last_pucch_format, uci_data.uci_cqi_len, uci_data.uci_ack_len);
+  float gain = set_power(tx_power);  
+  
+  Info("PUCCH: power=%.2f dBm, tti_tx=%d, n_cce=%3d, ack=%s, sr=%s, shortened=%s%s\n", 
+         tx_power, tti+4, 
          last_dl_pdcch_ncce, uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",uci_data.scheduling_request?"yes":"no", 
          ue_ul.pucch.shortened?"yes":"no", timestr);        
   }   
@@ -679,7 +656,6 @@ void phch_worker::encode_pucch()
   if (uci_data.scheduling_request) {
     phy->sr_enabled = false; 
   }
-  //normalize(phy->cur_pusch_power);
 }
 
 void phch_worker::encode_srs()
@@ -697,10 +673,12 @@ void phch_worker::encode_srs()
   get_time_interval(logtime_start);
   snprintf(timestr, 64, ", total_time=%4d us", (int) logtime_start[0].tv_usec);
 #endif
-    
-  Info("SRS: power=%.2f dBm, tti_tx=%d%s\n", phy->cur_pusch_power, tti+4, timestr);
   
-  //normalize(phy->cur_pusch_power);
+  float tx_power = srslte_ue_ul_srs_power(&ue_ul, phy->pathloss);  
+  float gain = set_power(tx_power);
+  
+  Info("SRS: power=%.2f dBm, gain=%.1f, tti_tx=%d%s\n", tx_power, gain, tti+4, timestr);
+  
 }
 
 void phch_worker::enable_pregen_signals(bool enabled)
@@ -805,13 +783,27 @@ void phch_worker::set_ul_params()
   I_sr                         = (uint32_t) phy->params_db->get_param(phy_interface_params::SR_CONFIG_INDEX);
   
 
-  
-  
   if (pregen_enabled) { 
     Info("Pre-generating UL signals\n");
     srslte_ue_ul_pregen_signals(&ue_ul);
+  }  
+}
+
+float phch_worker::set_power(float tx_power) {
+  float gain = 0; 
+  /* Check if UL power control is enabled */
+  if(phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
+    
+    /* Adjust maximum power if it changes significantly */
+    if (tx_power < phy->cur_radio_power - 10 || tx_power > phy->cur_radio_power + 10) {
+      phy->cur_radio_power = tx_power; 
+      /* Add an optional offset to the power set to the RF frontend */
+      float radio_tx_power = phy->cur_radio_power;
+      radio_tx_power += (float) phy->params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
+      gain = phy->get_radio()->set_tx_power(radio_tx_power);  
+    }    
   }
-  
+  return gain;
 }
 
 /********** Execution time trace function ************/
