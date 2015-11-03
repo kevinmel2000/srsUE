@@ -396,7 +396,7 @@ void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
   cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[2] = true;
 
   cap->feature_group_indicator_present         = true;
-  cap->feature_group_indicator                 = 0x02081812;
+  cap->feature_group_indicator                 = 0x22081812;
   cap->inter_rat_params.utra_fdd_present       = false;
   cap->inter_rat_params.utra_tdd128_present    = false;
   cap->inter_rat_params.utra_tdd384_present    = false;
