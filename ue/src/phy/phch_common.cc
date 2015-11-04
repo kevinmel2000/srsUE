@@ -24,6 +24,7 @@
  *
  */
 
+#include <assert.h>
 #include <string.h>
 #include "srslte/srslte.h"
 #include "phy/phch_common.h"
@@ -37,17 +38,25 @@ namespace srsue {
 
 cf_t zeros[50000];
 
-phch_common::phch_common(uint32_t nof_mutex_) : tx_mutex(nof_mutex_)
+phch_common::phch_common(uint32_t max_mutex_) : tx_mutex(max_mutex_)
 {
   params_db = NULL; 
   log_h     = NULL; 
   radio_h   = NULL; 
   mac       = NULL; 
-  nof_mutex = nof_mutex_;
+  max_mutex = max_mutex_;
+  nof_mutex = 0; 
   sr_enabled        = false; 
   is_first_of_burst = true; 
   is_first_tx       = true; 
   rar_grant_pending = false; 
+  pathloss = 0; 
+  cur_pathloss = 0; 
+  rsrp_filtered = 0; 
+  cur_pusch_power = 0; 
+  p0_preamble = 0; 
+  cur_radio_power = 0; 
+  rx_gain_offset = 0; 
   sr_last_tx_tti = -1;
   cur_pusch_power = 0;
   bzero(zeros, 50000*sizeof(cf_t));
@@ -60,12 +69,17 @@ void phch_common::init(phy_params *_params, srslte::log *_log, srslte::radio *_r
   log_h     = _log; 
   radio_h   = _radio; 
   mac       = _mac; 
+    
   is_first_tx = true; 
   sr_last_tx_tti = -1;
-  
   for (int i=0;i<nof_mutex;i++) {
     pthread_mutex_init(&tx_mutex[i], NULL);
   }
+}
+
+void phch_common::set_nof_mutex(uint32_t nof_mutex_) {
+  nof_mutex = nof_mutex_; 
+  assert(nof_mutex <= max_mutex);
 }
 
 bool phch_common::ul_rnti_active(uint32_t tti) {

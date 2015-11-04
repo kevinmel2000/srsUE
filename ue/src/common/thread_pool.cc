@@ -50,6 +50,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include "common/thread_pool.h"
 
@@ -92,15 +93,15 @@ void thread_pool::worker::stop()
   wait_thread_finish();
 }
 
-thread_pool::thread_pool(uint32_t nof_workers_)  : 
-                                  workers(nof_workers_),
-                                  status(nof_workers_),
-                                  cvar(nof_workers_),
-                                  mutex(nof_workers_)
+thread_pool::thread_pool(uint32_t max_workers_)  : 
+                                  workers(max_workers_),
+                                  status(max_workers_),
+                                  cvar(max_workers_),
+                                  mutex(max_workers_)
                                   
 {
-  nof_workers = nof_workers_;
-  for (int i=0;i<nof_workers;i++) {
+  max_workers = max_workers_;
+  for (int i=0;i<max_workers;i++) {
     workers[i] = NULL;
     status[i] = IDLE; 
     pthread_mutex_init(&mutex[i], NULL);
@@ -109,17 +110,21 @@ thread_pool::thread_pool(uint32_t nof_workers_)  :
   pthread_mutex_init(&mutex_queue, NULL);
   pthread_cond_init(&cvar_queue, NULL);
   running = true; 
+  nof_workers = 0; 
 }
 
 void thread_pool::init_worker(uint32_t id, worker *obj, uint32_t prio)
 {
-  if (id < nof_workers) {
+  if (id < max_workers) {
+    if (id >= nof_workers) {
+      nof_workers = id+1;
+    }
     pthread_mutex_lock(&mutex_queue);   
     workers[id] = obj; 
     available_workers.push(obj);    
     obj->setup(id, this, prio);
     pthread_cond_signal(&cvar_queue);
-    pthread_mutex_unlock(&mutex_queue);  
+    pthread_mutex_unlock(&mutex_queue);    
   }
 }
 

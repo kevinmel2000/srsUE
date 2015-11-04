@@ -18,10 +18,7 @@ phy_filename = /tmp/ue.phy_trace
 radio_filename = /tmp/ue.radio_trace
 
 [log]
-rlc_level = info
-pdcp_level = info
-rrc_level = info
-nas_level = info
+phy_level = info
 all_level = warning
 all_hex_limit = 32
 filename = /tmp/ue.log
@@ -49,7 +46,8 @@ ul_gain = 70
 # power control values. By default uses rx gain. 
 #rx_gain_offset = 50
 
-pdsch_max_its       = 4
+# Maximum number of turbo decoder iterations (default 4)
+#pdsch_max_its       = 4
 
 #sync_track_th       = 1.3 # must be > 1
 #sync_track_avg_coef = 0.1 # must be 0..1
@@ -58,8 +56,8 @@ pdsch_max_its       = 4
 #sync_find_max_frames = 100
 
 # Enables/Disables continuous transmission mode (Default enabled)
-continuous_tx = false 
+#continuous_tx = true
 
-# Currently not enabled
+# Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #nof_phy_threads = 2
 

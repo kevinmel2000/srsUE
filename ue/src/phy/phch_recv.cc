@@ -46,7 +46,7 @@ phch_recv::phch_recv() {
 }
 
 bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, prach* _prach_buffer, srslte::thread_pool* _workers_pool,
-                     phch_common* _worker_com, srslte::log* _log_h, bool do_agc_, uint32_t prio, uint32_t _nof_tx_mutex)
+                     phch_common* _worker_com, srslte::log* _log_h, bool do_agc_, uint32_t prio)
 {
   radio_h      = _radio_handler;
   log_h        = _log_h;     
@@ -54,13 +54,15 @@ bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, pra
   workers_pool = _workers_pool;
   worker_com   = _worker_com;
   prach_buffer = _prach_buffer; 
-  nof_tx_mutex = _nof_tx_mutex;
   tx_mutex_cnt = 0; 
   running      = true; 
   phy_state    = IDLE; 
   time_adv_sec = 0; 
   cell_is_set  = false; 
   do_agc       = do_agc_;
+
+  nof_tx_mutex = MUTEX_X_WORKER*workers_pool->get_nof_workers();
+  worker_com->set_nof_mutex(nof_tx_mutex);
   
   continuous_tx_mode = worker_com->params_db->get_param(phy_interface_params::CONTINUOUS_TX)>0?true:false;
   

@@ -89,7 +89,8 @@ private:
   }worker_status;
   
   std::vector<worker*> workers; 
-  uint32_t nof_workers; 
+  uint32_t nof_workers;
+  uint32_t max_workers; 
   bool running;
   pthread_cond_t cvar_queue;
   pthread_mutex_t mutex_queue;

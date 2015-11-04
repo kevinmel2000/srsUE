@@ -134,7 +134,7 @@ bool ue::init()
       delete [] c_str;
       return false;
     }    
-    phy->init_agc(radio_uhd, mac, phy_log);
+    phy->init_agc(radio_uhd, mac, phy_log, args->expert.nof_phy_threads);
   } else {
     if(!radio_uhd->init(c_str))
     {
@@ -142,7 +142,7 @@ bool ue::init()
       delete [] c_str;
       return false;
     }    
-    phy->init(radio_uhd, mac, phy_log);    
+    phy->init(radio_uhd, mac, phy_log, args->expert.nof_phy_threads);    
     radio_uhd->set_rx_gain(args->rf.rx_gain);
     if (args->rf.tx_gain < 0) {
       radio_uhd->set_tx_gain(args->rf.rx_gain);
