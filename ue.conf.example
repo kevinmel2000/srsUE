@@ -58,7 +58,7 @@ pdsch_max_its       = 4
 #sync_find_max_frames = 100
 
 # Enables/Disables continuous transmission mode (Default enabled)
-continuous_tx = false 
+continuous_tx = true 
 
 # Currently not enabled
 #nof_phy_threads = 2

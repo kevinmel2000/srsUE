@@ -38,7 +38,7 @@
                               DEFINES
 *******************************************************************************/
 
-#define SRSUE_UE_CATEGORY     3
+#define SRSUE_UE_CATEGORY     5
 
 #define SRSUE_N_SRB           3
 #define SRSUE_N_DRB           8
