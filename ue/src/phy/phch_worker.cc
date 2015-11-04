@@ -107,9 +107,10 @@ cf_t* phch_worker::get_buffer()
   return signal_buffer; 
 }
 
-void phch_worker::set_tti(uint32_t tti_)
+void phch_worker::set_tti(uint32_t tti_, uint32_t tx_tti_)
 {
-  tti = tti_; 
+  tti    = tti_; 
+  tx_tti = tx_tti_;
 }
 
 void phch_worker::set_cfo(float cfo_)
@@ -227,7 +228,7 @@ void phch_worker::work_imp()
 
   tr_log_end();
   
-  phy->worker_end(tti, signal_ready, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb), tx_time);
+  phy->worker_end(tx_tti, signal_ready, signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb), tx_time);
   
   if (dl_action.decode_enabled && !dl_action.generate_ack_callback) {
     phy->mac->tb_decoded(dl_ack, dl_mac_grant.rnti_type, dl_mac_grant.pid);

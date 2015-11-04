@@ -110,7 +110,8 @@ public:
   
 private:
     
-  const static int NOF_WORKERS         = 2;
+  const static int NOF_WORKERS         = 3;
+  const static int NOF_TX_MUTEX        = 4*NOF_WORKERS;
   const static int SF_RECV_THREAD_PRIO = 1;
   const static int WORKERS_THREAD_PRIO = 0; 
   

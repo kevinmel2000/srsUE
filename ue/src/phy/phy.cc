@@ -53,7 +53,7 @@ namespace srsue {
 
 phy::phy() : workers_pool(NOF_WORKERS), 
              workers(NOF_WORKERS), 
-             workers_common(4*NOF_WORKERS)
+             workers_common(NOF_TX_MUTEX)
 {
 }
 
@@ -84,7 +84,7 @@ bool phy::init_(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::l
     //printf("init worker here is at 0x%x\n", &workers[i]);
   }
 
-  sf_recv.init(radio_handler, mac, &prach_buffer, &workers_pool, &workers_common, log_h, do_agc, SF_RECV_THREAD_PRIO);
+  sf_recv.init(radio_handler, mac, &prach_buffer, &workers_pool, &workers_common, log_h, do_agc, SF_RECV_THREAD_PRIO, NOF_TX_MUTEX);
   
   return true; 
 }

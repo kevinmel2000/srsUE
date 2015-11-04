@@ -49,7 +49,7 @@ public:
   
   /* Functions used by main PHY thread */
   cf_t *get_buffer();
-  void  set_tti(uint32_t tti); 
+  void  set_tti(uint32_t tti, uint32_t tx_tti); 
   void  set_tx_time(srslte_timestamp_t tx_time);
   void  set_cfo(float cfo);
   
@@ -100,6 +100,7 @@ private:
   bool           cell_initiated; 
   cf_t          *signal_buffer; 
   uint32_t       tti; 
+  uint32_t       tx_tti;
   bool           pregen_enabled;
   uint32_t       last_dl_pdcch_ncce;
   
