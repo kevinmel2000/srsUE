@@ -147,7 +147,7 @@ bool phch_recv::cell_search(int force_N_id_2)
 
   bzero(found_cells, 3*sizeof(srslte_ue_cellsearch_result_t));
 
-  Info("Starting Cell search...\n");
+  log_h->console("Searching or cell...\n");
   if (srslte_ue_cellsearch_init(&cs, radio_recv_wrapper_cs, radio_h)) {
     Error("Initiating UE cell search\n");
     return false; 
@@ -162,7 +162,6 @@ bool phch_recv::cell_search(int force_N_id_2)
   srslte_ue_cellsearch_set_threshold(&cs, (float) 
     worker_com->params_db->get_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD)/10);
 
-  radio_h->set_master_clock_rate(30.72e6);        
   radio_h->set_rx_srate(1.92e6);
   radio_h->start_rx();
   
@@ -195,7 +194,7 @@ bool phch_recv::cell_search(int force_N_id_2)
   cell.cp   = found_cells[max_peak_cell].cp; 
   cellsearch_cfo = found_cells[max_peak_cell].cfo;
   
-  Info("Found CELL ID: %d CP: %s, CFO: %f\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo);
+  log_h->console("Found CELL ID: %d CP: %s, CFO: %.1f KHz. Trying to decode MIB...\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo/1000);
   
   srslte_ue_mib_sync_t ue_mib_sync; 
 
@@ -394,6 +393,7 @@ void phch_recv::get_current_cell(srslte_cell_t* cell_)
 
 void phch_recv::sync_start()
 {
+  radio_h->set_master_clock_rate(30.72e6);        
   phy_state = CELL_SEARCH;
 }
 

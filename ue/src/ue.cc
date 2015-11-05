@@ -157,6 +157,8 @@ bool ue::init()
   radio_uhd->set_rx_freq(args->rf.dl_freq);
   radio_uhd->set_tx_freq(args->rf.ul_freq);
 
+  phy_log->console("Setting frequency: DL=%.1f Mhz, UL=%.1f MHz\n", args->rf.dl_freq, args->rf.ul_freq);
+  
   mac->init(phy, rlc, mac_log);
   rlc->init(pdcp, rrc, this, rlc_log, mac);
   pdcp->init(rlc, rrc, gw, pdcp_log);
