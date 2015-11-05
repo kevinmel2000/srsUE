@@ -194,7 +194,7 @@ bool phch_recv::cell_search(int force_N_id_2)
   cell.cp   = found_cells[max_peak_cell].cp; 
   cellsearch_cfo = found_cells[max_peak_cell].cfo;
   
-  log_h->console("Found CELL ID: %d CP: %s, CFO: %.1f KHz. Trying to decode MIB...\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo/1000);
+  log_h->console("Found CELL ID: %d CP: %s, CFO: %.1f KHz.\nTrying to decode MIB...\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo/1000);
   
   srslte_ue_mib_sync_t ue_mib_sync; 
 
