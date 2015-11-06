@@ -147,7 +147,7 @@ bool phch_recv::cell_search(int force_N_id_2)
 
   bzero(found_cells, 3*sizeof(srslte_ue_cellsearch_result_t));
 
-  log_h->console("Searching or cell...\n");
+  log_h->console("Searching for cell...\n");
   if (srslte_ue_cellsearch_init(&cs, radio_recv_wrapper_cs, radio_h)) {
     Error("Initiating UE cell search\n");
     return false; 
