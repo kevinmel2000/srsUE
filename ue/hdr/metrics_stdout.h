@@ -42,19 +42,23 @@ namespace srsue {
 class metrics_stdout
 {
 public:
-  metrics_stdout();
+  metrics_stdout(int report_period_secs=1);
 
   bool init(ue *u);
   void stop();
+  void toggle_print(bool b);
   static void* metrics_thread_start(void *m);
   void metrics_thread_run();
 
 private:
-  void print_metrics();
+  void        print_metrics();
+  void        print_disconnect();
+  std::string float_to_string(float f, int digits);
+  std::string float_to_eng_string(float f, int digits);
 
   ue           *ue_;
-  bool          first_connect;
   bool          started;
+  bool          do_print;
   pthread_t     metrics_thread;
   ue_metrics_t  metrics;
   uint32_t      metrics_report_period; // seconds

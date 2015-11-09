@@ -27,13 +27,27 @@
 
 #include "metrics_stdout.h"
 
+#include <sstream>
+#include <stdlib.h>
+#include <math.h>
+#include <float.h>
+#include <iomanip>
+
+using namespace std;
+
 namespace srsue{
 
-metrics_stdout::metrics_stdout()
+char const * const prefixes[2][9] =
+{
+  {   "",   "m",   "u",   "n",    "p",    "f",    "a",    "z",    "y", },
+  {   "",   "k",   "M",   "G",    "T",    "P",    "E",    "Z",    "Y", },
+};
+
+metrics_stdout::metrics_stdout(int report_period_secs)
     :started(false)
-    ,metrics_report_period(1)
+    ,do_print(false)
+    ,metrics_report_period(report_period_secs)
     ,n_reports(10)
-    ,first_connect(true)
 {
 }
 
@@ -55,6 +69,11 @@ void metrics_stdout::stop()
   }
 }
 
+void metrics_stdout::toggle_print(bool b)
+{
+  do_print = b;
+}
+
 void* metrics_stdout::metrics_thread_start(void *m_)
 {
   metrics_stdout *m = (metrics_stdout*)m_;
@@ -67,37 +86,87 @@ void metrics_stdout::metrics_thread_run()
   {
     sleep(metrics_report_period);
     if(ue_->get_metrics(metrics)) {
-      first_connect = false;
       print_metrics();
     } else {
-      if(!first_connect)
-        printf("--- disconnected ---\n");
+      print_disconnect();
     }
   }
 }
 
 void metrics_stdout::print_metrics()
 {
+  if(!do_print)
+    return;
+
   if(++n_reports > 10)
   {
     n_reports = 0;
-    printf("-----n----sinr----rsrp---rsrq----rssi--itx---mcs--cfo-----sfo----mabr\n");
+    cout << endl;
+    cout << "mcs\tsnr\trsrq\tturbo\tcfo\tsfo\tmabr" << endl;
+    cout << "------------------------------------------------------" << endl;
   }
-  printf("%02.4f %02.4f %03.4f %02.4f %03.4f %01.2f %02.2f %04.0f %04.2f %03.2f\n",
-         metrics.phy.phch_metrics.n,
-         metrics.phy.phch_metrics.sinr,
-         metrics.phy.phch_metrics.rsrp,
-         metrics.phy.phch_metrics.rsrq,
-         metrics.phy.phch_metrics.rssi,
-         metrics.phy.phch_metrics.turbo_iters,
-         metrics.phy.phch_metrics.dl_mcs,
-         metrics.phy.sync_metrics.cfo,
-         metrics.phy.sync_metrics.sfo,
-         metrics.phy.mabr);
+  cout << float_to_string(metrics.phy.phch_metrics.dl_mcs, 2) << "\t";
+  cout << float_to_string(metrics.phy.phch_metrics.sinr, 3) << "\t";
+  cout << float_to_string(metrics.phy.phch_metrics.rsrq, 3) << "\t";
+  cout << float_to_string(metrics.phy.phch_metrics.turbo_iters, 2) << "\t";
+  cout << float_to_eng_string(metrics.phy.sync_metrics.cfo, 3) << "\t";
+  cout << float_to_eng_string(metrics.phy.sync_metrics.sfo, 3) << "\t";
+  cout << float_to_eng_string(metrics.phy.mabr*1000, 3) << " ";
+  cout << endl;
+
+
+//  printf("%f %f %f %f %f %f %f %f %f %f\n",
+//         metrics.phy.phch_metrics.n,
+//         metrics.phy.phch_metrics.sinr,
+//         metrics.phy.phch_metrics.rsrp,
+//         metrics.phy.phch_metrics.rsrq,
+//         metrics.phy.phch_metrics.rssi,
+//         metrics.phy.phch_metrics.turbo_iters,
+//         metrics.phy.phch_metrics.dl_mcs,
+//         metrics.phy.sync_metrics.cfo,
+//         metrics.phy.sync_metrics.sfo,
+//         metrics.phy.mabr);
   if(metrics.uhd.uhd_error) {
-    printf("UHD status: O=%d, U=%d, L=%d\n",
-           metrics.uhd.uhd_o, metrics.uhd.uhd_u, metrics.uhd.uhd_l);
+    cout << "UHD status:"
+         << "  O=" << metrics.uhd.uhd_o
+         << ", U=" << metrics.uhd.uhd_u
+         << ", L=" << metrics.uhd.uhd_l << endl;
   }
+}
+
+void metrics_stdout::print_disconnect()
+{
+  if(do_print) {
+    cout << "--- disconnected ---" << endl;
+  }
+}
+
+std::string metrics_stdout::float_to_string(float f, int digits)
+{
+  std::ostringstream os;
+  const int    precision = (f == 0.0) ? digits-1 : digits - log10(fabs(f))-2*DBL_EPSILON;
+  os << std::fixed << std::setprecision(precision) << f;
+  return os.str();
+}
+
+std::string metrics_stdout::float_to_eng_string(float f, int digits)
+{
+  const int degree = (f == 0.0) ? 0 : lrint( floor( log10( fabs( f ) ) / 3) );
+
+  std::string factor;
+
+  if ( abs( degree ) < 9 )
+  {
+    if(degree < 0)
+      factor = prefixes[0][ abs( degree ) ];
+    else
+      factor = prefixes[1][ abs( degree ) ];
+  } else {
+    return "failed";
+  }
+
+  const double scaled = f * pow( 1000.0, -degree );
+  return float_to_string(scaled, digits) + factor;
 }
 
 } // namespace srsue

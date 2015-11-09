@@ -67,6 +67,7 @@ bool ue::init(all_args_t *args_)
   args     = args_;
 
   logger.init(args->log.filename);
+  uhd_log.init("UHD ", &logger);
   phy_log.init("PHY ", &logger, true);
   mac_log.init("MAC ", &logger, true);
   rlc_log.init("RLC ", &logger);
@@ -78,6 +79,7 @@ bool ue::init(all_args_t *args_)
 
   // Init logs
   logger.log("\n\n");
+  uhd_log.set_level(srslte::LOG_LEVEL_INFO);
   phy_log.set_level(level(args->log.phy_level));
   mac_log.set_level(level(args->log.mac_level));
   rlc_log.set_level(level(args->log.rlc_level));
@@ -245,7 +247,11 @@ void ue::handle_uhd_msg(const char* msg)
     uhd_metrics.uhd_l++;
     uhd_metrics.uhd_error = true;
   } else {
-    printf("%s", msg);
+    std::string str(msg);
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
+    str.push_back('\n');
+    uhd_log.info(str);
   }
 }
 

@@ -168,6 +168,7 @@ private:
   srsue::usim       usim;
 
   srsue::logger     logger;
+  srsue::log_filter uhd_log;
   srsue::log_filter phy_log;
   srsue::log_filter mac_log;
   srsue::log_filter rlc_log;
