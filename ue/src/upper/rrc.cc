@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -24,6 +23,7 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
 
 #include <unistd.h>
 #include <sstream>
@@ -351,12 +351,12 @@ void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
   ul_dcch_msg.msg.ue_capability_info.rrc_transaction_id = transaction_id;
 
   LIBLTE_RRC_UE_CAPABILITY_INFORMATION_STRUCT *info = &ul_dcch_msg.msg.ue_capability_info;
-  info->N_ue_caps = 0; // Sending an empty array for testing
+  info->N_ue_caps = 1;
   info->ue_capability_rat[0].rat_type = LIBLTE_RRC_RAT_TYPE_EUTRA;
 
   LIBLTE_RRC_UE_EUTRA_CAPABILITY_STRUCT *cap = &info->ue_capability_rat[0].eutra_capability;
   cap->access_stratum_release = LIBLTE_RRC_ACCESS_STRATUM_RELEASE_REL9;
-  cap->ue_category = 3;
+  cap->ue_category = SRSUE_UE_CATEGORY;
 
   cap->pdcp_params.max_rohc_ctxts_present = false;
   cap->pdcp_params.supported_rohc_profiles[0] = false;
@@ -396,7 +396,7 @@ void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
   cap->meas_params.band_list_eutra[2].inter_freq_need_for_gaps[2] = true;
 
   cap->feature_group_indicator_present         = true;
-  cap->feature_group_indicator                 = 0x7f0dfcba;
+  cap->feature_group_indicator                 = 0x62001000;
   cap->inter_rat_params.utra_fdd_present       = false;
   cap->inter_rat_params.utra_tdd128_present    = false;
   cap->inter_rat_params.utra_tdd384_present    = false;

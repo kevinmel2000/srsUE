@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -24,6 +23,7 @@
  * and at http://www.gnu.org/licenses/.
  *
  */
+
 
 #include "upper/nas.h"
 #include "liblte_security.h"
@@ -260,9 +260,9 @@ void nas::parse_attach_reject(uint32_t lcid, byte_buffer_t *pdu)
 {
   LIBLTE_MME_ATTACH_REJECT_MSG_STRUCT attach_rej;
 
-  nas_log->warning("Received Attach Reject\n");
   liblte_mme_unpack_attach_reject_msg((LIBLTE_BYTE_MSG_STRUCT*)pdu, &attach_rej);
-  nas_log->info("Attach reject cause = %02X\n", attach_rej.emm_cause);
+  nas_log->warning("Received Attach Reject. Cause= %02X\n", attach_rej.emm_cause);
+  nas_log->console("Received Attach Reject. Cause= %02X\n", attach_rej.emm_cause);
   state = EMM_STATE_DEREGISTERED;
   pool->deallocate(pdu);
   // FIXME: Command RRC to release?

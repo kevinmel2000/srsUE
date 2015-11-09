@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2013-2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -124,6 +123,19 @@ public:
     PRACH_HIGH_SPEED_FLAG,
     PRACH_ZC_CONFIG,
     PRACH_FREQ_OFFSET,
+    
+    SYNC_TRACK_THRESHOLD,
+    SYNC_TRACK_AVG_COEFF,
+    
+    PRACH_GAIN,    
+    UL_GAIN,
+    
+    UL_PWR_CTRL_OFFSET,
+    
+    RX_GAIN_OFFSET,
+    
+    CONTINUOUS_TX,
+    PDSCH_MAX_ITS,
     
     NOF_PARAMS,    
   } phy_param_t;

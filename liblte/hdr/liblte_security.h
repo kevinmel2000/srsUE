@@ -200,6 +200,7 @@ LIBLTE_ERROR_ENUM liblte_security_128_eia2(uint8                 *key,
 // Structs
 // Functions
 LIBLTE_ERROR_ENUM liblte_security_milenage_f1(uint8 *k,
+                                              uint8 *op,
                                               uint8 *rand,
                                               uint8 *sqn,
                                               uint8 *amf,
@@ -220,6 +221,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1(uint8 *k,
 // Structs
 // Functions
 LIBLTE_ERROR_ENUM liblte_security_milenage_f1_star(uint8 *k,
+                                                   uint8 *op,
                                                    uint8 *rand,
                                                    uint8 *sqn,
                                                    uint8 *amf,
@@ -240,6 +242,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1_star(uint8 *k,
 // Structs
 // Functions
 LIBLTE_ERROR_ENUM liblte_security_milenage_f2345(uint8 *k,
+                                                 uint8 *op,
                                                  uint8 *rand,
                                                  uint8 *res,
                                                  uint8 *ck,
@@ -260,6 +263,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f2345(uint8 *k,
 // Structs
 // Functions
 LIBLTE_ERROR_ENUM liblte_security_milenage_f5_star(uint8 *k,
+                                                   uint8 *op,
                                                    uint8 *rand,
                                                    uint8 *ak);
 

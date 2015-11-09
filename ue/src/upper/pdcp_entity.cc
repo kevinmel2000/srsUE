@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -25,6 +24,7 @@
  *
  */
 
+
 #include "upper/pdcp_entity.h"
 #include "liblte/hdr/liblte_security.h"
 
@@ -37,6 +37,7 @@ pdcp_entity::pdcp_entity()
   ,tx_count(0)
   ,rx_count(0)
   ,do_security(false)
+  ,sn_len(12)
 {
   pool = buffer_pool::get_instance();
 }
@@ -55,7 +56,16 @@ void pdcp_entity::init(rlc_interface_pdcp            *rlc_,
   lcid    = lcid_;
   active  = true;
 
-  // TODO: handle cnfg
+  if(cnfg)
+  {
+    if(LIBLTE_RRC_PDCP_SN_SIZE_12_BITS == cnfg->rlc_um_pdcp_sn_size)
+    {
+      sn_len = 12;
+    } else {
+      sn_len = 7;
+    }
+    // TODO: handle remainder of cnfg
+  }
 }
 
 bool pdcp_entity::is_active()
@@ -95,7 +105,12 @@ void pdcp_entity::write_sdu(byte_buffer_t *sdu)
   // Handle DRB messages
   if(lcid >= RB_ID_DRB1)
   {
-    pdcp_pack_data_pdu_long_sn(tx_count++, sdu);
+    if(12 == sn_len)
+    {
+      pdcp_pack_data_pdu_long_sn(tx_count++, sdu);
+    } else {
+      pdcp_pack_data_pdu_short_sn(tx_count++, sdu);
+    }
     rlc->write_sdu(lcid, sdu);
   }
 }
@@ -136,7 +151,12 @@ void pdcp_entity::write_pdu(byte_buffer_t *pdu)
   if(lcid >= RB_ID_DRB1)
   {
     uint32_t sn;
-    pdcp_unpack_data_pdu_long_sn(pdu, &sn);
+    if(12 == sn_len)
+    {
+      pdcp_unpack_data_pdu_long_sn(pdu, &sn);
+    } else {
+      pdcp_unpack_data_pdu_short_sn(pdu, &sn);
+    }
     log->info_hex(pdu->msg, pdu->N_bytes, "DL %s PDU: %d", rb_id_text[lcid], sn);
     gw->write_pdu(lcid, pdu);
   }
@@ -191,6 +211,22 @@ void pdcp_unpack_control_pdu(byte_buffer_t *pdu, uint32_t *sn)
   pdu->N_bytes -= 4;
 
   // TODO: integrity check MAC
+}
+
+void pdcp_pack_data_pdu_short_sn(uint32_t sn, byte_buffer_t *sdu)
+{
+  // Make room and add header
+  sdu->msg--;
+  sdu->N_bytes++;
+  sdu->msg[0] = (PDCP_D_C_DATA_PDU << 7) | (sn & 0x7F);
+}
+
+void pdcp_unpack_data_pdu_short_sn(byte_buffer_t *sdu, uint32_t *sn)
+{
+  // Strip header
+  *sn  = sdu->msg[0] & 0x7F;
+  sdu->msg++;
+  sdu->N_bytes--;
 }
 
 void pdcp_pack_data_pdu_long_sn(uint32_t sn, byte_buffer_t *sdu)

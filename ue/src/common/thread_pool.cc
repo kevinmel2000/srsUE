@@ -2,6 +2,31 @@
  *
  * \section COPYRIGHT
  *
+ * Copyright 2013-2015 Software Radio Systems Limited
+ *
+ * \section LICENSE
+ *
+ * This file is part of the srsUE library.
+ *
+ * srsUE is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * srsUE is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * A copy of the GNU Affero General Public License can be found in
+ * the LICENSE file in the top-level directory of this distribution
+ * and at http://www.gnu.org/licenses/.
+ *
+ */
+/**
+ *
+ * \section COPYRIGHT
+ *
  * Copyright 2013-2014 The srsUE Developers. See the
  * COPYRIGHT file at the top-level directory of this distribution.
  *
@@ -142,7 +167,6 @@ void thread_pool::worker::wait_to_start()
 void thread_pool::worker::finished()
 {
 #ifdef USE_QUEUE
-  //my_parent->available_workers.push(this); 
   pthread_mutex_lock(&my_parent->mutex[my_id]); 
   my_parent->status[my_id] = IDLE; 
   pthread_mutex_unlock(&my_parent->mutex[my_id]); 
@@ -181,7 +205,7 @@ thread_pool::worker* thread_pool::wait_worker(uint32_t tti)
 #ifdef USE_QUEUE
   debug_thread("wait_worker() - enter - tti=%d, state0=%d, state1=%d\n", tti, status[0], status[1]);
   pthread_mutex_lock(&mutex_queue); 
-  uint32_t id = 0; 
+  uint32_t id = 0;
   while(!find_finished_worker(tti, &id) && running) {
     pthread_cond_wait(&cvar_queue, &mutex_queue);    
   }

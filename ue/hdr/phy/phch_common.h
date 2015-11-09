@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2013-2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -37,7 +36,7 @@
 #include "common/log.h"
 #include "phy/phy_params.h"
 
-#define CONTINUOUS_TX
+//#define CONTINUOUS_TX
 
 
 namespace srsue {
@@ -65,6 +64,7 @@ struct phch_sync_metrics_t
     
     phch_common() {
       pathloss = 0; 
+      cur_pathloss = 0; 
       rsrp_filtered = 0; 
       cur_pusch_power = 0; 
       p0_preamble = 0; 
@@ -81,6 +81,7 @@ struct phch_sync_metrics_t
     
     /* Power control variables */
     float pathloss;
+    float cur_pathloss;
     float p0_preamble;     
     float cur_radio_power; 
     float cur_pusch_power;
@@ -121,6 +122,8 @@ struct phch_sync_metrics_t
     void get_metrics(phch_metrics_t &m);
     void set_sync_metrics(const phch_sync_metrics_t &m);
     void get_sync_metrics(phch_sync_metrics_t &m);
+
+    void reset_ul();
     
   private: 
     std::vector<pthread_mutex_t>    tx_mutex; 
@@ -150,9 +153,12 @@ struct phch_sync_metrics_t
     pending_ack_t pending_ack[10];
     
     bool is_first_tx;
+
     uint32_t nof_workers;
+    uint32_t nof_mutex;
 
     srslte_cell_t       cell;
+
     phch_metrics_t      metrics;
     phch_sync_metrics_t sync_metrics;
   };

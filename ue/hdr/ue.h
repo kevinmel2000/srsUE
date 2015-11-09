@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -99,11 +98,19 @@ typedef struct {
   std::string   filename;
 }log_args_t;
 
-typedef struct{
-  std::string imsi;
-  std::string imei;
-  std::string k;
-}usim_args_t;
+typedef struct {
+  float prach_gain;
+  float ul_gain;
+  float ul_pwr_ctrl_offset;
+  float rx_gain_offset;
+  int pdsch_max_its;
+  float sync_track_th;
+  float sync_track_avg_coef;
+  float sync_find_th;
+  float sync_find_max_frames;
+  bool continuous_tx;
+  int nof_phy_threads;  
+}expert_args_t;
 
 typedef struct {
   std::string   usrp_args;
@@ -112,6 +119,7 @@ typedef struct {
   trace_args_t  trace;
   log_args_t    log;
   usim_args_t   usim;
+  expert_args_t expert;
 }all_args_t;
 
 typedef struct {
@@ -176,6 +184,8 @@ private:
   uhd_metrics_t     uhd_metrics;
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
+  
+  void set_expert_parameters();
 };
 
 } // namespace srsue

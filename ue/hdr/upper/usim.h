@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -35,15 +34,30 @@
 
 namespace srsue {
 
+typedef enum{
+  auth_algo_milenage = 0,
+  auth_algo_xor,
+}auth_algo_t;
+
+typedef struct{
+  std::string algo;
+  std::string op;
+  std::string amf;
+  std::string imsi;
+  std::string imei;
+  std::string k;
+}usim_args_t;
+
 class usim
     :public usim_interface_nas
     ,public usim_interface_rrc
 {
 public:
   usim();
-  void init(std::string imsi_, std::string imei_, std::string k_, srslte::log *usim_log_);
+  void init(usim_args_t *args, srslte::log *usim_log_);
   void stop();
 
+  // NAS interface
   void get_imsi_vec(uint8_t* imsi_, uint32_t n);
   void get_imei_vec(uint8_t* imei_, uint32_t n);
 
@@ -57,6 +71,7 @@ public:
   void generate_nas_keys(uint8_t *k_nas_enc,
                          uint8_t *k_nas_int);
 
+  // RRC interface
   void generate_as_keys(uint32_t count_ul,
                         uint8_t *k_rrc_enc,
                         uint8_t *k_rrc_int,
@@ -65,22 +80,39 @@ public:
 
 
 private:
+  void gen_auth_res_milenage( uint8_t  *rand,
+                              uint8_t  *autn_enb,
+                              uint16_t  mcc,
+                              uint16_t  mnc,
+                              bool     *net_valid,
+                              uint8_t  *res);
+  void gen_auth_res_xor(      uint8_t  *rand,
+                              uint8_t  *autn_enb,
+                              uint16_t  mcc,
+                              uint16_t  mnc,
+                              bool     *net_valid,
+                              uint8_t  *res);
+  void str_to_hex(std::string str, uint8_t *hex);
+
   srslte::log *usim_log;
 
   // User data
-  uint64_t imsi;
-  uint64_t imei;
-  uint8_t  k[16];
+  auth_algo_t auth_algo;
+  uint8_t     amf[2];  // 3GPP 33.102 v10.0.0 Annex H
+  uint8_t     op[16];
+  uint64_t    imsi;
+  uint64_t    imei;
+  uint8_t     k[16];
 
   // Security variables
-  uint8_t  rand[16];
-  uint8_t  ck[16];
-  uint8_t  ik[16];
-  uint8_t  ak[6];
-  uint8_t  mac[8];
-  uint8_t  autn[16];
-  uint8_t  k_asme[32];
-  uint8_t  k_enb[32];
+  uint8_t     rand[16];
+  uint8_t     ck[16];
+  uint8_t     ik[16];
+  uint8_t     ak[6];
+  uint8_t     mac[8];
+  uint8_t     autn[16];
+  uint8_t     k_asme[32];
+  uint8_t     k_enb[32];
 
 };
 

@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -87,11 +86,11 @@ private:
   uint32_t            lcid;
   bool                do_security;
 
+  uint8_t             sn_len;
   // TODO: Support the following configurations
   // LIBLTE_SECURITY_CIPHERING_ALGORITHM_ID_ENUM cipher_alg;
   // LIBLTE_SECURITY_INTEGRITY_ALGORITHM_ID_ENUM integrity_alg;
   // bool do_rohc;
-  // PDCP_SN_LENGTH sn_len;
 
   uint32_t            rx_count;
   uint32_t            tx_count;
@@ -109,6 +108,8 @@ void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu);
 void pdcp_pack_control_pdu(uint32_t sn, byte_buffer_t *sdu, uint8_t *key_256, uint8_t direction, uint8_t lcid);
 void pdcp_unpack_control_pdu(byte_buffer_t *sdu, uint32_t *sn);
 
+void pdcp_pack_data_pdu_short_sn(uint32_t sn, byte_buffer_t *sdu);
+void pdcp_unpack_data_pdu_short_sn(byte_buffer_t *sdu, uint32_t *sn);
 void pdcp_pack_data_pdu_long_sn(uint32_t sn, byte_buffer_t *sdu);
 void pdcp_unpack_data_pdu_long_sn(byte_buffer_t *sdu, uint32_t *sn);
 

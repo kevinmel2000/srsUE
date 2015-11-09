@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2013-2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -86,7 +85,8 @@ private:
   void set_uci_periodic_cqi();
   void set_uci_ack(bool ack);
   bool srs_is_ready_to_send();
-  void normalize(float tx_power);
+  float set_power(float tx_power);
+  void setup_tx_gain();
   
   void tr_log_start();
   void tr_log_end();

@@ -60,9 +60,6 @@ typedef struct{
                               GLOBAL VARIABLES
 *******************************************************************************/
 
-static const uint8 OP[16] = {0x63,0xBF,0xA5,0x0E,0xE6,0x52,0x33,0x65,
-                             0xFF,0x14,0xC1,0xF4,0x5F,0x88,0x73,0x7D};
-
 static const uint8 S[256] = { 99,124,119,123,242,107,111,197, 48,  1,103, 43,254,215,171,118,
                              202,130,201,125,250, 89, 71,240,173,212,162,175,156,164,114,192,
                              183,253,147, 38, 54, 63,247,204, 52,165,229,241,113,216, 49, 21,
@@ -695,6 +692,7 @@ LIBLTE_ERROR_ENUM liblte_security_128_eia2(uint8                 *key,
     Document Reference: 35.206 v10.0.0 Annex 3
 *********************************************************************/
 LIBLTE_ERROR_ENUM liblte_security_milenage_f1(uint8 *k,
+                                              uint8 *op,
                                               uint8 *rand,
                                               uint8 *sqn,
                                               uint8 *amf,
@@ -719,7 +717,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1(uint8 *k,
         rijndael_key_schedule(k, &round_keys);
 
         // Compute OPc
-        compute_OPc(&round_keys, (uint8 *)OP, op_c);
+        compute_OPc(&round_keys, op, op_c);
 
         // Compute temp
         for(i=0; i<16; i++)
@@ -778,6 +776,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1(uint8 *k,
     Document Reference: 35.206 v10.0.0 Annex 3
 *********************************************************************/
 LIBLTE_ERROR_ENUM liblte_security_milenage_f1_star(uint8 *k,
+                                                   uint8 *op,
                                                    uint8 *rand,
                                                    uint8 *sqn,
                                                    uint8 *amf,
@@ -802,7 +801,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1_star(uint8 *k,
         rijndael_key_schedule(k, &round_keys);
 
         // Compute OPc
-        compute_OPc(&round_keys, (uint8 *)OP, op_c);
+        compute_OPc(&round_keys, op, op_c);
 
         // Compute temp
         for(i=0; i<16; i++)
@@ -861,6 +860,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f1_star(uint8 *k,
     Document Reference: 35.206 v10.0.0 Annex 3
 *********************************************************************/
 LIBLTE_ERROR_ENUM liblte_security_milenage_f2345(uint8 *k,
+                                                 uint8 *op,
                                                  uint8 *rand,
                                                  uint8 *res,
                                                  uint8 *ck,
@@ -886,7 +886,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f2345(uint8 *k,
         rijndael_key_schedule(k, &round_keys);
 
         // Compute OPc
-        compute_OPc(&round_keys, (uint8 *)OP, op_c);
+        compute_OPc(&round_keys, op, op_c);
 
         // Compute temp
         for(i=0; i<16; i++)
@@ -971,6 +971,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f2345(uint8 *k,
     Document Reference: 35.206 v10.0.0 Annex 3
 *********************************************************************/
 LIBLTE_ERROR_ENUM liblte_security_milenage_f5_star(uint8 *k,
+                                                   uint8 *op,
                                                    uint8 *rand,
                                                    uint8 *ak)
 {
@@ -990,7 +991,7 @@ LIBLTE_ERROR_ENUM liblte_security_milenage_f5_star(uint8 *k,
         rijndael_key_schedule(k, &round_keys);
 
         // Compute OPc
-        compute_OPc(&round_keys, (uint8 *)OP, op_c);
+        compute_OPc(&round_keys, op, op_c);
 
         // Compute temp
         for(i=0; i<16; i++)

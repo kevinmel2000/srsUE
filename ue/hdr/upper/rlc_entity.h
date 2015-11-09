@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -32,7 +31,6 @@
 #include "common/common.h"
 #include "common/interfaces.h"
 #include "liblte_rrc.h"
-#include "liblte_rlc.h"
 
 namespace srsue {
 

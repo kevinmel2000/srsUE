@@ -2,8 +2,7 @@
  *
  * \section COPYRIGHT
  *
- * Copyright 2015 The srsUE Developers. See the
- * COPYRIGHT file at the top-level directory of this distribution.
+ * Copyright 2013-2015 Software Radio Systems Limited
  *
  * \section LICENSE
  *
@@ -39,7 +38,7 @@
                               DEFINES
 *******************************************************************************/
 
-#define SRSUE_UE_CATEGORY     3
+#define SRSUE_UE_CATEGORY     5
 
 #define SRSUE_N_SRB           3
 #define SRSUE_N_DRB           8
