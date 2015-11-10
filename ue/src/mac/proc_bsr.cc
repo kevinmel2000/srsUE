@@ -286,7 +286,7 @@ bool bsr_proc::need_to_send_bsr_on_ul_grant(uint32_t grant_size, bsr_t *bsr)
       timers_db->get(mac::BSR_TIMER_PERIODIC)->run();
     }
   }
-  // Cancel all triggered BSR       
+  // Cancel all triggered BSR and SR     
   triggered_bsr_type = NONE; 
   reset_sr = true;     
   // Restart or Start ReTX timer

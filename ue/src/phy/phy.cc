@@ -51,46 +51,47 @@ using namespace std;
 
 namespace srsue {
 
-phy::phy() : workers_pool(NOF_WORKERS), 
-             workers(NOF_WORKERS), 
-             workers_common(4*NOF_WORKERS)
+phy::phy() : workers_pool(MAX_WORKERS), 
+             workers(MAX_WORKERS), 
+             workers_common(phch_recv::MUTEX_X_WORKER*MAX_WORKERS)
 {
 }
 
-bool phy::init(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h) {
-  return init_(radio_handler_, mac, log_h, false);
+bool phy::init(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers) {
+  return init_(radio_handler_, mac, log_h, false, nof_workers);
 }
 
-bool phy::init_agc(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h) {
-  return init_(radio_handler_, mac, log_h, true);
+bool phy::init_agc(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers) {
+  return init_(radio_handler_, mac, log_h, true, nof_workers);
 }
 
 
-bool phy::init_(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h_, bool do_agc)
+bool phy::init_(srslte::radio* radio_handler_, mac_interface_phy *mac, srslte::log *log_h_, bool do_agc, uint32_t nof_workers_)
 {
 
   mlockall(MCL_CURRENT | MCL_FUTURE);
   
   log_h = log_h_; 
   radio_handler = radio_handler_;
+  nof_workers = nof_workers_; 
   
+  // Add workers to workers pool and start threads
+  for (int i=0;i<nof_workers;i++) {
+    workers[i].set_common(&workers_common);
+    workers_pool.init_worker(i, &workers[i], WORKERS_THREAD_PRIO);    
+  }
+
   prach_buffer.init(&params_db, log_h);
   workers_common.init(&params_db, log_h, radio_handler, mac);
   
-  // Add workers to workers pool and start threads
-  for (int i=0;i<NOF_WORKERS;i++) {
-    workers[i].set_common(&workers_common);
-    workers_pool.init_worker(i, &workers[i], WORKERS_THREAD_PRIO);    
-    //printf("init worker here is at 0x%x\n", &workers[i]);
-  }
-
+  // Warning this must be initialized after all workers have been added to the pool
   sf_recv.init(radio_handler, mac, &prach_buffer, &workers_pool, &workers_common, log_h, do_agc, SF_RECV_THREAD_PRIO);
-  
+
   return true; 
 }
 void phy::start_trace()
 {
-  for (int i=0;i<NOF_WORKERS;i++) {
+  for (int i=0;i<nof_workers;i++) {
     workers[i].start_trace();
   }
   printf("trace started\n");
@@ -98,7 +99,7 @@ void phy::start_trace()
 
 void phy::write_trace(std::string filename)
 {
-  for (int i=0;i<NOF_WORKERS;i++) {
+  for (int i=0;i<nof_workers;i++) {
     string i_str = static_cast<ostringstream*>( &(ostringstream() << i) )->str();
     workers[i].write_trace(filename + "_" + i_str);
   }
@@ -158,7 +159,7 @@ void phy::configure_prach_params()
 void phy::configure_ul_params()
 {
   Info("Configuring UL parameters\n");
-  for (int i=0;i<NOF_WORKERS;i++) {
+  for (int i=0;i<nof_workers;i++) {
     workers[i].set_ul_params();
   }
 }
@@ -249,14 +250,14 @@ void phy::set_rar_grant(uint32_t tti, uint8_t grant_payload[SRSLTE_RAR_GRANT_LEN
 }
 
 void phy::set_crnti(uint16_t rnti) {
-  for(uint32_t i=0;i<NOF_WORKERS;i++) {
+  for(uint32_t i=0;i<nof_workers;i++) {
     workers[i].set_crnti(rnti);
   }    
 }
 
 void phy::enable_pregen_signals(bool enable)
 {
-  for(uint32_t i=0;i<NOF_WORKERS;i++) {
+  for(uint32_t i=0;i<nof_workers;i++) {
     workers[i].enable_pregen_signals(enable);
   }
 }

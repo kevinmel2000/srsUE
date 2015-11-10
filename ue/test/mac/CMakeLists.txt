@@ -17,10 +17,6 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-find_package(UHD)
-
-if(UHD_FOUND)
-  add_executable(mac_test mac_test.cc)
-  target_link_libraries(mac_test srsue_common srsue_mac srsue_phy srsue_radio lte ${Boost_LIBRARIES})
-endif(UHD_FOUND)
+add_executable(mac_test mac_test.cc)
+target_link_libraries(mac_test srsue_common srsue_mac srsue_phy srsue_radio lte ${Boost_LIBRARIES})
 

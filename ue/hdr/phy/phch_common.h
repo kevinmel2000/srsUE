@@ -88,11 +88,10 @@ struct phch_sync_metrics_t
     float rsrp_filtered;
     float rx_gain_offset;
 
-    phch_common(uint32_t nof_workers);
+    phch_common(uint32_t max_mutex);
     void init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac);
     
-    /* For RNTI searches, -1 means now or forever */
-    
+    /* For RNTI searches, -1 means now or forever */    
     void               set_ul_rnti(srslte_rnti_type_t type, uint16_t rnti_value, int tti_start = -1, int tti_end = -1);
     uint16_t           get_ul_rnti(uint32_t tti);
     srslte_rnti_type_t get_ul_rnti_type();
@@ -111,6 +110,8 @@ struct phch_sync_metrics_t
         
     void worker_end(uint32_t tti, bool tx_enable, cf_t *buffer, uint32_t nof_samples, srslte_timestamp_t tx_time);
     
+    void set_nof_mutex(uint32_t nof_mutex);
+    
     bool sr_enabled; 
     int  sr_last_tx_tti; 
    
@@ -126,6 +127,7 @@ struct phch_sync_metrics_t
     void reset_ul();
     
   private: 
+    
     std::vector<pthread_mutex_t>    tx_mutex; 
     
     bool               is_first_of_burst;
@@ -156,6 +158,7 @@ struct phch_sync_metrics_t
 
     uint32_t nof_workers;
     uint32_t nof_mutex;
+    uint32_t max_mutex;
 
     srslte_cell_t       cell;
 

@@ -67,6 +67,7 @@ void sr_proc::step(uint32_t tti)
             phy_h->sr_send();
           }
         } else {
+          // TODO: Instruct higher-layers to release PUCCH/SRS, clear downlink assignments and uplink grants
           do_ra = true; 
           reset(); 
         }

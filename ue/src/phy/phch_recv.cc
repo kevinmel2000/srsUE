@@ -54,11 +54,15 @@ bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, pra
   workers_pool = _workers_pool;
   worker_com   = _worker_com;
   prach_buffer = _prach_buffer; 
+  tx_mutex_cnt = 0; 
   running      = true; 
   phy_state    = IDLE; 
   time_adv_sec = 0; 
   cell_is_set  = false; 
   do_agc       = do_agc_;
+
+  nof_tx_mutex = MUTEX_X_WORKER*workers_pool->get_nof_workers();
+  worker_com->set_nof_mutex(nof_tx_mutex);
   
   continuous_tx_mode = worker_com->params_db->get_param(phy_interface_params::CONTINUOUS_TX)>0?true:false;
   
@@ -143,7 +147,7 @@ bool phch_recv::cell_search(int force_N_id_2)
 
   bzero(found_cells, 3*sizeof(srslte_ue_cellsearch_result_t));
 
-  Info("Starting Cell search...\n");
+  log_h->console("Searching for cell...\n");
   if (srslte_ue_cellsearch_init(&cs, radio_recv_wrapper_cs, radio_h)) {
     Error("Initiating UE cell search\n");
     return false; 
@@ -158,7 +162,6 @@ bool phch_recv::cell_search(int force_N_id_2)
   srslte_ue_cellsearch_set_threshold(&cs, (float) 
     worker_com->params_db->get_param(phy_interface_params::CELLSEARCH_TIMEOUT_PSS_CORRELATION_THRESHOLD)/10);
 
-  radio_h->set_master_clock_rate(30.72e6);        
   radio_h->set_rx_srate(1.92e6);
   radio_h->start_rx();
   
@@ -191,7 +194,7 @@ bool phch_recv::cell_search(int force_N_id_2)
   cell.cp   = found_cells[max_peak_cell].cp; 
   cellsearch_cfo = found_cells[max_peak_cell].cfo;
   
-  Info("Found CELL ID: %d CP: %s, CFO: %f\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo);
+  log_h->console("Found CELL ID: %d CP: %s, CFO: %.1f KHz.\nTrying to decode MIB...\n", cell.id, srslte_cp_string(cell.cp), cellsearch_cfo/1000);
   
   srslte_ue_mib_sync_t ue_mib_sync; 
 
@@ -316,7 +319,7 @@ void phch_recv::run_thread()
           srslte_sync_set_em_alpha(&ue_sync.strack, (float) worker_com->params_db->get_param(phy_interface_params::SYNC_TRACK_THRESHOLD)/10);
         }
         
-        tti = (tti + 1) % 10240;
+        tti = (tti+1)%10240;        
         worker = (phch_worker*) workers_pool->wait_worker(tti);
         if (worker) {          
           buffer = worker->get_buffer();
@@ -339,8 +342,9 @@ void phch_recv::run_thread()
             srslte_timestamp_add(&tx_time_prach, 0, 4e-3);
             worker->set_tx_time(tx_time);
             
-            Debug("Settting TTI=%d to worker %d\n", tti, worker->get_id());
-            worker->set_tti(tti);
+            Debug("Settting TTI=%d, tx_mutex=%d to worker %d\n", tti, tx_mutex_cnt, worker->get_id());
+            worker->set_tti(tti, tx_mutex_cnt);
+            tx_mutex_cnt = (tx_mutex_cnt+1)%nof_tx_mutex;
 
             // Check if we need to TX a PRACH 
             if (prach_buffer->is_ready_to_send(tti)) {
@@ -392,6 +396,7 @@ void phch_recv::get_current_cell(srslte_cell_t* cell_)
 
 void phch_recv::sync_start()
 {
+  radio_h->set_master_clock_rate(30.72e6);        
   phy_state = CELL_SEARCH;
 }
 

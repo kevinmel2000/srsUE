@@ -126,7 +126,7 @@ bool ue::init(all_args_t *args_)
       delete [] c_str;
       return false;
     }    
-    phy.init_agc(&radio_uhd, &mac, &phy_log);
+    phy.init_agc(&radio_uhd, &mac, &phy_log, args->expert.nof_phy_threads);
   } else {
     if(!radio_uhd.init(c_str))
     {
@@ -134,7 +134,7 @@ bool ue::init(all_args_t *args_)
       delete [] c_str;
       return false;
     }    
-    phy.init(&radio_uhd, &mac, &phy_log);
+    phy.init(&radio_uhd, &mac, &phy_log, args->expert.nof_phy_threads);
     radio_uhd.set_rx_gain(args->rf.rx_gain);
     if (args->rf.tx_gain < 0) {
       radio_uhd.set_tx_gain(args->rf.rx_gain);
@@ -148,6 +148,8 @@ bool ue::init(all_args_t *args_)
 
   radio_uhd.set_rx_freq(args->rf.dl_freq);
   radio_uhd.set_tx_freq(args->rf.ul_freq);
+
+  phy_log.console("Setting frequency: DL=%.1f Mhz, UL=%.1f MHz\n", args->rf.dl_freq/1e6, args->rf.ul_freq/1e6);
 
   mac.init(&phy, &rlc, &mac_log);
   rlc.init(&pdcp, &rrc, this, &rlc_log, &mac);

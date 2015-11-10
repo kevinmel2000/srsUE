@@ -57,8 +57,8 @@ class phy
 {
 public:
   phy();
-  bool init(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
-  bool init_agc(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h);
+  bool init(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers = DEFAULT_WORKERS);
+  bool init_agc(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers = DEFAULT_WORKERS);
   void stop();
 
   void get_metrics(phy_metrics_t &m);
@@ -119,7 +119,11 @@ public:
   
 private:
     
-  const static int NOF_WORKERS         = 2;
+  uint32_t nof_workers; 
+  
+  const static int MAX_WORKERS         = 4;
+  const static int DEFAULT_WORKERS     = 2;
+  
   const static int SF_RECV_THREAD_PRIO = 1;
   const static int WORKERS_THREAD_PRIO = 0; 
   
@@ -139,7 +143,7 @@ private:
   /* Current time advance */
   uint32_t     n_ta;
   
-  bool init_(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, bool do_agc);
+  bool init_(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, bool do_agc, uint32_t nof_workers);
 
 };
 
