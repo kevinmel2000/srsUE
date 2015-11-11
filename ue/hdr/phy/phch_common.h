@@ -41,7 +41,7 @@
 
 namespace srsue {
 
-struct phch_metrics_t
+struct dl_metrics_t
 {
   float n;
   float sinr;
@@ -49,10 +49,15 @@ struct phch_metrics_t
   float rsrq;
   float rssi;
   float turbo_iters;
-  float dl_mcs;
+  float mcs;
 };
 
-struct phch_sync_metrics_t
+struct ul_metrics_t
+{
+  float mcs;
+};
+
+struct sync_metrics_t
 {
   float cfo;
   float sfo;
@@ -70,7 +75,15 @@ struct phch_sync_metrics_t
       p0_preamble = 0; 
       cur_radio_power = 0; 
       rx_gain_offset = 0;
-      bzero(&metrics, sizeof(phch_metrics_t));
+      bzero(&dl_metrics, sizeof(dl_metrics_t));
+      dl_metrics_read = true;
+      dl_metrics_count = 0;
+      bzero(&ul_metrics, sizeof(ul_metrics_t));
+      ul_metrics_read = true;
+      ul_metrics_count = 0;
+      bzero(&sync_metrics, sizeof(sync_metrics_t));
+      sync_metrics_read = true;
+      sync_metrics_count = 0;
     }
     
     /* Common variables used by all phy workers */
@@ -119,10 +132,12 @@ struct phch_sync_metrics_t
 
     void set_cell(const srslte_cell_t &c);
     uint32_t get_nof_prb();
-    void set_metrics(const phch_metrics_t &m);
-    void get_metrics(phch_metrics_t &m);
-    void set_sync_metrics(const phch_sync_metrics_t &m);
-    void get_sync_metrics(phch_sync_metrics_t &m);
+    void set_dl_metrics(const dl_metrics_t &m);
+    void get_dl_metrics(dl_metrics_t &m);
+    void set_ul_metrics(const ul_metrics_t &m);
+    void get_ul_metrics(ul_metrics_t &m);
+    void set_sync_metrics(const sync_metrics_t &m);
+    void get_sync_metrics(sync_metrics_t &m);
 
     void reset_ul();
     
@@ -154,16 +169,23 @@ struct phch_sync_metrics_t
     } pending_ack_t;
     pending_ack_t pending_ack[10];
     
-    bool is_first_tx;
+    bool            is_first_tx;
 
-    uint32_t nof_workers;
-    uint32_t nof_mutex;
-    uint32_t max_mutex;
+    uint32_t        nof_workers;
+    uint32_t        nof_mutex;
+    uint32_t        max_mutex;
 
-    srslte_cell_t       cell;
+    srslte_cell_t   cell;
 
-    phch_metrics_t      metrics;
-    phch_sync_metrics_t sync_metrics;
+    dl_metrics_t    dl_metrics;
+    uint32_t        dl_metrics_count;
+    bool            dl_metrics_read;
+    ul_metrics_t    ul_metrics;
+    uint32_t        ul_metrics_count;
+    bool            ul_metrics_read;
+    sync_metrics_t  sync_metrics;
+    uint32_t        sync_metrics_count;
+    bool            sync_metrics_read;
   };
   
 } // namespace srsue

@@ -46,8 +46,9 @@ typedef _Complex float cf_t;
 
 struct phy_metrics_t
 {
-  phch_sync_metrics_t sync_metrics;
-  phch_metrics_t      phch_metrics;
+  sync_metrics_t sync;
+  dl_metrics_t   dl;
+  ul_metrics_t   ul;
   float mabr;
 };
 

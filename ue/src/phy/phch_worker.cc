@@ -49,7 +49,8 @@ phch_worker::phch_worker() : tr_exec(10240)
   trace_enabled   = false; 
   cfi = 0;
   
-  bzero(&metrics, sizeof(phch_metrics_t));
+  bzero(&dl_metrics, sizeof(dl_metrics_t));
+  bzero(&ul_metrics, sizeof(ul_metrics_t));
   reset_ul_params();
   
 }
@@ -405,13 +406,13 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
              timestr);
 
       // Store metrics
-      metrics.dl_mcs = grant->mcs.idx;
-      metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
-      metrics.rsrp   = srslte_chest_dl_get_rsrp(&ue_dl.chest);
-      metrics.sinr   = 10*log10(metrics.rsrp/metrics.n);
-      metrics.rsrq   = srslte_chest_dl_get_rsrq(&ue_dl.chest);
-      metrics.rssi   = srslte_chest_dl_get_rssi(&ue_dl.chest);
-      phy->set_metrics(metrics);
+      dl_metrics.mcs    = grant->mcs.idx;
+      dl_metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
+      dl_metrics.rsrp   = srslte_chest_dl_get_rsrp(&ue_dl.chest);
+      dl_metrics.sinr   = 10*log10(dl_metrics.rsrp/dl_metrics.n);
+      dl_metrics.rsrq   = srslte_chest_dl_get_rsrq(&ue_dl.chest);
+      dl_metrics.rssi   = srslte_chest_dl_get_rssi(&ue_dl.chest);
+      phy->set_dl_metrics(dl_metrics);
 
       return ack; 
     } else {
@@ -625,7 +626,9 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
          uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",
          ue_ul.pusch.shortened?"yes":"no", timestr);
 
-
+  // Store metrics
+  ul_metrics.mcs = grant->mcs.idx;
+  phy->set_ul_metrics(ul_metrics);
 }
 
 void phch_worker::encode_pucch()

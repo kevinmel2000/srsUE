@@ -102,29 +102,30 @@ void metrics_stdout::print_metrics()
   {
     n_reports = 0;
     cout << endl;
-    cout << "mcs\tsnr\trsrq\tturbo\tcfo\tsfo\tmabr" << endl;
-    cout << "------------------------------------------------------" << endl;
+    cout << "--DL-------------------------------------------------- UL------" << endl;
+    cout << "mcs\tsnr\trsrq\tturbo\tcfo\tsfo\tmabr\tmcs" << endl;
   }
-  cout << float_to_string(metrics.phy.phch_metrics.dl_mcs, 2) << "\t";
-  cout << float_to_string(metrics.phy.phch_metrics.sinr, 3) << "\t";
-  cout << float_to_string(metrics.phy.phch_metrics.rsrq, 3) << "\t";
-  cout << float_to_string(metrics.phy.phch_metrics.turbo_iters, 2) << "\t";
-  cout << float_to_eng_string(metrics.phy.sync_metrics.cfo, 3) << "\t";
-  cout << float_to_eng_string(metrics.phy.sync_metrics.sfo, 3) << "\t";
-  cout << float_to_eng_string(metrics.phy.mabr*1000, 3) << " ";
+  cout << float_to_string(metrics.phy.dl.mcs, 2) << "\t";
+  cout << float_to_string(metrics.phy.dl.sinr, 3) << "\t";
+  cout << float_to_string(metrics.phy.dl.rsrq, 3) << "\t";
+  cout << float_to_string(metrics.phy.dl.turbo_iters, 2) << "\t";
+  cout << float_to_eng_string(metrics.phy.sync.cfo, 3) << "\t";
+  cout << float_to_eng_string(metrics.phy.sync.sfo, 3) << "\t";
+  cout << float_to_eng_string(metrics.phy.mabr*1000, 3) << "\t";
+  cout << float_to_string(metrics.phy.ul.mcs, 2) << " ";
   cout << endl;
 
 
 //  printf("%f %f %f %f %f %f %f %f %f %f\n",
-//         metrics.phy.phch_metrics.n,
-//         metrics.phy.phch_metrics.sinr,
-//         metrics.phy.phch_metrics.rsrp,
-//         metrics.phy.phch_metrics.rsrq,
-//         metrics.phy.phch_metrics.rssi,
-//         metrics.phy.phch_metrics.turbo_iters,
-//         metrics.phy.phch_metrics.dl_mcs,
-//         metrics.phy.sync_metrics.cfo,
-//         metrics.phy.sync_metrics.sfo,
+//         metrics.phy.dl.n,
+//         metrics.phy.dl.sinr,
+//         metrics.phy.dl.rsrp,
+//         metrics.phy.dl.rsrq,
+//         metrics.phy.dl.rssi,
+//         metrics.phy.dl.turbo_iters,
+//         metrics.phy.dl.mcs,
+//         metrics.phy.sync.cfo,
+//         metrics.phy.sync.sfo,
 //         metrics.phy.mabr);
   if(metrics.uhd.uhd_error) {
     cout << "UHD status:"

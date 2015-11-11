@@ -77,7 +77,7 @@ private:
   srslte_ue_mib_t     ue_mib;
 
   // Sync metrics
-  phch_sync_metrics_t metrics;
+  sync_metrics_t metrics;
 
   enum {
     IDLE, CELL_SEARCH, SYNCING, SYNC_DONE
