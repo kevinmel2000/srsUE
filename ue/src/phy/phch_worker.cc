@@ -491,10 +491,11 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
   }
   
   /* Limit UL modulation if not supported by the UE or disabled by higher layers */
-  if (phy->params_db->get_param(phy_interface_params::DISABLE_64QAM) || !phy->params_db->get_param(phy_interface_params::PUSCH_EN_64QAM)) {
+  if (!phy->params_db->get_param(phy_interface_params::FORCE_ENABLE_64QAM) && !phy->params_db->get_param(phy_interface_params::PUSCH_EN_64QAM)) {
     if (grant->phy_grant.ul.mcs.mod == SRSLTE_MOD_64QAM) {
       grant->phy_grant.ul.mcs.mod = SRSLTE_MOD_16QAM;
       grant->phy_grant.ul.Qm      = 4;
+      printf("downgrading to 16qam\n");
     }
   }
   

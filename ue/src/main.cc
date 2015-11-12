@@ -125,7 +125,7 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
         ("expert.sync_find_th",         bpo::value<float>(&args->expert.sync_find_th)->default_value(1.6), "Synchronization find phase threshold")
         ("expert.sync_find_max_frames",   bpo::value<float>(&args->expert.sync_find_max_frames)->default_value(100), "Synchronization find phase timeout")
                 
-        ("expert.disable_64qam",      bpo::value<bool>(&args->expert.disable_64qam)->default_value(false), "Disables 64QAM on PUSCH")
+        ("expert.enable_64qam_attach",      bpo::value<bool>(&args->expert.enable_64qam_attach)->default_value(false), "PUSCH 64QAM modulation before attachment")
         
         ("expert.continuous_tx",      bpo::value<bool>(&args->expert.continuous_tx)->default_value(false), "Enables continues transmission (default off)")
         ("expert.nof_phy_threads",    bpo::value<int>(&args->expert.nof_phy_threads)->default_value(2), "Number of PHY threads")

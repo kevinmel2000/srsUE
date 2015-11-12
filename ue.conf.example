@@ -55,8 +55,8 @@ ul_gain = 70
 #sync_find_th         = 1.6
 #sync_find_max_frames = 100
 
-# Disables PUSCH 64QAM modulation (Default false)
-#disable_64qam = false
+# Enables PUSCH 64QAM modulation before attachment (Necessary for old Amarisoft eNodeB, disabled by default)
+#enable_64qam_attach = false
 
 # Enables continuous transmission mode (Default false)
 #continuous_tx = false

@@ -134,7 +134,7 @@ public:
     
     RX_GAIN_OFFSET,
     
-    DISABLE_64QAM,
+    FORCE_ENABLE_64QAM,
     
     CONTINUOUS_TX,
     PDSCH_MAX_ITS,
