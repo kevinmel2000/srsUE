@@ -495,7 +495,6 @@ bool phch_worker::decode_pdcch_ul(mac_interface_phy::mac_grant_t* grant)
     if (grant->phy_grant.ul.mcs.mod == SRSLTE_MOD_64QAM) {
       grant->phy_grant.ul.mcs.mod = SRSLTE_MOD_16QAM;
       grant->phy_grant.ul.Qm      = 4;
-      printf("downgrading to 16qam\n");
     }
   }
   
