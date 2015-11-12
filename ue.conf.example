@@ -1,63 +1,117 @@
+#####################################################################
+#                   srsUE configuration file
+#####################################################################
+# RF configuration
+#
+# dl_freq: Downlink centre frequency (Hz).
+# ul_freq: Uplink centre frequency (Hz).
+# rx_gain: Receive gain (dB). Disables AGC if enabled
+# tx_gain: Transmit gain (dB). Used if UL power control is disabled
+#####################################################################
 [rf]
 dl_freq = 2680000000
 ul_freq = 2560000000
-
-# If enabled, disables AGC
-#rx_gain = 50 
-
-# Default tx gain if UL power control disabled. 
+#rx_gain = 50  
 #tx_gain = 50
 
+#####################################################################
+# MAC-layer packet capture configuration
+#
+# Packets are captured to file in the compact format decoded by 
+# the Wireshark mac-lte-framed dissector. For more information see:
+# https://wiki.wireshark.org/MAC-LTE
+#
+# enable:   Enable MAC layer packet captures (true/false)
+# filename: File path to use for packet captures
+#####################################################################
 [pcap]
 enable = true
 filename = /tmp/ue.pcap
 
+#####################################################################
+# PHY and Radio layer trace capture configuration
+#
+# enable:         Enable PHY and Radio layer traces (true/false)
+# phy_filename:   File path to use for PHY trace output
+# radio_filename: File path to use for Radio trace output
+#####################################################################
 [trace]
 enable = false
 phy_filename = /tmp/ue.phy_trace
 radio_filename = /tmp/ue.radio_trace
 
+#####################################################################
+# Log configuration
+#
+# Log levels can be set for individual layers. "all_level" sets log
+# level for all layers unless otherwise configured.
+# Format: e.g. phy_level = info
+#
+# In the same way, packet hex dumps can be limited for each level.
+# "all_hex_limit" sets the hex limit for all layers unless otherwise
+# configured.
+# Format: e.g. phy_hex_limit = 32
+#
+# Logging layers: phy, mac, rlc, pdcp, rrc, nas, gw, usim, all
+# Logging levels: debug, info, warning, error, none
+#
+# filename: File path to use for log output
+#####################################################################
 [log]
 phy_level = info
 all_level = warning
 all_hex_limit = 32
 filename = /tmp/ue.log
 
+#####################################################################
+# USIM configuration
+#
+# algo: Authentication algorithm (xor/milenage)
+# op:   128-bit Operator Variant Algorithm Configuration Field (hex)
+# amf:  16-bit Authentication Management Field (hex)
+# k:    128-bit subscriber key (hex)
+# imsi: 15 digit International Mobile Subscriber Identity
+# imei: 15 digit International Mobile Station Equipment Identity
+#####################################################################
 [usim]
 algo = milenage
 op   = 63BFA50EE6523365FF14C1F45F88737D
 amf  = 8000
+k    = 00112233445566778899aabbccddeeff
 imsi = 001010123456789
 imei = 353490069873319
-k    = 00112233445566778899aabbccddeeff
 
+#####################################################################
+# Expert configuration options
+#
+# prach_gain:           PRACH gain (dB). If positive, disables power control 
+#                       and fixes PRACH tx gain.
+# ul_gain:              Uplink gain (dB). If positive, disables power control
+#                       and fixes PUSCH/PUCCH/SRS tx gain.
+# ul_pwr_ctrl_offset:   Uplink power control offset (dB). Adds an offset
+#                       to all UL gains calculated by power control.
+# rx_gain_offset:       Receive gain offset (dB). Defines the default receiver
+#                       chain gain used to compute UL power control values if
+#                       RSSI sensor not found. Uses rx gain by default.
+# pdsch_max_its:        Maximum number of turbo decoder iterations (default 4)
+# sync_track_th:
+# sync_track_avg_coef:
+# sync_find_th:
+# sync_find_max_frames:
+# continuous_tx:        Enable/disable continuous transmission mode (true/false)
+                        Default enabled.
+# nof_phy_threads:      Selects the number of PHY threads (maximum 4, minimum 1, default 2)
+#####################################################################
 [expert]
-
-# If positive, disables power control and fixes the PRACH tx gain
 prach_gain = 60
-
-# If positive, disables power control and fixes the PUSCH/PUCCH/SRS tx gain
 ul_gain = 70
-
-# Adds an offset to all UL gains calculated by power control
 #ul_pwr_ctrl_offset = 0
-
-# If RSSI sensor not found defines the default receiver chain gain used to compute UL 
-# power control values. By default uses rx gain. 
 #rx_gain_offset = 50
-
-# Maximum number of turbo decoder iterations (default 4)
 #pdsch_max_its       = 4
-
 #sync_track_th       = 1.3 # must be > 1
 #sync_track_avg_coef = 0.1 # must be 0..1
-
 #sync_find_th         = 1.6
 #sync_find_max_frames = 100
-
-# Enables/Disables continuous transmission mode (Default enabled)
 #continuous_tx = true
-
-# Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #nof_phy_threads = 2
 
