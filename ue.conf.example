@@ -55,8 +55,11 @@ ul_gain = 70
 #sync_find_th         = 1.6
 #sync_find_max_frames = 100
 
-# Enables/Disables continuous transmission mode (Default enabled)
-#continuous_tx = true
+# Disables PUSCH 64QAM modulation (Default false)
+#disable_64qam = false
+
+# Enables continuous transmission mode (Default false)
+#continuous_tx = false
 
 # Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #nof_phy_threads = 2
