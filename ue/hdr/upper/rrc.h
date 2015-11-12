@@ -73,6 +73,8 @@ public:
   void stop();
 
   rrc_state_t get_state();
+  
+  void enable_capabilities();
 
 private:
   buffer_pool          *pool;

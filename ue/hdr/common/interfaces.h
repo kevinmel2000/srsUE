@@ -101,6 +101,7 @@ public:
   virtual void write_sdu(uint32_t lcid, byte_buffer_t *sdu) = 0;
   virtual uint16_t get_mcc() = 0;
   virtual uint16_t get_mnc() = 0;
+  virtual void enable_capabilities() = 0;
 };
 
 // RRC interface for PDCP

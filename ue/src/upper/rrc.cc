@@ -342,6 +342,12 @@ void rrc::send_rrc_con_reconfig_complete(uint32_t lcid, byte_buffer_t *pdu)
   pdcp->write_sdu(lcid, pdu);
 }
 
+void rrc::enable_capabilities()
+{
+  phy->set_param(srsue::phy_interface_params::PUSCH_EN_64QAM,
+                 sib2.rr_config_common_sib.pusch_cnfg.enable_64_qam);  
+}
+
 void rrc::send_rrc_ue_cap_info(uint32_t lcid, byte_buffer_t *pdu)
 {
   rrc_log->debug("Preparing UE Capability Info\n");
@@ -622,8 +628,7 @@ void rrc::apply_sib2_configs()
                  sib2.rr_config_common_sib.pdsch_cnfg.p_b);
 
   // PUSCH ConfigCommon
-  phy->set_param(srsue::phy_interface_params::PUSCH_EN_64QAM,
-                 sib2.rr_config_common_sib.pusch_cnfg.enable_64_qam);
+  phy->set_param(srsue::phy_interface_params::PUSCH_EN_64QAM, 0); // This will be set after attach
   phy->set_param(srsue::phy_interface_params::PUSCH_HOPPING_OFFSET,
                  sib2.rr_config_common_sib.pusch_cnfg.pusch_hopping_offset);
   phy->set_param(srsue::phy_interface_params::PUSCH_HOPPING_N_SB,

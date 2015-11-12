@@ -247,6 +247,9 @@ void nas::parse_attach_accept(uint32_t lcid, byte_buffer_t *pdu)
 
     nas_log->info("Sending Attach Complete\n");
     rrc->write_sdu(lcid, pdu);
+    
+    // Instruct RRC to enable capabilities
+    rrc->enable_capabilities();
   }
   else
   {
