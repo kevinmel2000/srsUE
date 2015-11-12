@@ -127,7 +127,7 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
                 
         ("expert.disable_64qam",      bpo::value<bool>(&args->expert.disable_64qam)->default_value(false), "Disables 64QAM on PUSCH")
         
-        ("expert.burst_tx",           bpo::value<bool>(&args->expert.continuous_tx)->default_value(false), "Enables bursty transmission (switches off tx on idle)")
+        ("expert.continuous_tx",      bpo::value<bool>(&args->expert.continuous_tx)->default_value(false), "Enables continues transmission (default off)")
         ("expert.nof_phy_threads",    bpo::value<int>(&args->expert.nof_phy_threads)->default_value(2), "Number of PHY threads")
         
     ;

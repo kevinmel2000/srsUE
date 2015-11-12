@@ -38,8 +38,6 @@
 
 namespace srsue {
  
-  
-bool continuous_tx_mode = false; 
 
 phch_recv::phch_recv() { 
   running = false; 
@@ -63,9 +61,7 @@ bool phch_recv::init(srslte::radio* _radio_handler, mac_interface_phy *_mac, pra
 
   nof_tx_mutex = MUTEX_X_WORKER*workers_pool->get_nof_workers();
   worker_com->set_nof_mutex(nof_tx_mutex);
-  
-  continuous_tx_mode = worker_com->params_db->get_param(phy_interface_params::CONTINUOUS_TX)>0?true:false;
-  
+    
   start(prio);
 }
 
@@ -78,10 +74,9 @@ int radio_recv_wrapper_cs(void *h, void *data, uint32_t nsamples, srslte_timesta
 {
   srslte::radio *radio_h = (srslte::radio*) h;
   if (radio_h->rx_now(data, nsamples, rx_time)) {
-    if (continuous_tx_mode) {
-      if (abs(nsamples-radio_h->get_tti_len())<10) {
-        radio_h->tx_offset(nsamples-radio_h->get_tti_len());
-      }
+    int offset = nsamples-radio_h->get_tti_len();
+    if (abs(offset)<10 && offset != 0) {
+      radio_h->tx_offset(offset);
     }
     return nsamples;
   } else {

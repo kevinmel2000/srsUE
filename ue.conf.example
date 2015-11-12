@@ -58,8 +58,8 @@ ul_gain = 70
 # Disables PUSCH 64QAM modulation (Default false)
 #disable_64qam = false
 
-# Enables/Disables bursty transmission mode (Default false)
-#burst_tx = false
+# Enables continuous transmission mode (Default false)
+#continuous_tx = false
 
 # Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #nof_phy_threads = 2
