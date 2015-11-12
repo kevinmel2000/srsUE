@@ -94,10 +94,11 @@ imei = 353490069873319
 #                       chain gain used to compute UL power control values if
 #                       RSSI sensor not found. Uses rx gain by default.
 # pdsch_max_its:        Maximum number of turbo decoder iterations (default 4)
-# sync_track_th:
-# sync_track_avg_coef:
-# sync_find_th:
-# sync_find_max_frames:
+# sync_track_th:        Peak-to-sidelobe ratio (PSR) threshold for PSS correlation 
+#                       in track phase
+# sync_track_avg_coef:  Exponential averaging coefficient for PSS correlation in track phase
+# sync_find_th:         PSR threshold for PSS correlation in find phase
+# sync_find_max_frames: Maximum number of frames scanned during cell find phase
 # continuous_tx:        Enable/disable continuous transmission mode (true/false)
                         Default enabled.
 # nof_phy_threads:      Selects the number of PHY threads (maximum 4, minimum 1, default 2)
