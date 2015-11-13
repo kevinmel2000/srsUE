@@ -28,11 +28,23 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/thread/mutex.hpp>
 #include "ue.h"
+#include "srslte/srslte.h"
 
 namespace srsue{
 
 ue*           ue::instance = NULL;
 boost::mutex  ue_instance_mutex;
+
+bool ue::check_srslte_version(void) {
+  if (REQUIRED_SRSLTE_VERSION_MAJOR >= SRSLTE_VERSION_MAJOR && 
+      REQUIRED_SRSLTE_VERSION_MINOR >= SRSLTE_VERSION_MINOR) {
+    return true; 
+  } else {
+    fprintf(stderr, "Invalid srsLTE version. Minimum required version is %d.%d\n", 
+            SRSLTE_VERSION_MAJOR, SRSLTE_VERSION_MINOR);
+    return false; 
+  }
+}
 
 ue* ue::get_instance(void)
 {
@@ -66,6 +78,10 @@ bool ue::init(all_args_t *args_)
 {
   args     = args_;
 
+  if (!check_srslte_version()) {
+    return false; 
+  }
+  
   logger.init(args->log.filename);
   uhd_log.init("UHD ", &logger);
   phy_log.init("PHY ", &logger, true);

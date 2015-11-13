@@ -52,6 +52,11 @@
 #include "common/logger.h"
 #include "common/log_filter.h"
 
+
+#define REQUIRED_SRSLTE_VERSION_MAJOR  1
+#define REQUIRED_SRSLTE_VERSION_MINOR  0
+#define REQUIRED_SRSLTE_VERSION_BUGFIX 0
+
 namespace srsue {
 
 /*******************************************************************************
@@ -187,6 +192,7 @@ private:
 
   srslte::LOG_LEVEL_ENUM level(std::string l);
   
+  bool check_srslte_version();
   void set_expert_parameters();
 };
 
