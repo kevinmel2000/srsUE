@@ -36,13 +36,18 @@ ue*           ue::instance = NULL;
 boost::mutex  ue_instance_mutex;
 
 bool ue::check_srslte_version(void) {
-  if (REQUIRED_SRSLTE_VERSION_MAJOR >= SRSLTE_VERSION_MAJOR && 
-      REQUIRED_SRSLTE_VERSION_MINOR >= SRSLTE_VERSION_MINOR) {
-    return true; 
+  int maj = srslte_get_version_major();
+  int min = srslte_get_version_minor();
+
+  if (REQUIRED_SRSLTE_VERSION_MAJOR > maj ||
+      (REQUIRED_SRSLTE_VERSION_MAJOR >= maj &&
+       REQUIRED_SRSLTE_VERSION_MINOR > min)) {
+    fprintf(stderr, "srsLTE version mismatch. Minimum required version is %d.%d. Found version %d.%d\n",
+            REQUIRED_SRSLTE_VERSION_MAJOR, REQUIRED_SRSLTE_VERSION_MINOR,
+            maj, min);
+    return false;
   } else {
-    fprintf(stderr, "Invalid srsLTE version. Minimum required version is %d.%d\n", 
-            SRSLTE_VERSION_MAJOR, SRSLTE_VERSION_MINOR);
-    return false; 
+    return true;
   }
 }
 
