@@ -111,6 +111,16 @@ void phy::stop()
   workers_pool.stop();
 }
 
+void phy::get_metrics(phy_metrics_t &m) {
+  workers_common.get_dl_metrics(m.dl);
+  workers_common.get_ul_metrics(m.ul);
+  workers_common.get_sync_metrics(m.sync);
+  m.mabr = srslte_ra_tbs_from_idx(srslte_ra_tbs_idx_from_mcs(m.dl.mcs), workers_common.get_nof_prb());
+
+  // Estimate IP-layer MABR as 75% of MAC-layer MABR
+  m.mabr = m.mabr*4/5;
+}
+
 void phy::set_timeadv_rar(uint32_t ta_cmd) {
   n_ta = srslte_N_ta_new_rar(ta_cmd);
   sf_recv.set_time_adv_sec(((float) n_ta)*SRSLTE_LTE_TS);

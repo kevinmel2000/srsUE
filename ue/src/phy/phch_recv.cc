@@ -214,6 +214,7 @@ bool phch_recv::cell_search(int force_N_id_2)
 
   if (ret == 1) {
     srslte_pbch_mib_unpack(bch_payload, &cell, NULL);
+    worker_com->set_cell(cell);
     srslte_cell_fprint(stdout, &cell, 0);
     //FIXME: this is temporal
     srslte_bit_pack_vector(bch_payload, bch_payload_bits, SRSLTE_BCH_PAYLOAD_LEN);
@@ -322,8 +323,10 @@ void phch_recv::run_thread()
 
             Debug("Worker %d synchronized\n", worker->get_id());
             
-            float cfo = srslte_ue_sync_get_cfo(&ue_sync)/15000; 
-            worker->set_cfo(cfo);
+            metrics.sfo = srslte_ue_sync_get_sfo(&ue_sync);
+            metrics.cfo = srslte_ue_sync_get_cfo(&ue_sync);
+            worker->set_cfo(metrics.cfo/15000);
+            worker_com->set_sync_metrics(metrics);
     
             /* Compute TX time: Any transmission happens in TTI+4 thus advance 4 ms the reception time */
             srslte_timestamp_t rx_time, tx_time, tx_time_prach; 
@@ -345,7 +348,7 @@ void phch_recv::run_thread()
               Info("TX PRACH now. RX time: %d:%f, Now: %d:%f\n", rx_time.full_secs, rx_time.frac_secs, 
                    cur_time.full_secs, cur_time.frac_secs);
               // send prach if we have to 
-              prach_buffer->send(radio_h, cfo, worker_com->pathloss, tx_time_prach);
+              prach_buffer->send(radio_h, metrics.cfo/15000, worker_com->pathloss, tx_time_prach);
               radio_h->tx_end();            
               worker_com->p0_preamble = prach_buffer->get_p0_preamble();
               worker_com->cur_radio_power = SRSLTE_MIN(SRSLTE_PC_MAX, worker_com->pathloss + worker_com->p0_preamble);

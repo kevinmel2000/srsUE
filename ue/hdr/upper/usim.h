@@ -39,15 +39,22 @@ typedef enum{
   auth_algo_xor,
 }auth_algo_t;
 
+typedef struct{
+  std::string algo;
+  std::string op;
+  std::string amf;
+  std::string imsi;
+  std::string imei;
+  std::string k;
+}usim_args_t;
+
 class usim
     :public usim_interface_nas
     ,public usim_interface_rrc
 {
 public:
   usim();
-  void init(std::string imsi_, std::string imei_, std::string k_,
-            std::string auth_algo_, std::string op_, std::string amf_,
-            srslte::log *usim_log_);
+  void init(usim_args_t *args, srslte::log *usim_log_);
   void stop();
 
   // NAS interface

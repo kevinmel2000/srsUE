@@ -49,8 +49,10 @@ typedef boost::shared_ptr<std::string> str_ptr;
 class logger
 {
 public:
-  logger(std::string filename);
+  logger();
+  logger(std::string file);
   ~logger();
+  void init(std::string file);
   void log(const char *msg);
   void log(str_ptr msg);
 
@@ -60,6 +62,7 @@ private:
   void flush();
 
   FILE*                               logfile;
+  bool                                inited;
   bool                                not_done;
   std::string                         filename;
   boost::condition                    not_empty;

@@ -33,24 +33,34 @@ using namespace std;
 
 namespace srsue{
 
-logger::logger(std::string file)
+logger::logger()
   :buffer(LOG_BUFFER_SIZE)
-  ,filename(file)
+  ,inited(false)
   ,not_done(true)
-{
-  logfile = fopen(filename.c_str(), "a");
-  if(logfile==NULL) {
-    printf("Error: could not create log file, no messages will be logged");
-  }
-  pthread_create(&thread, NULL, &start, this);
+{}
+
+logger::logger(std::string file) {
+  init(file);
 }
 
 logger::~logger() {
   not_done = false;
   log("Closing log");
-  pthread_join(thread, NULL);
-  flush();
-  fclose(logfile);
+  if(inited) {
+    pthread_join(thread, NULL);
+    flush();
+    fclose(logfile);
+  }
+}
+
+void logger::init(std::string file) {
+  filename = file;
+  logfile = fopen(filename.c_str(), "a");
+  if(logfile==NULL) {
+    printf("Error: could not create log file, no messages will be logged");
+  }
+  pthread_create(&thread, NULL, &start, this);
+  inited = true;
 }
 
 void logger::log(const char *msg) {

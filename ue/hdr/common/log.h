@@ -58,10 +58,18 @@ class log
 {
 public:
 
+  log() {
+    service_name = "";
+    tti = 0;
+    level = LOG_LEVEL_NONE;
+    hex_limit = 0;
+  }
+
   log(std::string service_name_) {
     service_name = service_name_;
     tti = 0;
     level = LOG_LEVEL_NONE;
+    hex_limit = 0;
   }
 
   // This function shall be called at the start of every tti for printing tti
@@ -110,7 +118,6 @@ protected:
   uint32_t        tti;
   LOG_LEVEL_ENUM  level;
   int             hex_limit;
-private:
   std::string     service_name;
 };
 

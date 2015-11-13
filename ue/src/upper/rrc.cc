@@ -177,7 +177,8 @@ void rrc::write_pdu_bcch_dlsch(byte_buffer_t *pdu)
     } else if (LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2 == dlsch_msg.sibs[0].sib_type && RRC_STATE_SIB2_SEARCH == state) {
       // Handle SIB2
       memcpy(&sib2, &dlsch_msg.sibs[0].sib.sib2, sizeof(LIBLTE_RRC_SYS_INFO_BLOCK_TYPE_2_STRUCT));
-      rrc_log->info("SIB2 received, \n");
+      rrc_log->console("SIB2 received\n");
+      rrc_log->info("SIB2 received\n");
       state = RRC_STATE_WAIT_FOR_CON_SETUP;
       mac->set_param(srsue::mac_interface_params::BCCH_SI_WINDOW_ST, -1);
       apply_sib2_configs();
@@ -515,6 +516,7 @@ void rrc::parse_dl_dcch(uint32_t lcid, byte_buffer_t *pdu)
     }
     break;
   case LIBLTE_RRC_DL_DCCH_MSG_TYPE_RRC_CON_RELEASE:
+    state = RRC_STATE_IDLE;
     rrc_log->console("RRC Connection released, reconnection not enabled.\n");
     break;
   default:

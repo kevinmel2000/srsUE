@@ -128,6 +128,10 @@ private:
   float                             cfo;
   bool                              rar_cqi_request;
   double snr;
+
+  // Metrics
+  dl_metrics_t dl_metrics;
+  ul_metrics_t ul_metrics;
   
 #ifdef LOG_EXECTIME
   struct timeval logtime_start[3]; 

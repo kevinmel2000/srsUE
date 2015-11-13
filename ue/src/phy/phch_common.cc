@@ -60,7 +60,16 @@ phch_common::phch_common(uint32_t max_mutex_) : tx_mutex(max_mutex_)
   sr_last_tx_tti = -1;
   cur_pusch_power = 0;
   bzero(zeros, 50000*sizeof(cf_t));
-  
+
+  bzero(&dl_metrics, sizeof(dl_metrics_t));
+  dl_metrics_read = true;
+  dl_metrics_count = 0;
+  bzero(&ul_metrics, sizeof(ul_metrics_t));
+  ul_metrics_read = true;
+  ul_metrics_count = 0;
+  bzero(&sync_metrics, sizeof(sync_metrics_t));
+  sync_metrics_read = true;
+  sync_metrics_count = 0;
 }
   
 void phch_common::init(phy_params *_params, srslte::log *_log, srslte::radio *_radio, mac_interface_phy *_mac)
@@ -230,6 +239,71 @@ void phch_common::worker_end(uint32_t tti, bool tx_enable,
   pthread_mutex_unlock(&tx_mutex[(tti+1)%nof_mutex]);
 }    
 
+
+void phch_common::set_cell(const srslte_cell_t &c) {
+  cell = c;
+}
+
+uint32_t phch_common::get_nof_prb() {
+  return cell.nof_prb;
+}
+
+void phch_common::set_dl_metrics(const dl_metrics_t &m) {
+  if(dl_metrics_read) {
+    dl_metrics       = m;
+    dl_metrics_count = 1;
+    dl_metrics_read  = false;
+  } else {
+    dl_metrics_count++;
+    dl_metrics.mcs = dl_metrics.mcs + (m.mcs - dl_metrics.mcs)/dl_metrics_count;
+    dl_metrics.n = dl_metrics.n + (m.n - dl_metrics.n)/dl_metrics_count;
+    dl_metrics.rsrp = dl_metrics.rsrp + (m.rsrp - dl_metrics.rsrp)/dl_metrics_count;
+    dl_metrics.rsrq = dl_metrics.rsrq + (m.rsrq - dl_metrics.rsrq)/dl_metrics_count;
+    dl_metrics.rssi = dl_metrics.rssi + (m.rssi - dl_metrics.rssi)/dl_metrics_count;
+    dl_metrics.sinr = dl_metrics.sinr + (m.sinr - dl_metrics.sinr)/dl_metrics_count;
+    dl_metrics.turbo_iters = dl_metrics.turbo_iters + (m.turbo_iters - dl_metrics.turbo_iters)/dl_metrics_count;
+  }
+}
+
+void phch_common::get_dl_metrics(dl_metrics_t &m) {
+  m = dl_metrics;
+  dl_metrics_read = true;
+}
+
+void phch_common::set_ul_metrics(const ul_metrics_t &m) {
+  if(ul_metrics_read) {
+    ul_metrics       = m;
+    ul_metrics_count = 1;
+    ul_metrics_read  = false;
+  } else {
+    ul_metrics_count++;
+    ul_metrics.mcs = ul_metrics.mcs + (m.mcs - ul_metrics.mcs)/ul_metrics_count;
+  }
+}
+
+void phch_common::get_ul_metrics(ul_metrics_t &m) {
+  m = ul_metrics;
+  ul_metrics_read = true;
+}
+
+void phch_common::set_sync_metrics(const sync_metrics_t &m) {
+
+  if(sync_metrics_read) {
+    sync_metrics = m;
+    sync_metrics_count = 1;
+    sync_metrics_read  = false;
+  } else {
+    sync_metrics_count++;
+    sync_metrics.cfo = sync_metrics.cfo + (m.cfo - sync_metrics.cfo)/sync_metrics_count;
+    sync_metrics.sfo = sync_metrics.sfo + (m.sfo - sync_metrics.sfo)/sync_metrics_count;
+  }
+}
+
+void phch_common::get_sync_metrics(sync_metrics_t &m) {
+  m = sync_metrics;
+  sync_metrics_read = true;
+}
+
 void phch_common::reset_ul()
 {
   is_first_tx = true; 
@@ -238,6 +312,5 @@ void phch_common::reset_ul()
     pthread_mutex_unlock(&tx_mutex[i]);
   }
 }
-
 
 }

@@ -46,7 +46,10 @@ class log_filter : public srslte::log
 {
 public:
 
+  log_filter();
   log_filter(std::string layer, logger *logger_, bool tti=false);
+
+  void init(std::string layer, logger *logger_, bool tti=false);
 
   void console(std::string message, ...);
   void error(std::string message, ...);

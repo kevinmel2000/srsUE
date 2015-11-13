@@ -44,6 +44,14 @@ namespace srsue {
     
 typedef _Complex float cf_t; 
 
+struct phy_metrics_t
+{
+  sync_metrics_t sync;
+  dl_metrics_t   dl;
+  ul_metrics_t   ul;
+  float mabr;
+};
+
 class phy
     : public phy_interface
     , public phy_interface_rrc
@@ -53,6 +61,8 @@ public:
   bool init(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers = DEFAULT_WORKERS);
   bool init_agc(srslte::radio *radio_handler, mac_interface_phy *mac, srslte::log *log_h, uint32_t nof_workers = DEFAULT_WORKERS);
   void stop();
+
+  void get_metrics(phy_metrics_t &m);
   
   void set_crnti(uint16_t rnti);
   
@@ -128,6 +138,8 @@ private:
   prach                    prach_buffer; 
   
   phy_params   params_db; 
+
+  srslte_cell_t cell;
   
   /* Current time advance */
   uint32_t     n_ta;

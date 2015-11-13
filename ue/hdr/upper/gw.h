@@ -38,6 +38,12 @@
 
 namespace srsue {
 
+struct gw_metrics_t
+{
+  float dl_tput;
+  float ul_tput;
+};
+
 class gw
     :public gw_interface_pdcp
     ,public gw_interface_nas
@@ -47,6 +53,8 @@ public:
   gw();
   void init(pdcp_interface_gw *pdcp_, ue_interface *ue_, srslte::log *gw_log_);
   void stop();
+
+  void get_metrics(gw_metrics_t *m){}
 
   // UE interface
   bool check_ul_buffers();

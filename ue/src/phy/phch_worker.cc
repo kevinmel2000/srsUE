@@ -24,6 +24,7 @@
  *
  */
 
+#include <unistd.h>
 #include <string.h>
 #include "phy/phch_worker.h"
 #include "common/mac_interface.h"
@@ -48,6 +49,8 @@ phch_worker::phch_worker() : tr_exec(10240)
   trace_enabled   = false; 
   cfi = 0;
   
+  bzero(&dl_metrics, sizeof(dl_metrics_t));
+  bzero(&ul_metrics, sizeof(ul_metrics_t));
   reset_ul_params();
   
 }
@@ -402,6 +405,15 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
              srslte_pdsch_last_noi(&ue_dl.pdsch),
              timestr);
 
+      // Store metrics
+      dl_metrics.mcs    = grant->mcs.idx;
+      dl_metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
+      dl_metrics.rsrp   = srslte_chest_dl_get_rsrp(&ue_dl.chest);
+      dl_metrics.sinr   = 10*log10(dl_metrics.rsrp/dl_metrics.n);
+      dl_metrics.rsrq   = srslte_chest_dl_get_rsrq(&ue_dl.chest);
+      dl_metrics.rssi   = srslte_chest_dl_get_rssi(&ue_dl.chest);
+      phy->set_dl_metrics(dl_metrics);
+
       return ack; 
     } else {
       Warning("Received grant for TBS=0\n");
@@ -623,7 +635,9 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
          uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",
          timestr);
 
-
+  // Store metrics
+  ul_metrics.mcs = grant->mcs.idx;
+  phy->set_ul_metrics(ul_metrics);
 }
 
 void phch_worker::encode_pucch()

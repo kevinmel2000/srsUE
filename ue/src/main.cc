@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include <iostream>
 #include <fstream>
@@ -37,6 +38,7 @@
 #include <boost/program_options/parsers.hpp>
 
 #include "ue.h"
+#include "metrics_stdout.h"
 
 //TODO: Get version from cmake
 #define VERSION "0.1.0"
@@ -44,7 +46,8 @@
 using namespace std;
 namespace bpo = boost::program_options;
 
-static bool running = true;
+static bool running       = true;
+static bool print_metrics = false;
 
 void sig_int_handler(int signo)
 {
@@ -235,25 +238,43 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
     }
 }
 
+void *input_loop(void *v)
+{
+  char key;
+  while(running) {
+    cin >> key;
+    if('t' == key) {
+      print_metrics = !print_metrics;
+    }
+  }
+}
+
 
 int main(int argc, char *argv[]) {
 
   signal(SIGINT, sig_int_handler);
-  srsue::all_args_t args;
+  srsue::all_args_t     args;
+  srsue::metrics_stdout metrics;
+  srsue::ue            *ue = srsue::ue::get_instance();
 
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
   parse_args(&args, argc, argv);
-
-  srsue::ue ue(&args);
-  if(!ue.init()) {
+  if(!ue->init(&args)) {
     exit(1);
   }
+  metrics.init(ue);
+
+  pthread_t input;
+  pthread_create(&input, NULL, &input_loop, NULL);
 
   while(running) {
-    usleep(100000);
+    metrics.toggle_print(print_metrics);
+    sleep(1);
   }
 
-  ue.stop();
+  metrics.stop();
+  ue->stop();
+  ue->cleanup();
   cout << "---  exiting  ---" << endl;
   exit(0);
 }

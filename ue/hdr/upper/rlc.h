@@ -36,6 +36,11 @@
 
 namespace srsue {
 
+struct rlc_metrics_t
+{
+  float arq_retx;
+};
+
 /****************************************************************************
  * RLC Layer
  * Ref: 3GPP TS 36.322 v10.0.0
@@ -55,6 +60,8 @@ public:
             srslte::log        *rlc_log_, 
             mac_interface_timers *mac_timers_);
   void stop();
+
+  void get_metrics(rlc_metrics_t *m){}
 
   // PDCP interface
   void write_sdu(uint32_t lcid, byte_buffer_t *sdu);
