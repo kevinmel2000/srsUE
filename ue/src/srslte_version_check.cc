@@ -24,6 +24,13 @@
  *
  */
 
-#define REQUIRED_SRSLTE_VERSION_MAJOR  001
-#define REQUIRED_SRSLTE_VERSION_MINOR  000
-#define REQUIRED_SRSLTE_VERSION_PATCH  000
+#include "srslte_version_check.h"
+#include <srslte/srslte.h>
+
+#if REQUIRED_SRSLTE_VERSION_MAJOR > SRSLTE_VERSION_MAJOR
+   #error "SRSLTE version mismatch"
+#endif
+
+#if REQUIRED_SRSLTE_VERSION_MAJOR >= SRSLTE_VERSION_MAJOR && REQUIRED_SRSLTE_VERSION_MINOR > SRSLTE_VERSION_MINOR
+   #error "SRSLTE version mismatch"
+#endif

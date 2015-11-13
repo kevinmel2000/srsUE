@@ -37,7 +37,6 @@
 #include <string>
 #include <pthread.h>
 
-#include "srslte_version_check.h"
 #include "radio/radio_uhd.h"
 #include "phy/phy.h"
 #include "mac/mac.h"

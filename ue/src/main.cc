@@ -24,7 +24,6 @@
  *
  */
 
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,11 +36,9 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
 
+#include "version.h"
 #include "ue.h"
 #include "metrics_stdout.h"
-
-//TODO: Get version from cmake
-#define VERSION "0.1.0"
 
 using namespace std;
 using namespace srsue;
@@ -154,7 +151,10 @@ void parse_args(all_args_t *args, int argc, char* argv[]) {
 
     // print version number and exit
     if (vm.count("version")) {
-        cout << "Version " << VERSION << endl;
+        cout << "Version " <<
+                SRSUE_VERSION_MAJOR << "." <<
+                SRSUE_VERSION_MINOR << "." <<
+                SRSUE_VERSION_PATCH << endl;
         exit(0);
     }
 
@@ -265,6 +265,7 @@ int main(int argc, char *argv[])
   ue            *ue = ue::get_instance();
 
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
+
   parse_args(&args, argc, argv);
   if(!ue->init(&args)) {
     exit(1);
