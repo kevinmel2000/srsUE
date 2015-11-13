@@ -44,22 +44,15 @@
 #define VERSION "0.1.0"
 
 using namespace std;
+using namespace srsue;
 namespace bpo = boost::program_options;
-
-static bool running       = true;
-static bool print_metrics = false;
-
-void sig_int_handler(int signo)
-{
-  running = false;
-}
 
 /**********************************************************************
  *  Program arguments processing
  ***********************************************************************/
 string config_file;
 
-void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
+void parse_args(all_args_t *args, int argc, char* argv[]) {
 
     // Command line only options
     bpo::options_description general("General options");
@@ -238,24 +231,38 @@ void parse_args(srsue::all_args_t *args, int argc, char* argv[]) {
     }
 }
 
-void *input_loop(void *v)
+static bool running    = true;
+static bool do_metrics = false;
+
+void sig_int_handler(int signo)
 {
+  running = false;
+}
+
+void *input_loop(void *m)
+{
+  metrics_stdout *metrics = (metrics_stdout*)m;
   char key;
   while(running) {
     cin >> key;
     if('t' == key) {
-      print_metrics = !print_metrics;
+      do_metrics = !do_metrics;
+      if(do_metrics) {
+        cout << "Enter t to stop trace." << endl;
+      } else {
+        cout << "Enter t to restart trace." << endl;
+      }
+      metrics->toggle_print(do_metrics);
     }
   }
 }
 
-
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
   signal(SIGINT, sig_int_handler);
-  srsue::all_args_t     args;
-  srsue::metrics_stdout metrics;
-  srsue::ue            *ue = srsue::ue::get_instance();
+  all_args_t     args;
+  metrics_stdout metrics;
+  ue            *ue = ue::get_instance();
 
   cout << "---  Software Radio Systems LTE UE  ---" << endl << endl;
   parse_args(&args, argc, argv);
@@ -265,10 +272,9 @@ int main(int argc, char *argv[]) {
   metrics.init(ue);
 
   pthread_t input;
-  pthread_create(&input, NULL, &input_loop, NULL);
+  pthread_create(&input, NULL, &input_loop, &metrics);
 
   while(running) {
-    metrics.toggle_print(print_metrics);
     sleep(1);
   }
 
