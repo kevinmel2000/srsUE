@@ -172,7 +172,7 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
   } else {
     radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::PRACH_GAIN));
     
-    log_h->console("TX PRACH: Power control for PRACH is disabled, setting gain to %.0f dB\n", 
+    Info("TX PRACH: Power control for PRACH is disabled, setting gain to %.0f dB\n", 
       (float) params_db->get_param(phy_interface_params::PRACH_GAIN));
   }
     
@@ -186,7 +186,7 @@ bool prach::send(srslte::radio *radio_handler, float cfo, float pathloss, srslte
   // Set UL gain if power control for the rest of the channels is disabled
   if (params_db->get_param(phy_interface_params::UL_GAIN) > 0) {
     radio_handler->set_tx_gain((float) params_db->get_param(phy_interface_params::UL_GAIN));    
-    log_h->console("UL power control is disabled. Fixing TX gain to %.0f dB\n", (float) params_db->get_param(phy_interface_params::UL_GAIN));
+    Info("UL power control is disabled. Fixing TX gain to %.0f dB\n", (float) params_db->get_param(phy_interface_params::UL_GAIN));
   } 
   
 }

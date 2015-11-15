@@ -223,7 +223,6 @@ void ra_proc::step_preamble_transmission() {
       
   rar_received = false; 
   phy_h->prach_send(sel_preamble, sel_maskIndex - 1, received_target_power_dbm); 
-  rInfo("Selected received_target_power_dbm=%d dBm\n", received_target_power_dbm);
   state = PDCCH_SETUP;
 }
 
@@ -231,6 +230,7 @@ void ra_proc::step_pdcch_setup() {
   int ra_tti = phy_h->prach_tx_tti();
   if (ra_tti > 0) {    
     ra_rnti = 1+ra_tti%10;
+    log_h->console("Random Access Transmission: seq=%d, ra-rnti=%d\n", sel_preamble, ra_rnti);
     phy_h->pdcch_dl_search(SRSLTE_RNTI_RAR, ra_rnti, ra_tti+3, ra_tti+3+responseWindowSize);
     state = RESPONSE_RECEPTION;
   }
@@ -384,7 +384,7 @@ bool ra_proc::contention_resolution_id_received(uint64_t rx_contention_id) {
   
   if (transmitted_contention_id == rx_contention_id) 
   {
-    rDebug("MAC PDU Contention Resolution ID matches the one transmitted in CCCH SDU\n");
+    log_h->console("Random Access Complete.     C-RNTI=%d\n", params_db->get_param(mac_interface_params::RNTI_TEMP));
     // UE Contention Resolution ID included in MAC CE matches the CCCH SDU transmitted in Msg3
     params_db->set_param(mac_interface_params::RNTI_C, params_db->get_param(mac_interface_params::RNTI_TEMP));
     // finish the disassembly and demultiplexing of the MAC PDU

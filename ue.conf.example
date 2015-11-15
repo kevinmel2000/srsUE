@@ -5,14 +5,13 @@
 #
 # dl_freq: Downlink centre frequency (Hz).
 # ul_freq: Uplink centre frequency (Hz).
-# rx_gain: Receive gain (dB). Disables AGC if enabled
-# tx_gain: Transmit gain (dB). Used if UL power control is disabled
+# tx_gain: Transmit gain (dB). 
+# rx_gain: Optional receive gain (dB). Disables AGC if enabled
 #####################################################################
 [rf]
 dl_freq = 2680000000
 ul_freq = 2560000000
-#rx_gain = 50  
-#tx_gain = 50
+tx_gain = 70
 
 #####################################################################
 # MAC-layer packet capture configuration
@@ -94,8 +93,8 @@ imei = 353490069873319
 # nof_phy_threads:      Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #####################################################################
 [expert]
-prach_gain = 60
-ul_gain = 70
+#prach_gain = 60
+#ul_gain = 70
 #ul_pwr_ctrl_offset = 0
 #rx_gain_offset = 50
 #pdsch_max_its       = 4

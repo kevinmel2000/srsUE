@@ -164,6 +164,10 @@ bool ue::init(all_args_t *args_)
   }
   if (args->rf.tx_gain > 0) {
     radio_uhd.set_tx_gain(args->rf.tx_gain);
+  } else {
+    std::cout << std::endl << 
+                "Warning: TX gain was not set. " << 
+                "Using open-loop power control (not working properly)" << std::endl << std::endl; 
   }
 
   delete [] c_str;
@@ -196,9 +200,17 @@ void ue::set_expert_parameters() {
   
   phy.set_param(phy_interface_params::SYNC_TRACK_THRESHOLD, 10*args->expert.sync_track_th);
   phy.set_param(phy_interface_params::SYNC_TRACK_AVG_COEFF, 100*args->expert.sync_track_avg_coef);
-    
-  phy.set_param(phy_interface_params::PRACH_GAIN, args->expert.prach_gain);
-  phy.set_param(phy_interface_params::UL_GAIN, args->expert.ul_gain);
+
+  if (args->rf.tx_gain > 0) {
+    phy.set_param(phy_interface_params::PRACH_GAIN, args->rf.tx_gain);
+    phy.set_param(phy_interface_params::UL_GAIN,    args->rf.tx_gain);
+  } else {
+    phy.set_param(phy_interface_params::PRACH_GAIN, args->expert.prach_gain);
+    phy.set_param(phy_interface_params::UL_GAIN,    args->expert.ul_gain);
+    std::cout << std::endl << 
+                "Warning: TX gain was not set. " << 
+                "Using open-loop power control (not working properly)" << std::endl << std::endl; 
+  }
   
   phy.set_param(phy_interface_params::UL_PWR_CTRL_OFFSET, args->expert.ul_pwr_ctrl_offset);
   
