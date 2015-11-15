@@ -299,6 +299,7 @@ void phch_recv::run_thread()
             phy_state = IDLE; 
             break; 
           case 1:
+            srslte_ue_sync_set_agc_period(&ue_sync, 20);
             phy_state = SYNC_DONE;  
             break;        
           case 0:
