@@ -1,6 +1,7 @@
+#
 # Copyright 2015 Software Radio Systems Limited
 #
-# This file is part of srsUE
+# This file is part of srsUE.
 #
 # srsUE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -17,17 +18,7 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(radio)
-add_subdirectory(common)
-add_subdirectory(phy)
-add_subdirectory(mac)
-add_subdirectory(upper)
-
-add_executable(ue main.cc ue.cc metrics_stdout.cc srslte_version_check.cc)
-target_link_libraries(ue    srsue_upper
-                            srsue_common
-                            srsue_mac
-                            srsue_phy
-                            srsue_radio
-                            lte
-                            ${Boost_LIBRARIES})
+SET(SRSUE_VERSION_MAJOR 001)
+SET(SRSUE_VERSION_MINOR 000)
+SET(SRSUE_VERSION_PATCH 000)
+SET(SRSUE_VERSION "${SRSUE_VERSION_MAJOR}.${SRSUE_VERSION_MINOR}.${SRSUE_VERSION_PATCH}")

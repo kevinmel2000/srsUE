@@ -1,3 +1,4 @@
+#
 # Copyright 2015 Software Radio Systems Limited
 #
 # This file is part of srsUE
@@ -17,17 +18,7 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(radio)
-add_subdirectory(common)
-add_subdirectory(phy)
-add_subdirectory(mac)
-add_subdirectory(upper)
-
-add_executable(ue main.cc ue.cc metrics_stdout.cc srslte_version_check.cc)
-target_link_libraries(ue    srsue_upper
-                            srsue_common
-                            srsue_mac
-                            srsue_phy
-                            srsue_radio
-                            lte
-                            ${Boost_LIBRARIES})
+CONFIGURE_FILE(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+    ${PROJECT_BINARY_DIR}/version.h
+)
