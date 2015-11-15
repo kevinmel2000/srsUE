@@ -55,7 +55,7 @@ logger::~logger() {
 
 void logger::init(std::string file) {
   filename = file;
-  logfile = fopen(filename.c_str(), "a");
+  logfile = fopen(filename.c_str(), "w");
   if(logfile==NULL) {
     printf("Error: could not create log file, no messages will be logged");
   }
