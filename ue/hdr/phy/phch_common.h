@@ -50,11 +50,13 @@ struct dl_metrics_t
   float rssi;
   float turbo_iters;
   float mcs;
+  float pathloss;
 };
 
 struct ul_metrics_t
 {
   float mcs;
+  float power;
 };
 
 struct sync_metrics_t

@@ -25,20 +25,8 @@ ul_freq = 2560000000
 # filename: File path to use for packet captures
 #####################################################################
 [pcap]
-enable = true
-filename = /tmp/ue.pcap
-
-#####################################################################
-# PHY and Radio layer trace capture configuration
-#
-# enable:         Enable PHY and Radio layer traces (true/false)
-# phy_filename:   File path to use for PHY trace output
-# radio_filename: File path to use for Radio trace output
-#####################################################################
-[trace]
 enable = false
-phy_filename = /tmp/ue.phy_trace
-radio_filename = /tmp/ue.radio_trace
+filename = /tmp/ue.pcap
 
 #####################################################################
 # Log configuration
@@ -100,9 +88,9 @@ imei = 353490069873319
 # sync_find_th:         PSR threshold for PSS correlation in find phase
 # sync_find_max_frames: Maximum number of frames scanned during cell find phase
 # enable_64qam_attach:  Enables PUSCH 64QAM modulation before attachment (Necessary for old 
-                        Amarisoft LTE 100 eNodeB, disabled by default)
+#                        Amarisoft LTE 100 eNodeB, disabled by default)
 # continuous_tx:        Enable/disable continuous transmission mode (true/false)
-                        Default disabled.
+#                        Default disabled.
 # nof_phy_threads:      Selects the number of PHY threads (maximum 4, minimum 1, default 2)
 #####################################################################
 [expert]

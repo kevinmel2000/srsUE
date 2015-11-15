@@ -74,9 +74,10 @@ bool mac::init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h_)
   dl_harq.init      (              log_h, &params_db, &timers_db, &demux_unit);
 
   reset();
-
+  
   started = true; 
   start(MAC_MAIN_THREAD_PRIO);
+  
   
   return started; 
 }
@@ -107,6 +108,8 @@ void mac::reconfiguration()
 // Implement Section 5.9
 void mac::reset()
 {
+  bzero(&metrics, sizeof(mac_metrics_t));
+  
   timers_db.stop_all();
   upper_timers_thread.reset();
   
@@ -259,6 +262,11 @@ void mac::bch_decoded_ok(uint8_t* payload, uint32_t len)
 void mac::harq_recv(uint32_t tti, bool ack, mac_interface_phy::tb_action_ul_t* action)
 {
   ul_harq.harq_recv(tti, ack, action);
+  if (!ack) {
+    metrics.tx_errors++;
+  } else {
+    metrics.tx_brate += ul_harq.get_current_tbs(tti);
+  }
 }
 
 void mac::new_grant_dl(mac_interface_phy::mac_grant_t grant, mac_interface_phy::tb_action_dl_t* action)
@@ -274,6 +282,7 @@ void mac::new_grant_dl(mac_interface_phy::mac_grant_t grant, mac_interface_phy::
     }
     dl_harq.new_grant_dl(grant, action);
   }
+  metrics.rx_pkts++;
 }
 
 uint32_t mac::get_current_tti()
@@ -294,11 +303,18 @@ void mac::new_grant_ul(mac_interface_phy::mac_grant_t grant, mac_interface_phy::
     }
   }
   ul_harq.new_grant_ul(grant, action);
+  metrics.tx_pkts++;
 }
 
 void mac::new_grant_ul_ack(mac_interface_phy::mac_grant_t grant, bool ack, mac_interface_phy::tb_action_ul_t* action)
 {
   ul_harq.new_grant_ul_ack(grant, ack, action);
+  metrics.tx_pkts++;
+  if (!ack) {
+    metrics.tx_errors++;
+  } else {
+    metrics.tx_brate += ul_harq.get_current_tbs(tti);
+  }
 }
 
 void mac::tb_decoded(bool ack, srslte_rnti_type_t rnti_type, uint32_t harq_pid)
@@ -311,6 +327,9 @@ void mac::tb_decoded(bool ack, srslte_rnti_type_t rnti_type, uint32_t harq_pid)
     dl_harq.tb_decoded(ack, rnti_type, harq_pid);
     if (ack) {
       pdu_process_thread.notify();
+      metrics.rx_brate += dl_harq.get_current_tbs(harq_pid);
+    } else {
+      metrics.rx_errors++;
     }
   }
 }
@@ -372,6 +391,12 @@ srslte::timers::timer* mac::get(uint32_t timer_id)
 }
 
 
+void mac::get_metrics(mac_metrics_t &m)
+{
+  metrics.ul_buffer = (int) bsr_procedure.get_buffer_state();
+  m = metrics;  
+  bzero(&metrics, sizeof(mac_metrics_t));
+}
 
 
 /********************************************************

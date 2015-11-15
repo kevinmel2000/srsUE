@@ -138,6 +138,7 @@ typedef struct {
 typedef struct {
   uhd_metrics_t uhd;
   phy_metrics_t phy;
+  mac_metrics_t mac;
 }ue_metrics_t;
 
 /*******************************************************************************

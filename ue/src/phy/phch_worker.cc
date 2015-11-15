@@ -237,54 +237,7 @@ void phch_worker::work_imp()
     phy->mac->tb_decoded(dl_ack, dl_mac_grant.rnti_type, dl_mac_grant.pid);
   }
 
-  /* Provide UE Measurements to higher layers */
-  
-  
-  /* Compute ADC/RX gain offset every 20 ms */
-  if ((tti%20) == 0 || phy->rx_gain_offset == 0) {
-    float rx_gain_offset = 0; 
-    if (phy->get_radio()->has_rssi()) {
-      float rssi_all_signal = srslte_chest_dl_get_rssi(&ue_dl.chest);          
-      if (rssi_all_signal) {
-        rx_gain_offset = 10*log10(rssi_all_signal)-phy->get_radio()->get_rssi();
-      } else {
-        rx_gain_offset = 0; 
-      }
-    } else {
-      if (phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET) > 0) {
-        rx_gain_offset = (float) phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET);
-      } else {
-        rx_gain_offset = phy->get_radio()->get_rx_gain();
-      }
-    }
-    if (phy->rx_gain_offset) {
-      phy->rx_gain_offset = SRSLTE_VEC_EMA(phy->rx_gain_offset, rx_gain_offset, 0.1);
-    } else {
-      phy->rx_gain_offset = rx_gain_offset; 
-    }
-  }
-  
-  // Adjust measurements with RX gain offset    
-  if (phy->rx_gain_offset) {
-    float rsrp = 10*log10(srslte_chest_dl_get_rsrp(&ue_dl.chest)) + 30 - phy->rx_gain_offset;
-    float rssi = 10*log10(srslte_chest_dl_get_rssi(&ue_dl.chest)) + 30 - phy->rx_gain_offset;
-    float rsrq = 10*log10(srslte_chest_dl_get_rsrq(&ue_dl.chest));
-
-    // TODO: Send UE measurements to RRC where filtering is done. Now do filtering here
-    if (!phy->rsrp_filtered) {
-      phy->rsrp_filtered = rsrp;
-    } else {
-      uint32_t k = 4; // Set by RRC reconfiguration message
-      float coeff = pow(0.5,(float) k/4);
-      phy->rsrp_filtered = SRSLTE_VEC_EMA(phy->rsrp_filtered, rsrp, 1-coeff);
-      if (isnan(phy->rsrp_filtered) || isinf(phy->rsrp_filtered)) {
-        phy->rsrp_filtered = 0; 
-      }
-    }    
-    // Compute PL
-    float tx_crs_power = (float) phy->params_db->get_param(phy_interface_params::PDSCH_RSPOWER);
-    phy->pathloss = phy->rsrp_filtered - tx_crs_power;
-  }
+  update_measurements();
 }
 
 
@@ -407,12 +360,6 @@ bool phch_worker::decode_pdsch(srslte_ra_dl_grant_t *grant, uint8_t *payload,
 
       // Store metrics
       dl_metrics.mcs    = grant->mcs.idx;
-      dl_metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
-      dl_metrics.rsrp   = srslte_chest_dl_get_rsrp(&ue_dl.chest);
-      dl_metrics.sinr   = 10*log10(dl_metrics.rsrp/dl_metrics.n);
-      dl_metrics.rsrq   = srslte_chest_dl_get_rsrq(&ue_dl.chest);
-      dl_metrics.rssi   = srslte_chest_dl_get_rssi(&ue_dl.chest);
-      phy->set_dl_metrics(dl_metrics);
 
       return ack; 
     } else {
@@ -628,16 +575,16 @@ void phch_worker::encode_pusch(srslte_ra_ul_grant_t *grant, uint8_t *payload, ui
   snprintf(timestr, 64, ", total_time=%4d us", (int) logtime_start[0].tv_usec);
 #endif
 
-  Info("PUSCH: power=%.2f dBm, tti_tx=%d, n_prb=%d, rb_start=%d, tbs=%d, mod=%d, mcs=%d, rv_idx=%d, ack=%s%s\n", 
-         tx_power, (tti+4)%10240,
+  Info("PUSCH: power=%.2f dBm, gain=%.1f dB, tti_tx=%d, n_prb=%d, rb_start=%d, tbs=%d, mod=%d, mcs=%d, rv_idx=%d, ack=%s%s\n", 
+         tx_power, gain, (tti+4)%10240,
          grant->L_prb, grant->n_prb[0], 
          grant->mcs.tbs/8, grant->mcs.mod, grant->mcs.idx, rv,
          uci_data.uci_ack_len>0?(uci_data.uci_ack?"1":"0"):"no",
          timestr);
 
   // Store metrics
-  ul_metrics.mcs = grant->mcs.idx;
-  phy->set_ul_metrics(ul_metrics);
+  ul_metrics.mcs   = grant->mcs.idx;
+  ul_metrics.power = tx_power;
 }
 
 void phch_worker::encode_pucch()
@@ -702,8 +649,9 @@ void phch_worker::encode_srs()
   
   float tx_power = srslte_ue_ul_srs_power(&ue_ul, phy->pathloss);  
   float gain = set_power(tx_power);
-  
-  Info("SRS: power=%.2f dBm, gain=%.1f, tti_tx=%d%s\n", tx_power, gain, (tti+4)%10240, timestr);
+  uint32_t fi = srslte_vec_max_fi((float*) signal_buffer, SRSLTE_SF_LEN_PRB(cell.nof_prb));
+  float *f = (float*) signal_buffer;
+  Info("SRS: power=%.2f dBm, gain=%.1f, amp=%.1f, tti_tx=%d%s\n", tx_power, gain, f[fi], (tti+4)%10240, timestr);
   
 }
 
@@ -821,16 +769,94 @@ float phch_worker::set_power(float tx_power) {
   if(phy->params_db->get_param(phy_interface_params::UL_GAIN) < 0) {
     
     /* Adjust maximum power if it changes significantly */
-    if (tx_power < phy->cur_radio_power - 10 || tx_power > phy->cur_radio_power + 10) {
+    //if (tx_power < phy->cur_radio_power - 5 || tx_power > phy->cur_radio_power + 5) {
       phy->cur_radio_power = tx_power; 
       /* Add an optional offset to the power set to the RF frontend */
       float radio_tx_power = phy->cur_radio_power;
       radio_tx_power += (float) phy->params_db->get_param(phy_interface_params::UL_PWR_CTRL_OFFSET);
       gain = phy->get_radio()->set_tx_power(radio_tx_power);  
-    }    
+    //}    
   }
   return gain;
 }
+
+
+
+
+
+
+
+/**************************** Measurements **************************/
+
+void phch_worker::update_measurements() 
+{
+    /* Compute ADC/RX gain offset every 20 ms */
+  if ((tti%20) == 0 || phy->rx_gain_offset == 0) {
+    float rx_gain_offset = 0; 
+    if (phy->get_radio()->has_rssi()) {
+      float rssi_all_signal = srslte_chest_dl_get_rssi(&ue_dl.chest);          
+      if (rssi_all_signal) {
+        rx_gain_offset = 10*log10(rssi_all_signal)-phy->get_radio()->get_rssi();
+      } else {
+        rx_gain_offset = 0; 
+      }
+    } else {
+      if (phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET) > 0) {
+        rx_gain_offset = (float) phy->params_db->get_param(phy_interface_params::RX_GAIN_OFFSET);
+      } else {
+        rx_gain_offset = phy->get_radio()->get_rx_gain();
+      }
+    }
+    if (phy->rx_gain_offset) {
+      phy->rx_gain_offset = SRSLTE_VEC_EMA(phy->rx_gain_offset, rx_gain_offset, 0.1);
+    } else {
+      phy->rx_gain_offset = rx_gain_offset; 
+    }
+  }
+  
+  // Adjust measurements with RX gain offset    
+  if (phy->rx_gain_offset) {
+    float rsrp = 10*log10(srslte_chest_dl_get_rsrp(&ue_dl.chest)) + 30 - phy->rx_gain_offset;
+    float rssi = 10*log10(srslte_chest_dl_get_rssi(&ue_dl.chest)) + 30 - phy->rx_gain_offset;
+    float rsrq = 10*log10(srslte_chest_dl_get_rsrq(&ue_dl.chest));
+
+    
+    // TODO: Send UE measurements to RRC where filtering is done. Now do filtering here
+    if (!phy->rsrp_filtered) {
+      phy->rsrp_filtered = rsrp;
+    } else {
+      uint32_t k = 4; // Set by RRC reconfiguration message
+      float coeff = pow(0.5,(float) k/4);
+      phy->rsrp_filtered = SRSLTE_VEC_EMA(phy->rsrp_filtered, rsrp, coeff);
+      if (isnan(phy->rsrp_filtered) || isinf(phy->rsrp_filtered)) {
+        phy->rsrp_filtered = 0; 
+      }
+    }    
+    // Compute PL
+    float tx_crs_power = (float) phy->params_db->get_param(phy_interface_params::PDSCH_RSPOWER);
+    phy->pathloss = tx_crs_power - phy->rsrp_filtered;
+
+    // Store metrics
+    dl_metrics.n      = srslte_chest_dl_get_noise_estimate(&ue_dl.chest);
+    dl_metrics.rsrp   = phy->rsrp_filtered;
+    dl_metrics.rsrq   = rsrq;
+    dl_metrics.rssi   = rssi;
+    dl_metrics.pathloss = phy->pathloss;
+    dl_metrics.sinr   = 10*log10(srslte_chest_dl_get_snr(&ue_dl.chest));
+    dl_metrics.turbo_iters = srslte_pdsch_last_noi(&ue_dl.pdsch);
+    phy->set_dl_metrics(dl_metrics);
+    
+    phy->set_ul_metrics(ul_metrics);
+
+  }
+
+}
+
+
+
+
+
+
 
 /********** Execution time trace function ************/
 

@@ -51,6 +51,7 @@ public:
   void setup_lcg(uint32_t lcid, uint32_t new_lcg);
   void set_priority(uint32_t lcid, uint32_t priority); 
   void timer_expired(uint32_t timer_id);
+  uint32_t get_buffer_state();
   
   typedef enum {
     LONG_BSR, 

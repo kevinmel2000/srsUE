@@ -55,7 +55,8 @@ private:
   void        print_disconnect();
   std::string float_to_string(float f, int digits);
   std::string float_to_eng_string(float f, int digits);
-
+  std::string int_to_eng_string(int f, int digits);
+  
   ue           *ue_;
   bool          started;
   bool          do_print;

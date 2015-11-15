@@ -60,6 +60,7 @@ public:
   void new_grant_ul_ack(mac_interface_phy::mac_grant_t grant, bool ack, mac_interface_phy::tb_action_ul_t *action);
   void harq_recv(uint32_t tti, bool ack, mac_interface_phy::tb_action_ul_t *action);
 
+  int get_current_tbs(uint32_t tti);
     
 private:  
 
@@ -80,6 +81,7 @@ private:
     bool is_sps();
     uint32_t last_tx_tti();
     uint32_t get_nof_retx();
+    int get_current_tbs();
    
   private: 
     mac_interface_phy::mac_grant_t cur_grant;

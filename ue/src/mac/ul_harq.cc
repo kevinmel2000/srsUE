@@ -75,6 +75,15 @@ void ul_harq_entity::reset_ndi() {
   }
 }
 
+int ul_harq_entity::get_current_tbs(uint32_t tti) {
+  int tti_harq = (int) tti-4;
+  if (tti_harq < 0) {
+    tti_harq += 10240; 
+  }
+  uint32_t pid_harq = pidof(tti_harq); 
+  return proc[pid_harq].get_current_tbs();
+}
+
 void ul_harq_entity::set_ack(uint32_t tti, bool ack) {
   int tti_harq = (int) tti - 4; 
   if (tti_harq < 0) {
@@ -246,6 +255,11 @@ void ul_harq_entity::ul_harq_process::run_tti(uint32_t tti_tx, mac_interface_phy
     harq_entity->pcap->write_ul_crnti(pdu_ptr, grant->n_bytes, grant->rnti, get_nof_retx(), tti_tx);
   }
 
+}
+
+int ul_harq_entity::ul_harq_process::get_current_tbs()
+{
+  return cur_grant.n_bytes*8;
 }
 
 void ul_harq_entity::ul_harq_process::generate_retx(uint32_t tti_tx, mac_interface_phy::tb_action_ul_t *action)

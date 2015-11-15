@@ -58,6 +58,7 @@ public:
   
   void reset();
   void start_pcap(mac_pcap* pcap);
+  int  get_current_tbs(uint32_t harq_pid);
 
 private:  
   
@@ -71,6 +72,7 @@ private:
     bool is_new_transmission(mac_interface_phy::mac_grant_t grant); 
     void new_grant_dl(mac_interface_phy::mac_grant_t grant, mac_interface_phy::tb_action_dl_t *action);
     void tb_decoded(bool ack);   
+    int get_current_tbs();
     
   private: 
     

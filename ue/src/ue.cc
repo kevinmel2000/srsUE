@@ -235,11 +235,13 @@ void ue::stop()
 bool ue::get_metrics(ue_metrics_t &m)
 {
   m.uhd = uhd_metrics;
+  bzero(&uhd_metrics, sizeof(uhd_metrics_t));
   uhd_metrics.uhd_error = false; // Reset error flag
 
   if(EMM_STATE_REGISTERED == nas.get_state()) {
     if(RRC_STATE_RRC_CONNECTED == rrc.get_state()) {
       phy.get_metrics(m.phy);
+      mac.get_metrics(m.mac);
       return true;
     }
   }

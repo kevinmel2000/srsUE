@@ -135,6 +135,12 @@ void dl_harq_entity::tb_decoded(bool ack, srslte_rnti_type_t rnti_type, uint32_t
   }
 }
 
+int dl_harq_entity::get_current_tbs(uint32_t harq_pid)
+{
+  return proc[harq_pid%NOF_HARQ_PROC].get_current_tbs();
+}
+
+
 bool dl_harq_entity::generate_ack_callback(void *arg)
 {
   demux *demux_unit = (demux*) arg;
@@ -270,6 +276,11 @@ void dl_harq_entity::dl_harq_process::new_grant_dl(mac_interface_phy::mac_grant_
       Debug("Generating ACK\n");
     }
   }
+}
+
+int dl_harq_entity::dl_harq_process::get_current_tbs()
+{
+  return cur_grant.n_bytes*8;
 }
 
 void dl_harq_entity::dl_harq_process::tb_decoded(bool ack_)

@@ -255,12 +255,13 @@ void phch_common::set_dl_metrics(const dl_metrics_t &m) {
     dl_metrics_read  = false;
   } else {
     dl_metrics_count++;
-    dl_metrics.mcs = dl_metrics.mcs + (m.mcs - dl_metrics.mcs)/dl_metrics_count;
-    dl_metrics.n = dl_metrics.n + (m.n - dl_metrics.n)/dl_metrics_count;
+    dl_metrics.mcs  = dl_metrics.mcs + (m.mcs - dl_metrics.mcs)/dl_metrics_count;
+    dl_metrics.n    = dl_metrics.n + (m.n - dl_metrics.n)/dl_metrics_count;
     dl_metrics.rsrp = dl_metrics.rsrp + (m.rsrp - dl_metrics.rsrp)/dl_metrics_count;
     dl_metrics.rsrq = dl_metrics.rsrq + (m.rsrq - dl_metrics.rsrq)/dl_metrics_count;
     dl_metrics.rssi = dl_metrics.rssi + (m.rssi - dl_metrics.rssi)/dl_metrics_count;
     dl_metrics.sinr = dl_metrics.sinr + (m.sinr - dl_metrics.sinr)/dl_metrics_count;
+    dl_metrics.pathloss = dl_metrics.pathloss + (m.pathloss - dl_metrics.pathloss)/dl_metrics_count;
     dl_metrics.turbo_iters = dl_metrics.turbo_iters + (m.turbo_iters - dl_metrics.turbo_iters)/dl_metrics_count;
   }
 }
@@ -277,7 +278,8 @@ void phch_common::set_ul_metrics(const ul_metrics_t &m) {
     ul_metrics_read  = false;
   } else {
     ul_metrics_count++;
-    ul_metrics.mcs = ul_metrics.mcs + (m.mcs - ul_metrics.mcs)/ul_metrics_count;
+    ul_metrics.mcs   = ul_metrics.mcs + (m.mcs - ul_metrics.mcs)/ul_metrics_count;
+    ul_metrics.power = ul_metrics.power + (m.power - ul_metrics.power)/ul_metrics_count;
   }
 }
 

@@ -48,10 +48,13 @@ namespace srsue {
 
 struct mac_metrics_t
 {
-  float tx_frames;
-  float rx_frames;
-  float rx_err_frames;
-  float ul_harq_retx;
+  int tx_pkts;
+  int tx_errors;
+  int tx_brate;
+  int rx_pkts;
+  int rx_errors;
+  int rx_brate; 
+  int ul_buffer;
 };
   
 class mac
@@ -66,7 +69,7 @@ public:
   bool init(phy_interface *phy, rlc_interface_mac *rlc, srslte::log *log_h);
   void stop();
 
-  void get_metrics(mac_metrics_t *m){}
+  void get_metrics(mac_metrics_t &m);
 
   /******** Interface from PHY (PHY -> MAC) ****************/ 
   /* see mac_interface.h for comments */
@@ -159,6 +162,7 @@ private:
   bool is_first_ul_grant;
 
 
+  mac_metrics_t metrics; 
 
 
   /* Class to run upper-layer timers with normal priority */

@@ -116,6 +116,16 @@ bool bsr_proc::check_highest_channel() {
   }
   return false; 
 }
+
+uint32_t bsr_proc::get_buffer_state() {
+  uint32_t buffer = 0; 
+  for (int i=0;i<MAX_LCID;i++) {
+    if (lcg[i] >= 0) {
+      buffer += rlc->get_buffer_state(i);
+    }
+  }
+  return buffer; 
+}
     
 // Checks if only one logical channel has data avaiable for Tx
 bool bsr_proc::check_single_channel() {    
