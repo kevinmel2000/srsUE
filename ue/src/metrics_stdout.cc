@@ -102,7 +102,7 @@ void metrics_stdout::print_metrics()
   {
     n_reports = 0;
     cout << endl;
-    cout << "--Signal--------------DL-----------------------------UL----------------------" << endl;
+    cout << "--Signal--------------DL------------------------------UL----------------------" << endl;
     cout << "  rsrp    pl    cfo   mcs   snr turbo  brate   bler   mcs   buff  brate   bler" << endl;
   }
   cout << float_to_string(metrics.phy.dl.rsrp, 2);
@@ -113,31 +113,20 @@ void metrics_stdout::print_metrics()
   cout << float_to_string(metrics.phy.dl.turbo_iters, 2);
   cout << float_to_eng_string((float) metrics.mac.rx_brate, 2);
   if (metrics.mac.rx_pkts > 0) {
-    cout << float_to_eng_string((float) metrics.mac.rx_errors/metrics.mac.rx_pkts, 2);
+    cout << float_to_string((float) 100*metrics.mac.rx_errors/metrics.mac.rx_pkts, 2) << "%";
   } else {
-    cout << float_to_string(0, 2);
+    cout << float_to_string(0, 2) << "%";
   }
   cout << float_to_string(metrics.phy.ul.mcs, 2);
   cout << float_to_eng_string((float) metrics.mac.ul_buffer, 2);
   cout << float_to_eng_string((float) metrics.mac.tx_brate, 2);
   if (metrics.mac.tx_pkts > 0) {
-    cout << float_to_eng_string((float) metrics.mac.tx_errors/metrics.mac.tx_pkts, 2);
+    cout << float_to_string((float) 100*metrics.mac.tx_errors/metrics.mac.tx_pkts, 2) << "%";
   } else {
-    cout << float_to_string(0, 2);
+    cout << float_to_string(0, 2) << "%";
   }
   cout << endl;
 
-//  printf("%f %f %f %f %f %f %f %f %f %f\n",
-//         metrics.phy.dl.n,
-//         metrics.phy.dl.sinr,
-//         metrics.phy.dl.rsrp,
-//         metrics.phy.dl.rsrq,
-//         metrics.phy.dl.rssi,
-//         metrics.phy.dl.turbo_iters,
-//         metrics.phy.dl.mcs,
-//         metrics.phy.sync.cfo,
-//         metrics.phy.sync.sfo,
-//         metrics.phy.mabr);
   if(metrics.uhd.uhd_error) {
     cout << "UHD status:"
          << "  O=" << metrics.uhd.uhd_o

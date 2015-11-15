@@ -105,6 +105,7 @@ private:
   uint32_t       tx_tti;
   bool           pregen_enabled;
   uint32_t       last_dl_pdcch_ncce;
+  bool           rnti_is_set; 
   
   /* Objects for DL */
   srslte_ue_dl_t ue_dl; 

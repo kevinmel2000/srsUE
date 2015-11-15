@@ -356,6 +356,7 @@ void phch_recv::run_thread()
             workers_pool->start_worker(worker);             
             mac->tti_clock(tti);
           } else {
+            log_h->console("Sync Error!\n");
             worker->release();
             phy_state = SYNCING;
             worker_com->reset_ul();

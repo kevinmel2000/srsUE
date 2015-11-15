@@ -46,6 +46,7 @@ phch_worker::phch_worker() : tr_exec(10240)
   cell_initiated  = false; 
   pregen_enabled  = false; 
   rar_cqi_request = false; 
+  rnti_is_set     = false; 
   trace_enabled   = false; 
   cfi = 0;
   
@@ -125,6 +126,7 @@ void phch_worker::set_crnti(uint16_t rnti)
 {
   srslte_ue_dl_set_rnti(&ue_dl, rnti);
   srslte_ue_ul_set_rnti(&ue_ul, rnti);
+  rnti_is_set = true; 
 }
 
 void phch_worker::work_imp()
@@ -501,7 +503,7 @@ void phch_worker::set_uci_sr()
 
 void phch_worker::set_uci_periodic_cqi()
 {
-  if (period_cqi.configured || rar_cqi_request) {
+  if ((period_cqi.configured || rar_cqi_request) && rnti_is_set) {
     if (srslte_cqi_send(period_cqi.pmi_idx, (tti+4)%10240)) {
       srslte_cqi_value_t cqi_report;
       if (period_cqi.format_is_subband) {
