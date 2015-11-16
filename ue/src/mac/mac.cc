@@ -261,11 +261,12 @@ void mac::bch_decoded_ok(uint8_t* payload, uint32_t len)
 
 void mac::harq_recv(uint32_t tti, bool ack, mac_interface_phy::tb_action_ul_t* action)
 {
+  int tbs = ul_harq.get_current_tbs(tti);
   ul_harq.harq_recv(tti, ack, action);
   if (!ack) {
     metrics.tx_errors++;
   } else {
-    metrics.tx_brate += ul_harq.get_current_tbs(tti);
+    metrics.tx_brate += tbs;
   }
 }
 
@@ -308,12 +309,12 @@ void mac::new_grant_ul(mac_interface_phy::mac_grant_t grant, mac_interface_phy::
 
 void mac::new_grant_ul_ack(mac_interface_phy::mac_grant_t grant, bool ack, mac_interface_phy::tb_action_ul_t* action)
 {
+  int tbs = ul_harq.get_current_tbs(tti);
   ul_harq.new_grant_ul_ack(grant, ack, action);
-  metrics.tx_pkts++;
   if (!ack) {
     metrics.tx_errors++;
   } else {
-    metrics.tx_brate += ul_harq.get_current_tbs(tti);
+    metrics.tx_brate += tbs;
   }
 }
 
