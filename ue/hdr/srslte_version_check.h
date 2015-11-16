@@ -24,6 +24,18 @@
  *
  */
 
-#define REQUIRED_SRSLTE_VERSION_MAJOR  001
-#define REQUIRED_SRSLTE_VERSION_MINOR  000
-#define REQUIRED_SRSLTE_VERSION_PATCH  000
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+#define REQ_SRSLTE_VMAJOR  001
+#define REQ_SRSLTE_VMINOR  000
+#define REQ_SRSLTE_VPATCH  000
+
+#include <srslte/srslte.h>
+
+#if !(SRSLTE_VERSION_CHECK(REQ_SRSLTE_VMAJOR, REQ_SRSLTE_VMINOR, REQ_SRSLTE_VPATCH))
+  #pragma message "Error: SRSLTE version " \
+  STR(REQ_SRSLTE_VMAJOR) "." STR(REQ_SRSLTE_VMINOR) "." STR(REQ_SRSLTE_VPATCH) " required. " \
+  "SRSLTE version " SRSLTE_VERSION_STRING " found."
+  #error "SRSLTE version mismatch."
+#endif
