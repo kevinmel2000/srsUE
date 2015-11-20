@@ -33,8 +33,10 @@
 #define METRICS_STDOUT_H
 
 #include <pthread.h>
+#include <stdint.h>
+#include <string>
 
-#include "ue.h"
+#include "ue_metrics_interface.h"
 
 namespace srsue {
 
@@ -43,7 +45,7 @@ class metrics_stdout
 public:
   metrics_stdout(int report_period_secs=1);
 
-  bool init(ue *u);
+  bool init(ue_metrics_interface *u);
   void stop();
   void toggle_print(bool b);
   static void* metrics_thread_start(void *m);
@@ -56,7 +58,8 @@ private:
   std::string float_to_eng_string(float f, int digits);
   std::string int_to_eng_string(int f, int digits);
   
-  ue           *ue_;
+  ue_metrics_interface *ue_;
+
   bool          started;
   bool          do_print;
   pthread_t     metrics_thread;

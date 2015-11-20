@@ -27,11 +27,13 @@
 
 #include "metrics_stdout.h"
 
+#include <unistd.h>
 #include <sstream>
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
 #include <iomanip>
+#include <iostream>
 
 using namespace std;
 
@@ -51,7 +53,7 @@ metrics_stdout::metrics_stdout(int report_period_secs)
 {
 }
 
-bool metrics_stdout::init(ue *u)
+bool metrics_stdout::init(ue_metrics_interface *u)
 {
   ue_ = u;
 

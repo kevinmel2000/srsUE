@@ -35,35 +35,12 @@
 #include "radio/radio.h"
 #include "common/log.h"
 #include "phy/phy_params.h"
+#include "phy/phy_metrics.h"
 
 //#define CONTINUOUS_TX
 
 
 namespace srsue {
-
-struct dl_metrics_t
-{
-  float n;
-  float sinr;
-  float rsrp;
-  float rsrq;
-  float rssi;
-  float turbo_iters;
-  float mcs;
-  float pathloss;
-};
-
-struct ul_metrics_t
-{
-  float mcs;
-  float power;
-};
-
-struct sync_metrics_t
-{
-  float cfo;
-  float sfo;
-};
 
 /* Subclass that manages variables common to all workers */
   class phch_common {

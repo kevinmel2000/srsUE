@@ -30,6 +30,7 @@
 #include "srslte/srslte.h"
 #include "common/phy_interface.h"
 #include "common/log.h"
+#include "phy/phy_metrics.h"
 #include "phy/phch_recv.h"
 #include "phy/prach.h"
 #include "phy/phy_params.h"
@@ -43,14 +44,6 @@
 namespace srsue {
     
 typedef _Complex float cf_t; 
-
-struct phy_metrics_t
-{
-  sync_metrics_t sync;
-  dl_metrics_t   dl;
-  ul_metrics_t   ul;
-  float mabr;
-};
 
 class phy
     : public phy_interface

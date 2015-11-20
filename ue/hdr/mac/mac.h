@@ -33,6 +33,7 @@
 #include "mac/dl_harq.h"
 #include "mac/ul_harq.h"
 #include "common/timers.h"
+#include "mac/mac_metrics.h"
 #include "mac/proc_ra.h"
 #include "mac/proc_sr.h"
 #include "mac/proc_bsr.h"
@@ -45,17 +46,6 @@
 #include "common/threads.h"
 
 namespace srsue {
-
-struct mac_metrics_t
-{
-  int tx_pkts;
-  int tx_errors;
-  int tx_brate;
-  int rx_pkts;
-  int rx_errors;
-  int rx_brate; 
-  int ul_buffer;
-};
   
 class mac
     :public mac_interface_phy
