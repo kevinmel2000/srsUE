@@ -64,7 +64,7 @@ Running srsUE
 
  * Copy and rename the provided configuration file ue.conf.example
  * Check and set configuration parameters
- * ```sudo ue ue.conf```
+ * ```sudo ./ue ue.conf```
 
 Disclaimer
 ----------
